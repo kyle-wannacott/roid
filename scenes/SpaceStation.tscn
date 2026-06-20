@@ -1,0 +1,179 @@
+[gd_scene load_steps=21 format=3 uid="uid://b4stnspace01"]
+
+[ext_resource type="Script" path="res://scripts/SpaceStation.gd" id="1_stn"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_refuel"]
+radius = 12.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hub"]
+top_radius = 4.0
+bottom_radius = 5.0
+height = 3.0
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_dome"]
+top_radius = 0.0
+bottom_radius = 4.0
+height = 2.5
+radial_segments = 24
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 9.0
+outer_radius = 10.0
+rings = 64
+ring_segments = 8
+
+[sub_resource type="BoxMesh" id="BoxMesh_hangar"]
+size = Vector3(3, 2, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_solar"]
+size = Vector3(8, 0.15, 3)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_antenna"]
+top_radius = 0.15
+bottom_radius = 0.3
+height = 5.0
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_dock"]
+top_radius = 2.5
+bottom_radius = 2.5
+height = 1.0
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_window"]
+size = Vector3(0.15, 1.4, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="Material_hull"]
+albedo_color = Color(0.7, 0.72, 0.78, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_panel"]
+albedo_color = Color(0.55, 0.58, 0.65, 1)
+metallic = 0.6
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_solar"]
+albedo_color = Color(0.15, 0.2, 0.45, 1)
+metallic = 0.0
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.3, 0.7, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_accent"]
+albedo_color = Color(0.2, 0.5, 0.9, 1)
+metallic = 0.3
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.3, 0.6, 1.0, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Material_window"]
+transparency = 1
+albedo_color = Color(0.3, 0.7, 1, 0.45)
+metallic = 0.1
+roughness = 0.05
+emission_enabled = true
+emission = Color(0.4, 0.8, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_door"]
+size = Vector3(0.25, 1.8, 2.4)
+
+[sub_resource type="StandardMaterial3D" id="Material_door"]
+albedo_color = Color(0.4, 0.42, 0.48, 1)
+metallic = 0.8
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.9, 0.7, 0.2, 1)
+emission_energy_multiplier = 0.4
+
+[node name="SpaceStation" type="Node3D"]
+script = ExtResource("1_stn")
+
+[node name="HubPivot" type="Node3D" parent="."]
+
+[node name="Hub" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_hub")
+material_override = SubResource("Material_hull")
+
+[node name="Dome" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
+mesh = SubResource("CylinderMesh_dome")
+material_override = SubResource("Material_hull")
+
+[node name="HangarA" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+mesh = SubResource("BoxMesh_hangar")
+material_override = SubResource("Material_panel")
+
+[node name="HangarB" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -4.5, 0, 0)
+mesh = SubResource("BoxMesh_hangar")
+material_override = SubResource("Material_panel")
+
+[node name="SolarA" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+mesh = SubResource("BoxMesh_solar")
+material_override = SubResource("Material_solar")
+
+[node name="SolarB" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -9, 0, 0)
+mesh = SubResource("BoxMesh_solar")
+material_override = SubResource("Material_solar")
+
+[node name="DockingBay" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 0)
+mesh = SubResource("CylinderMesh_dock")
+material_override = SubResource("Material_accent")
+
+[node name="Window" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.95, 0, 0)
+mesh = SubResource("BoxMesh_window")
+material_override = SubResource("Material_window")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, -1.5, 0)
+mesh = SubResource("BoxMesh_door")
+material_override = SubResource("Material_door")
+
+[node name="DoorRight" type="MeshInstance3D" parent="HubPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, -1.5, 0)
+mesh = SubResource("BoxMesh_door")
+material_override = SubResource("Material_door")
+
+[node name="RingPivot" type="Node3D" parent="."]
+
+[node name="Ring" type="MeshInstance3D" parent="RingPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("TorusMesh_ring")
+material_override = SubResource("Material_panel")
+
+[node name="Antenna1" type="MeshInstance3D" parent="RingPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+mesh = SubResource("CylinderMesh_antenna")
+material_override = SubResource("Material_panel")
+
+[node name="Antenna2" type="MeshInstance3D" parent="RingPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 6)
+mesh = SubResource("CylinderMesh_antenna")
+material_override = SubResource("Material_panel")
+
+[node name="LabelAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+
+[node name="Beacon" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+light_color = Color(1, 0.2, 0.2, 1)
+light_energy = 2.0
+omni_range = 40.0
+
+[node name="RefuelArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RefuelArea"]
+shape = SubResource("SphereShape3D_refuel")

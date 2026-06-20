@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://b4astspace01"]
+
+[ext_resource type="Script" path="res://scripts/Asteroid.gd" id="1_ast"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ast"]
+radius = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_ast"]
+radius = 1.0
+height = 2.0
+radial_segments = 32
+rings = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ast"]
+albedo_color = Color(0.5, 0.45, 0.4, 1)
+metallic = 0.05
+roughness = 0.95
+
+[node name="Asteroid" type="StaticBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_ast")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_ast")
+material_override = SubResource("StandardMaterial3D_ast")
+
+[node name="CollisionShape" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ast")

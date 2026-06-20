@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bms8yfasqfv7e"]
+
+[ext_resource type="Script" path="res://scripts/AsteroidManager.gd" id="1_mgr"]
+
+[node name="AsteroidManager" type="Node3D"]
+script = ExtResource("1_mgr")
+
+[node name="MultiMeshInstance" type="MultiMeshInstance3D" parent="."]

@@ -1,0 +1,217 @@
+[gd_scene load_steps=3 format=3 uid="uid://b4hudspace01"]
+
+[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_title"]
+font_size = 14
+font_color = Color(0.8, 0.9, 1, 0.9)
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TopLeft" type="MarginContainer" parent="Root"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 320.0
+offset_bottom = 280.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Root/TopLeft"]
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="Root/TopLeft/Panel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Root/TopLeft/Panel/Margin"]
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Root/TopLeft/Panel/Margin/VBox"]
+text = "SHIP STATUS"
+label_settings = SubResource("LabelSettings_title")
+
+[node name="HealthRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="HealthLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/HealthRow"]
+text = "HULL  "
+custom_minimum_size = Vector2(80, 0)
+
+[node name="HealthValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/HealthRow"]
+text = "100 / 100"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="HealthBar" type="ProgressBar" parent="Root/TopLeft/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 10)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="FuelRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="FuelLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/FuelRow"]
+text = "FUEL  "
+custom_minimum_size = Vector2(80, 0)
+
+[node name="FuelValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/FuelRow"]
+text = "100 / 100"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="FuelBar" type="ProgressBar" parent="Root/TopLeft/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 12)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="GemRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="GemLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/GemRow"]
+text = "GEMS  "
+custom_minimum_size = Vector2(80, 0)
+
+[node name="GemValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/GemRow"]
+text = "0"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="SpeedRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="SpeedLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/SpeedRow"]
+text = "SPEED "
+custom_minimum_size = Vector2(80, 0)
+
+[node name="SpeedValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/SpeedRow"]
+text = "0.0"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="StationRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="StationLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StationRow"]
+text = "STATION"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="StationValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StationRow"]
+text = "0.0"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="MineRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="MineLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/MineRow"]
+text = "MINING"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="MineValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/MineRow"]
+text = "OUT OF RANGE"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="StateRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="StateLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StateRow"]
+text = "STATE "
+custom_minimum_size = Vector2(80, 0)
+
+[node name="StateValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StateRow"]
+text = "FLYING"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="ShieldRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
+
+[node name="ShieldLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/ShieldRow"]
+text = "SHIELD"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="ShieldValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/ShieldRow"]
+unique_name_in_owner = true
+text = "INACTIVE"
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="Reticle" type="Control" parent="Root"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+modulate = Color(0.8, 0.85, 1, 0.6)
+mouse_filter = 2
+
+[node name="HLine" type="ColorRect" parent="Root/Reticle"]
+offset_left = 2.0
+offset_top = 11.5
+offset_right = 22.0
+offset_bottom = 12.5
+color = Color(1, 1, 1, 0.9)
+
+[node name="HLine2" type="ColorRect" parent="Root/Reticle"]
+offset_left = 2.0
+offset_top = 11.5
+offset_right = 22.0
+offset_bottom = 12.5
+rotation = 3.14159
+color = Color(1, 1, 1, 0.9)
+
+[node name="VLine" type="ColorRect" parent="Root/Reticle"]
+offset_left = 11.5
+offset_top = 2.0
+offset_right = 12.5
+offset_bottom = 22.0
+color = Color(1, 1, 1, 0.9)
+
+[node name="VLine2" type="ColorRect" parent="Root/Reticle"]
+offset_left = 11.5
+offset_top = 2.0
+offset_right = 12.5
+offset_bottom = 22.0
+rotation = 3.14159
+color = Color(1, 1, 1, 0.9)
+
+[node name="Dot" type="ColorRect" parent="Root/Reticle"]
+offset_left = 11.0
+offset_top = 11.0
+offset_right = 13.0
+offset_bottom = 13.0
+color = Color(1, 1, 1, 0.9)
+
+[node name="Bottom" type="MarginContainer" parent="Root"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -64.0
+mouse_filter = 2
+
+[node name="Center" type="CenterContainer" parent="Root/Bottom"]
+mouse_filter = 2
+
+[node name="Controls" type="Label" parent="Root/Bottom/Center"]
+text = "W/S thrust   A/D turn   Q/E barrel roll   F/Click mine   H harpoon   Tab camera   R reset   F1 skill tree   F2 spreadsheet"
+modulate = Color(0.8, 0.85, 1, 0.7)
+
+[node name="Message" type="Label" parent="Root"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = -60.0
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(1, 1, 1, 0)

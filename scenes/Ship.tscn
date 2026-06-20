@@ -1,0 +1,300 @@
+[gd_scene format=3 uid="uid://b4shipspc01"]
+
+[ext_resource type="Script" uid="uid://cv6ybb06qrdn" path="res://scripts/Ship.gd" id="1_ship"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ship"]
+radius = 0.7
+height = 2.4
+
+[sub_resource type="StandardMaterial3D" id="Material_hull_main"]
+albedo_color = Color(0.78, 0.8, 0.85, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_hull"]
+size = Vector3(1.2, 0.45, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="Material_hull_accent"]
+albedo_color = Color(0.2, 0.4, 0.7, 1)
+metallic = 0.4
+roughness = 0.5
+emission_enabled = true
+emission = Color(0.15, 0.3, 0.6, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_fin"]
+size = Vector3(0.12, 0.5, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nose"]
+size = Vector3(0.7, 0.35, 0.9)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_nosecone"]
+top_radius = 0.0
+bottom_radius = 0.35
+height = 0.7
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="Material_cockpit"]
+albedo_color = Color(0.1, 0.15, 0.25, 1)
+metallic = 0.8
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.2, 0.5, 0.9, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_cockpit"]
+radius = 0.32
+height = 0.64
+radial_segments = 24
+rings = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_wing"]
+size = Vector3(1.6, 0.1, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wingtip"]
+size = Vector3(0.1, 0.25, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="Material_wing_bar"]
+albedo_color = Color(0.2, 1, 0.4, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.2, 1, 0.4, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_wingbar"]
+size = Vector3(0.12, 0.06, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="Material_engine_main"]
+albedo_color = Color(0.9, 0.95, 1, 1)
+roughness = 0.5
+emission_enabled = true
+emission = Color(0.4, 0.7, 1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_engine_main"]
+radius = 0.22
+height = 0.44
+radial_segments = 12
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="Material_engine_side"]
+albedo_color = Color(0.9, 0.95, 1, 1)
+roughness = 0.5
+emission_enabled = true
+emission = Color(0.3, 0.6, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_engine_side"]
+radius = 0.16
+height = 0.32
+radial_segments = 12
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="Material_laser"]
+albedo_color = Color(1, 0.2, 0.2, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.2, 0.2, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_laser"]
+size = Vector3(0.18, 0.18, 1)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_collect"]
+radius = 7.0
+
+[sub_resource type="StandardMaterial3D" id="Material_beacon"]
+albedo_color = Color(0.2, 1, 0.3, 1)
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.2, 1, 0.3, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="Material_claw"]
+albedo_color = Color(0.7, 0.6, 0.4, 1)
+metallic = 0.8
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.9, 0.7, 0.3, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_claw"]
+radius = 0.3
+height = 0.6
+radial_segments = 12
+rings = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_claw_prong"]
+top_radius = 0.0
+bottom_radius = 0.08
+height = 0.45
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="Material_cable"]
+albedo_color = Color(0.6, 0.5, 0.4, 1)
+metallic = 0.5
+roughness = 0.6
+emission_enabled = true
+emission = Color(0.4, 0.3, 0.2, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cable"]
+top_radius = 0.08
+bottom_radius = 0.08
+height = 1.0
+radial_segments = 8
+
+[node name="Ship" type="CharacterBody3D" unique_id=1956836986]
+collision_mask = 2
+script = ExtResource("1_ship")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=599583966]
+shape = SubResource("CapsuleShape3D_ship")
+
+[node name="Body" type="Node3D" parent="." unique_id=748695950]
+
+[node name="Hull" type="MeshInstance3D" parent="Body" unique_id=1845457545]
+material_override = SubResource("Material_hull_main")
+mesh = SubResource("BoxMesh_hull")
+
+[node name="HullAccent" type="MeshInstance3D" parent="Body" unique_id=1783558701]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0.3)
+material_override = SubResource("Material_hull_accent")
+mesh = SubResource("BoxMesh_fin")
+
+[node name="Nose" type="MeshInstance3D" parent="Body" unique_id=949598023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.4)
+material_override = SubResource("Material_hull_main")
+mesh = SubResource("BoxMesh_nose")
+
+[node name="NoseCone" type="MeshInstance3D" parent="Body" unique_id=321395854]
+transform = Transform3D(1, 0, 0, 0, 0.06395359, 0.6440532, 0, -0.97463846, 0.04226133, 0, -0.036953628, -2)
+material_override = SubResource("Material_hull_accent")
+mesh = SubResource("CylinderMesh_nosecone")
+
+[node name="TopFin" type="MeshInstance3D" parent="Body" unique_id=1038656405]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33925647, 0.1)
+material_override = SubResource("Material_hull_accent")
+mesh = SubResource("BoxMesh_fin")
+
+[node name="Cockpit" type="MeshInstance3D" parent="Body" unique_id=1299556388]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, -0.5)
+material_override = SubResource("Material_cockpit")
+mesh = SubResource("SphereMesh_cockpit")
+
+[node name="WingLeft" type="Node3D" parent="Body" unique_id=927774375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0, 0.1)
+
+[node name="WingMesh" type="MeshInstance3D" parent="Body/WingLeft" unique_id=543210133]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, 0)
+material_override = SubResource("Material_hull_main")
+mesh = SubResource("BoxMesh_wing")
+
+[node name="WingTipLight" type="MeshInstance3D" parent="Body/WingLeft" unique_id=1748521799]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.55, 0, 0)
+material_override = SubResource("Material_hull_accent")
+mesh = SubResource("BoxMesh_wingtip")
+
+[node name="WingBar" type="MeshInstance3D" parent="Body/WingLeft" unique_id=1537926870]
+transform = Transform3D(0.007853741, 0, -0.9999692, 0, 1, 0, 0.9999692, 0, 0.007853741, -0.8088309, 0.07, 0.32788432)
+material_override = SubResource("Material_wing_bar")
+mesh = SubResource("BoxMesh_wingbar")
+
+[node name="WingRight" type="Node3D" parent="Body" unique_id=1485032958]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0, 0.1)
+
+[node name="WingMesh" type="MeshInstance3D" parent="Body/WingRight" unique_id=192314781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
+material_override = SubResource("Material_hull_main")
+mesh = SubResource("BoxMesh_wing")
+
+[node name="WingTipLight" type="MeshInstance3D" parent="Body/WingRight" unique_id=1421468143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.55, 0, 0)
+material_override = SubResource("Material_hull_accent")
+mesh = SubResource("BoxMesh_wingtip")
+
+[node name="WingBar" type="MeshInstance3D" parent="Body/WingRight" unique_id=518089997]
+transform = Transform3D(-0.01364968, 0, -0.99990684, 0, 1, 0, 0.99990684, 0, -0.01364968, 0.7, 0.07, 0.30529153)
+material_override = SubResource("Material_wing_bar")
+mesh = SubResource("BoxMesh_wingbar")
+
+[node name="EngineGlowMain" type="MeshInstance3D" parent="Body" unique_id=2068887599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.1)
+material_override = SubResource("Material_engine_main")
+mesh = SubResource("SphereMesh_engine_main")
+
+[node name="EngineGlowLeft" type="MeshInstance3D" parent="Body" unique_id=995770643]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 1.1)
+material_override = SubResource("Material_engine_side")
+mesh = SubResource("SphereMesh_engine_side")
+
+[node name="EngineGlowRight" type="MeshInstance3D" parent="Body" unique_id=2038100691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 1.1)
+material_override = SubResource("Material_engine_side")
+mesh = SubResource("SphereMesh_engine_side")
+
+[node name="Laser" type="MeshInstance3D" parent="." unique_id=653373687]
+visible = false
+material_override = SubResource("Material_laser")
+mesh = SubResource("BoxMesh_laser")
+
+[node name="HitLight" type="OmniLight3D" parent="Laser" unique_id=557808500]
+light_color = Color(1, 0.2, 0.2, 1)
+light_energy = 4.0
+omni_range = 6.0
+
+[node name="MiningRay" type="RayCast3D" parent="." unique_id=1411139928]
+target_position = Vector3(0, 0, -35)
+collision_mask = 2
+
+[node name="CollectionArea" type="Area3D" parent="." unique_id=168047309]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollectionShape" type="CollisionShape3D" parent="CollectionArea" unique_id=1505177703]
+shape = SubResource("SphereShape3D_collect")
+
+[node name="Beacon" type="Node3D" parent="." unique_id=1120796082]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.2)
+
+[node name="BeaconMesh" type="MeshInstance3D" parent="Beacon" unique_id=165800925]
+mesh = SubResource("SphereMesh_engine_main")
+material_override = SubResource("Material_beacon")
+
+[node name="Light" type="OmniLight3D" parent="Beacon" unique_id=1459616646]
+light_color = Color(0.2, 1, 0.3, 1)
+light_energy = 2.5
+omni_range = 10.0
+
+[node name="Harpoon" type="Node3D" parent="." unique_id=1898300790]
+
+[node name="Claw" type="Node3D" parent="Harpoon" unique_id=187711425]
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="Harpoon/Claw" unique_id=1059269652]
+material_override = SubResource("Material_claw")
+mesh = SubResource("SphereMesh_claw")
+
+[node name="Prong1" type="MeshInstance3D" parent="Harpoon/Claw" unique_id=1165660828]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0.3, 0, 0)
+material_override = SubResource("Material_claw")
+mesh = SubResource("CylinderMesh_claw_prong")
+
+[node name="Prong2" type="MeshInstance3D" parent="Harpoon/Claw" unique_id=1827825368]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, -0.3, 0, 0)
+material_override = SubResource("Material_claw")
+mesh = SubResource("CylinderMesh_claw_prong")
+
+[node name="Prong3" type="MeshInstance3D" parent="Harpoon/Claw" unique_id=1797630394]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0.3, 0)
+material_override = SubResource("Material_claw")
+mesh = SubResource("CylinderMesh_claw_prong")
+
+[node name="Prong4" type="MeshInstance3D" parent="Harpoon/Claw" unique_id=1706000605]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, -0.3, 0)
+material_override = SubResource("Material_claw")
+mesh = SubResource("CylinderMesh_claw_prong")
+
+[node name="Cable" type="MeshInstance3D" parent="Harpoon" unique_id=285355051]
+visible = false
+material_override = SubResource("Material_cable")
+mesh = SubResource("CylinderMesh_cable")
