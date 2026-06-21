@@ -9,6 +9,11 @@ class_name GemManager
 signal gem_collected( slot_idx: int )
 
 @export var max_gems: int = 16384
+## Optional custom gem mesh.  If left null, the manager builds a
+## procedural round‑cut brilliant diamond at startup.  Assign any
+## ArrayMesh here (e.g. one imported from a .glb) and the manager
+## will use it for every gem instance.
+@export var gem_mesh: ArrayMesh
 
 # Pre‑baked gem mesh (flat‑shaded octahedron).  Built once in _ready.
 var _gem_mesh: ArrayMesh
@@ -61,7 +66,7 @@ func _setup_palette_weights() -> void:
 
 
 func _setup_multimesh() -> void:
-	_gem_mesh = _build_gem_mesh()
+	_gem_mesh = gem_mesh if gem_mesh != null else _build_gem_mesh()
 	_gem_material = ShaderMaterial.new()
 	_gem_material.shader = preload("res://shaders/gem_instance.gdshader")
 
@@ -71,6 +76,19 @@ func _setup_multimesh() -> void:
 	mm.mesh = _gem_mesh
 	mm.instance_count = max_gems
 	mmi.multimesh = mm
+
+
+## Swap the gem mesh at runtime (or from the editor after export).
+## Rebuilds the MultiMesh so all gems use the new shape.
+func set_gem_mesh(new_mesh: ArrayMesh) -> void:
+	gem_mesh = new_mesh
+	_setup_multimesh()
+	# Re‑push existing alive instances so their transforms/colours
+	# still apply against the new mesh.
+	for i in _count:
+		if alive[i]:
+			mmi.multimesh.set_instance_transform(i, Transform3D(Basis(), positions[i]))
+			mmi.multimesh.set_instance_color(i, colors[i])
 
 
 # ── Spawn / collect ────────────────────────────────────────────

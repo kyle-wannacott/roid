@@ -1,12 +1,14 @@
 // Gem material shader.
-//  • Per‑instance colour via the MultiMesh's per‑instance COLOR.
+//  • Per‑instance colour via the MultiMesh's INSTANCE_CUSTOM
+//    (set via set_instance_color).  The COLOR built-in only reads
+//    from per‑vertex mesh colors, which we don't bake.
 //  • Round‑cut diamond shape has a vertical brightness gradient
 //    (model‑space Y so the gradient is fixed to the gem, not the world).
 //  • Facet "fire" — each face catches light differently based on its
 //    normal direction (fixed pattern, doesn't swim as the gem tumbles).
 //  • Fresnel edge glow for the glassy crystal look.
-//  • Fake refraction by sampling SCREEN_TEXTURE with normal‑offset UVs.
-//  • Twinkle — each gem pulses on its own phase derived from COLOR.a.
+//  • Fake refraction by sampling the screen texture with normal‑offset UVs.
+//  • Twinkle — each gem pulses on its own phase derived from INSTANCE_CUSTOM.a.
 
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_disabled, diffuse_lambert;
@@ -32,8 +34,9 @@ void vertex() {
 }
 
 void fragment() {
-	// Per‑instance base hue (MultiMesh per‑instance COLOR).
-	vec3 base = COLOR.rgb;
+	// Per‑instance base hue (MultiMesh per‑instance color, set via
+	// set_instance_color on the MultiMesh).
+	vec3 base = INSTANCE_CUSTOM.rgb;
 
 	// Vertical gradient — brighter at the table, darker at the culet.
 	float t = clamp((v_local_y + 0.55) / 1.0, 0.0, 1.0);
@@ -58,8 +61,8 @@ void fragment() {
 	// the gem's own colour (with gradient + facet).
 	vec3 col = mix(refractive, graded, fresnel);
 
-	// Per‑instance twinkle — phase from COLOR.a.
-	float twinkle = 0.5 + 0.5 * sin(TIME * 4.0 + COLOR.a * 6.28);
+	// Per‑instance twinkle — phase from INSTANCE_CUSTOM.a.
+	float twinkle = 0.5 + 0.5 * sin(TIME * 4.0 + INSTANCE_CUSTOM.a * 6.28);
 	col *= (1.0 + twinkle_amount * twinkle);
 
 	// Strong emission so the gem glows in the dark.

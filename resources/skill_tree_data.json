@@ -120,7 +120,7 @@
 			"bottom"
 		],
 		"pin_width": 3.0,
-		"pins_per_side": 4,
+		"pins_per_side": 4.0,
 		"unlock_color": "#44aaff",
 		"x": -27.0,
 		"y": -24.0
@@ -248,7 +248,7 @@
 			"right"
 		],
 		"pin_width": 3.0,
-		"pins_per_side": 4,
+		"pins_per_side": 4.0,
 		"unlock_color": "#66cc66",
 		"x": 700.0,
 		"y": 470.0
@@ -608,7 +608,7 @@
 			"right"
 		],
 		"pin_width": 2.0,
-		"pins_per_side": 4,
+		"pins_per_side": 4.0,
 		"unlock_color": "#ffdd00",
 		"x": 482.0,
 		"y": 561.0
@@ -784,7 +784,7 @@
 			"gem_capacity_bonus": 25.0
 		},
 		"exclusive_children": false,
-		"icon": "Software_Package_Box_Crate_Archive_Open.png",
+		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity",
 		"name": "Cargo Hold",
 		"parent": "root",
@@ -801,7 +801,7 @@
 			"gem_capacity_bonus": 50.0
 		},
 		"exclusive_children": false,
-		"icon": "Software_Package_Box_Crate_Archive_Open.png",
+		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity_2",
 		"name": "Cargo Hold II",
 		"parent": "gem_capacity",
@@ -818,7 +818,7 @@
 			"gem_capacity_bonus": 100.0
 		},
 		"exclusive_children": false,
-		"icon": "Software_Package_Box_Crate_Archive_Open.png",
+		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity_3",
 		"name": "Cargo Hold III",
 		"parent": "gem_capacity_2",
@@ -856,8 +856,8 @@
 		"parent": "gem_magnet",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 571.0,
-		"y": -54.0
+		"x": 498.0,
+		"y": -52.0
 	},
 	{
 		"cost": 4.0,
@@ -872,8 +872,8 @@
 		"parent": "gem_magnet_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 359.0,
-		"y": -214.0
+		"x": 506.0,
+		"y": -179.0
 	},
 	{
 		"cost": 2.0,
@@ -940,8 +940,8 @@
 		"parent": "gem_magnet",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 688.0,
-		"y": -85.0
+		"x": 652.0,
+		"y": -41.0
 	},
 	{
 		"cost": 3.0,
@@ -957,8 +957,8 @@
 		"parent": "magnet_speed_1",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 620.0,
-		"y": -254.0
+		"x": 657.0,
+		"y": -164.0
 	},
 	{
 		"cost": 4.0,
@@ -974,7 +974,7 @@
 		"parent": "magnet_speed_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 616.0,
-		"y": -409.0
+		"x": 653.0,
+		"y": -319.0
 	}
 ]

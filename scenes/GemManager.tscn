@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bluo6dw8e5rvs"]
 
-[ext_resource type="Script" path="res://scripts/GemManager.gd" id="1_gemmgr"]
+[ext_resource type="Script" uid="uid://c6n3nqa1b8coa" path="res://scripts/GemManager.gd" id="1_gemmgr"]
 
-[node name="GemManager" type="Node3D"]
+[node name="GemManager" type="Node3D" unique_id=1112388576]
 script = ExtResource("1_gemmgr")
 
-[node name="MultiMeshInstance" type="MultiMeshInstance3D" parent="."]
+[node name="MultiMeshInstance" type="MultiMeshInstance3D" parent="." unique_id=1454929962]
