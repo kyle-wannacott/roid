@@ -151,12 +151,14 @@ var _missile_cooldown: float = 0.0
 @export var missile_fire_cooldown: float = 0.5
 @export var missile_speed: float = 80.0
 @export var missile_lifetime: float = 3.0
+@export var bullet_scene: PackedScene = preload("res://scenes/Bullet.tscn")
 
 # Turret heat system.  Continuous fire builds heat; the turret
 # cools down when idle.  Above `overheat_threshold` the turret
 # is locked out and the barrels glow red.  Skills reduce the
 # cool‑down rate and the heat build‑up rate.
 var _turret_heat: float = 0.0  # 0.0 (cool) to 1.0 (overheated)
+var _turret_barrel_pick: int = 0  # alternates which barrel fires next
 @export var turret_overheat_threshold: float = 1.0
 @export var turret_heat_per_shot: float = 0.06
 @export var turret_cool_per_sec: float = 0.35
@@ -355,25 +357,35 @@ func _physics_flying(delta: float) -> void:
 	# they cool.  Skills reduce cool‑down time and heat build‑up.
 	_turret_fire_remaining = max(0.0, _turret_fire_remaining - delta)
 	var turret_unlocked_now: bool = PlayerSkills != null and PlayerSkills.is_unlocked("turret_unlock")
-	var turret_cooling: float = _eff_turret_cool_rate if PlayerSkills and PlayerSkills.is_unlocked("turret_rapid_fire") else turret_cool_per_sec
-	# Cool down even when not firing.
-	if _turret_heat > 0.0 and not Input.is_action_pressed("turret_fire"):
-		_turret_heat = max(0.0, _turret_heat - turret_cooling * delta)
+	# Compute cool rate from skills (no ternary — be explicit).
+	var turret_cooling: float = turret_cool_per_sec
+	if PlayerSkills != null and PlayerSkills.is_unlocked("turret_rapid_fire"):
+		turret_cooling = _eff_turret_cool_rate
+	# Cool down at full rate when idle; slower when overheated (the
+	# soft‑lock); and full rate when firing (the player has to
+	# release to let it cool).
+	var firing: bool = Input.is_action_pressed("turret_fire")
+	if _turret_heat > 0.0:
+		if _turret_heat >= turret_overheat_threshold:
+			# Overheated: drain slowly so the red glow lingers.
+			_turret_heat = max(0.0, _turret_heat - turret_cooling * 0.3 * delta)
+		elif not firing:
+			# Idle: full cool rate.
+			_turret_heat = max(0.0, _turret_heat - turret_cooling * delta)
 	# Update the diagetic barrel colour.
 	_update_turret_barrel_color()
 	# Fire while the right mouse button is held, when not overheated,
 	# and the fire‑rate cooldown is ready.
-	if turret_unlocked_now and _turret_heat < turret_overheat_threshold \
-			and Input.is_action_pressed("turret_fire") \
-			and _turret_fire_remaining <= 0.0:
+	var can_fire: bool = (
+		turret_unlocked_now
+		and _turret_heat < turret_overheat_threshold
+		and firing
+		and _turret_fire_remaining <= 0.0
+	)
+	if can_fire:
 		_fire_turret_shot()
 		_turret_heat = min(1.0, _turret_heat + turret_heat_per_shot)
 		_turret_fire_remaining = turret_fire_rate
-	# If the turret is overheated, drain extra heat and continue to
-	# display the red glow until it's back under control.
-	if _turret_heat >= turret_overheat_threshold:
-		# Soft‑lock: heat still drains (slower while overheated).
-		_turret_heat = max(0.0, _turret_heat - turret_cooling * 0.3 * delta)
 
 	# --- Wing‑pod missiles (separate from turret) ---------------
 	# Right‑click is held for the turret above; missiles are fired
@@ -1105,12 +1117,35 @@ func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
 	pod.visible = false
 
 
-## Fire one shot from the turret.  Currently plays the muzzle flash
-## and the sound; the actual projectile is the player's laser
-## (the turret is a visual companion that "fires" from the barrels).
+## Fire one shot from the turret.  Spawns a bullet from each barrel
+## (alternating left/right) flying forward in the ship's facing
+## direction.  Also plays the muzzle flash and sound.
 func _fire_turret_shot() -> void:
 	_flash_turret_muzzle()
 	SoundManager.play_by_id("sfx_turret_fire")
+	if bullet_scene == null:
+		return
+	var barrels: Array[MeshInstance3D] = []
+	for node in get_tree().get_nodes_in_group("ship_turret_parts"):
+		if node is MeshInstance3D and node.mesh is CylinderMesh and node.mesh.height < 1.0:
+			barrels.append(node)
+	if barrels.is_empty():
+		return
+	# Pick a barrel — alternate between the two so fire looks even.
+	var idx: int = _turret_barrel_pick % barrels.size()
+	var barrel: MeshInstance3D = barrels[idx]
+	_turret_barrel_pick += 1
+	var b: Node3D = bullet_scene.instantiate() as Node3D
+	if b == null:
+		return
+	# Position the bullet at the barrel tip in world space.
+	var tip: Vector3 = barrel.global_position + (-barrel.global_transform.basis.y * 0.3)
+	get_tree().current_scene.add_child(b)
+	b.global_position = tip
+	# Orient the bullet to face the ship's forward direction.
+	b.global_rotation = global_rotation
+	if b.has_method("set_flight_params"):
+		b.set_flight_params(120.0, 1.5)
 
 
 ## Update the diagetic barrel colour to reflect the current heat.
