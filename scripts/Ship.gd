@@ -36,11 +36,11 @@ signal shield_changed(ready: bool, cooldown: float)
 enum State { FLYING, STRANDED, HARPOON_FLY, HARPOON_REEL, DOCKED }
 
 @export_group("Movement")
-@export var forward_thrust: float = 30.0
-@export var reverse_thrust: float = 18.0
+@export var forward_thrust: float = 18.0
+@export var reverse_thrust: float = 12.0
 @export var yaw_speed: float = 1.6
 @export var drag: float = 0.6
-@export var max_speed: float = 55.0
+@export var max_speed: float = 30.0
 ## Y position the ship is locked to (no vertical flight).
 @export var ground_height: float = 1.5
 
@@ -947,7 +947,7 @@ func _process(delta: float) -> void:
 			# Only collect the gem if we have room in the cargo hold.
 			# Gems stay orbiting the ship until capacity frees up.
 			if gems < _eff_gem_capacity:
-				gem.queue_free()
+				gem.collect()
 				# Play gem collect sound
 				SoundManager.play_by_id("sfx_gem_collect")
 				gems += 1
@@ -1434,15 +1434,19 @@ func _apply_skill_stats() -> void:
 	# Ion Thrusters: speed and yaw
 	var speed_bonus_pct := 0
 	var yaw_bonus_pct := 0
+	# Base engine tuning skills add to the base max_speed
+	var base_speed_mult := 1.0
+	if PlayerSkills.is_unlocked("engine_tuning_1"): base_speed_mult += 0.20
+	if PlayerSkills.is_unlocked("engine_tuning_2"): base_speed_mult += 0.20
 	if PlayerSkills.is_unlocked("ion_thrusters"):
-		speed_bonus_pct += 10
+		speed_bonus_pct += 15
 		yaw_bonus_pct += 15
 	if PlayerSkills.is_unlocked("ion_thrusters_2"):
-		speed_bonus_pct += 10
+		speed_bonus_pct += 15
 		yaw_bonus_pct += 15
-	_eff_max_speed = max_speed * (1.0 + float(speed_bonus_pct) / 100.0)
+	_eff_max_speed = max_speed * base_speed_mult * (1.0 + float(speed_bonus_pct) / 100.0)
 	_eff_yaw_speed = yaw_speed * (1.0 + float(yaw_bonus_pct) / 100.0)
-	_eff_forward_thrust = forward_thrust
+	_eff_forward_thrust = forward_thrust * base_speed_mult
 	
 	# Reverse Thrusters
 	if PlayerSkills.is_unlocked("reverse_thrusters"):
@@ -1452,10 +1456,10 @@ func _apply_skill_stats() -> void:
 	
 	# Afterburner
 	if PlayerSkills.is_unlocked("afterburner"):
-		_eff_afterburner_speed_pct = 15.0
+		_eff_afterburner_speed_pct = 25.0
 		_eff_afterburner_fuel_cost = 8.0
 	if PlayerSkills.is_unlocked("afterburner_speed"):
-		_eff_afterburner_speed_pct += 10.0
+		_eff_afterburner_speed_pct += 15.0
 	if PlayerSkills.is_unlocked("afterburner_efficiency"):
 		_eff_afterburner_efficiency_pct = 25.0
 	

@@ -5,7 +5,7 @@ class_name SunManager
 ## procedural sun shader (noise‑driven plasma + corona + flares).
 
 const SUN_SHADER: Shader = preload("res://shaders/sun_instance.gdshader")
-const SUN_MESH_RADIUS: float = 60.0
+const SUN_MESH_RADIUS: float = 150.0
 const SUN_GROUP: StringName = &"sun"
 
 

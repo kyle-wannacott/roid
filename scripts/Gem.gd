@@ -77,7 +77,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	age += delta
-	if age > lifetime or gem_slot < 0:
+	if age > lifetime:
+		_collect()
+		return
+	if gem_slot < 0:
 		queue_free()
 		return
 
@@ -115,6 +118,13 @@ func _collect() -> void:
 		gem_manager.collect_gem(gem_slot)
 		gem_slot = -1
 	queue_free()
+
+
+## Public method called by the Ship when it picks up the gem.
+## Properly cleans up through the GemManager so the MultiMesh
+## visual is hidden.
+func collect() -> void:
+	_collect()
 
 
 # ── Procedural gem mesh (same as GemManager._build_gem_mesh) ─────

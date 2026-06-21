@@ -1,16 +1,16 @@
 [gd_scene format=3 uid="uid://b4mainspc01"]
 
 [ext_resource type="Script" uid="uid://crbg7yt7sq0xc" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://chg2lmt61rg53" path="res://scenes/spreadsheet.tscn" id="1_ss"]
+[ext_resource type="PackedScene" uid="uid://b4skilltree01" path="res://scenes/skill_tree.tscn" id="1_st"]
 [ext_resource type="PackedScene" uid="uid://b4shipspc01" path="res://scenes/Ship.tscn" id="2_ship"]
 [ext_resource type="PackedScene" uid="uid://b4stnspace01" path="res://scenes/SpaceStation.tscn" id="3_station"]
 [ext_resource type="PackedScene" uid="uid://b4hudspace01" path="res://scenes/HUD.tscn" id="6_hud"]
 [ext_resource type="Script" uid="uid://d0yacqav3bo2q" path="res://scripts/ChaseCamera.gd" id="7_chasecam"]
 [ext_resource type="Shader" uid="uid://is4quc1pjads" path="res://shaders/starfield.gdshader" id="8_sky_shader"]
-[ext_resource type="PackedScene" uid="uid://b4skilltree01" path="res://scenes/skill_tree.tscn" id="1_st"]
-[ext_resource type="PackedScene" uid="uid://bspreadsheet01" path="res://scenes/spreadsheet.tscn" id="1_ss"]
-[ext_resource type="PackedScene" uid="uid://b4asteroidmgr01" path="res://scenes/AsteroidManager.tscn" id="9_astmgr"]
-[ext_resource type="PackedScene" uid="uid://b4gemmanager01" path="res://scenes/GemManager.tscn" id="10_gemmgr"]
-[ext_resource type="Script" path="res://scripts/SunManager.gd" id="11_sunmgr"]
+[ext_resource type="PackedScene" uid="uid://bms8yfasqfv7e" path="res://scenes/AsteroidManager.tscn" id="9_astmgr"]
+[ext_resource type="PackedScene" uid="uid://bluo6dw8e5rvs" path="res://scenes/GemManager.tscn" id="10_gemmgr"]
+[ext_resource type="Script" uid="uid://bbnwp8sc4sqi4" path="res://scripts/SunManager.gd" id="11_sunmgr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("8_sky_shader")
@@ -40,24 +40,17 @@ hud_path = NodePath("HUD")
 environment = SubResource("Environment_main")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=270824988]
-transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 30, 0)
+transform = Transform3D(0.707107, 0, -0.707107, 0, 0.707107, 0.707107, 0.707107, -0.707107, 0, 0, 120, -300)
 light_color = Color(0.9, 0.92, 1, 1)
 light_energy = 0.45
 shadow_enabled = true
 groups = ["sun"]
 
 [node name="Sun2" type="DirectionalLight3D" parent="." unique_id=270824989]
-transform = Transform3D(-0.866025, 0.25, -0.433013, 0, 0.866025, -0.5, 0.5, 0.433013, 0.75, 0, -20, 30)
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 0.707107, 0.707107, 0.707107, 0.707107, 0, 0, 100, 300)
 light_color = Color(1, 0.8, 0.6, 1)
 light_energy = 0.35
-shadow_enabled = false
 groups = ["sun"]
-
-[node name="Sun2" type="DirectionalLight3D" parent="." unique_id=270824989]
-transform = Transform3D(-0.866025, 0.25, -0.433013, 0, 0.866025, -0.5, 0.5, 0.433013, 0.75, 0, -20, 30)
-light_color = Color(1, 0.8, 0.6, 1)
-light_energy = 0.35
-shadow_enabled = false
 
 [node name="SunManager" type="Node" parent="." unique_id=888999999]
 script = ExtResource("11_sunmgr")
@@ -67,8 +60,6 @@ script = ExtResource("11_sunmgr")
 [node name="Ship" parent="." unique_id=439693177 instance=ExtResource("2_ship")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 5)
 asteroid_manager_path = NodePath("../AsteroidManager")
-
-
 
 [node name="AsteroidManager" parent="." unique_id=888888888 instance=ExtResource("9_astmgr")]
 gem_manager_path = NodePath("../GemManager")
@@ -81,13 +72,7 @@ current = true
 fov = 60.0
 script = ExtResource("7_chasecam")
 target_path = NodePath("../Ship")
-iso_offset = Vector3(0, 5, -8.5)
-iso_look = Vector3(0, 0, 3)
 top_offset = Vector3(0, 20, 0)
-top_look = Vector3(0, 0, 0)
-fov_base_iso = 60.0
-fov_base_top = 55.0
-fov_speed_boost = 10.0
 
 [node name="HUD" parent="." unique_id=1017201695 instance=ExtResource("6_hud")]
 
@@ -96,18 +81,8 @@ layer = 128
 
 [node name="SkillTree" parent="ToolsLayer" unique_id=2000101 instance=ExtResource("1_st")]
 visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="Spreadsheet" parent="ToolsLayer" unique_id=2000102 instance=ExtResource("1_ss")]
 visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_top = 0.0
+offset_bottom = 0.0
