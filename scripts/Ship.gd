@@ -90,6 +90,7 @@ var _eff_fuel_per_mine: float = 6.0
 var _eff_gem_heal: int = 0
 var _eff_bonus_gems: int = 0
 var _eff_solar_regen: float = 0.0
+var _eff_turret_cool_rate: float = 0.35  # base cool rate (overridden by skills)
 var _eff_nanobot_heal: float = 0.0
 var _eff_nanobot_interval: float = 0.0
 var _eff_shield_cooldown: float = 0.0
@@ -150,6 +151,19 @@ var _missile_cooldown: float = 0.0
 @export var missile_fire_cooldown: float = 0.5
 @export var missile_speed: float = 80.0
 @export var missile_lifetime: float = 3.0
+
+# Turret heat system.  Continuous fire builds heat; the turret
+# cools down when idle.  Above `overheat_threshold` the turret
+# is locked out and the barrels glow red.  Skills reduce the
+# cool‑down rate and the heat build‑up rate.
+var _turret_heat: float = 0.0  # 0.0 (cool) to 1.0 (overheated)
+@export var turret_overheat_threshold: float = 1.0
+@export var turret_heat_per_shot: float = 0.06
+@export var turret_cool_per_sec: float = 0.35
+@export var turret_fire_rate: float = 0.10  # seconds between bullets
+var _turret_fire_remaining: float = 0.0
+var _turret_barrel_mats: Array[StandardMaterial3D] = []
+var _turret_default_color: Color = Color(0.2, 0.2, 0.25, 1)
 var _afterburner_particles: GPUParticles3D = null
 var _afterburner_trail: MeshInstance3D = null
 var _cargo_bay: MeshInstance3D = null
@@ -335,23 +349,49 @@ func _physics_flying(delta: float) -> void:
 			_barrel_roll_dir = -1
 			_barrel_roll_progress = 0.0
 
-	# --- Turret fire (right click) ------------------------------
-	# Fires a missile from each wing pod that still has ammo.
-	# Requires the turret_unlock skill.  Missiles rearm at the station.
+	# --- Turret fire (right click held) ---------------------------
+	# Unlimited ammo, but the turret overheats with continuous fire.
+	# Overheated turrets glow red diagetically and lock out until
+	# they cool.  Skills reduce cool‑down time and heat build‑up.
+	_turret_fire_remaining = max(0.0, _turret_fire_remaining - delta)
+	var turret_unlocked_now: bool = PlayerSkills != null and PlayerSkills.is_unlocked("turret_unlock")
+	var turret_cooling: float = _eff_turret_cool_rate if PlayerSkills and PlayerSkills.is_unlocked("turret_rapid_fire") else turret_cool_per_sec
+	# Cool down even when not firing.
+	if _turret_heat > 0.0 and not Input.is_action_pressed("turret_fire"):
+		_turret_heat = max(0.0, _turret_heat - turret_cooling * delta)
+	# Update the diagetic barrel colour.
+	_update_turret_barrel_color()
+	# Fire while the right mouse button is held, when not overheated,
+	# and the fire‑rate cooldown is ready.
+	if turret_unlocked_now and _turret_heat < turret_overheat_threshold \
+			and Input.is_action_pressed("turret_fire") \
+			and _turret_fire_remaining <= 0.0:
+		_fire_turret_shot()
+		_turret_heat = min(1.0, _turret_heat + turret_heat_per_shot)
+		_turret_fire_remaining = turret_fire_rate
+	# If the turret is overheated, drain extra heat and continue to
+	# display the red glow until it's back under control.
+	if _turret_heat >= turret_overheat_threshold:
+		# Soft‑lock: heat still drains (slower while overheated).
+		_turret_heat = max(0.0, _turret_heat - turret_cooling * 0.3 * delta)
+
+	# --- Wing‑pod missiles (separate from turret) ---------------
+	# Right‑click is held for the turret above; missiles are fired
+	# by a separate key (H) so the player has both weapons.
 	_missile_cooldown = max(0.0, _missile_cooldown - delta)
-	if Input.is_action_just_pressed("turret_fire") \
-			and PlayerSkills and PlayerSkills.is_unlocked("turret_unlock") \
+	if Input.is_action_just_pressed("harpoon") \
+			and turret_unlocked_now \
 			and _missile_cooldown <= 0.0:
-		var any_fired: bool = false
+		var any_missile: bool = false
 		if _missile_ammo_left and _missile_pod_left:
 			_fire_missile_from_pod(_missile_pod_left)
 			_missile_ammo_left = false
-			any_fired = true
+			any_missile = true
 		if _missile_ammo_right and _missile_pod_right:
 			_fire_missile_from_pod(_missile_pod_right)
 			_missile_ammo_right = false
-			any_fired = true
-		if any_fired:
+			any_missile = true
+		if any_missile:
 			SoundManager.play_by_id("sfx_turret_fire")
 			_missile_cooldown = missile_fire_cooldown
 
@@ -1065,6 +1105,38 @@ func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
 	pod.visible = false
 
 
+## Fire one shot from the turret.  Currently plays the muzzle flash
+## and the sound; the actual projectile is the player's laser
+## (the turret is a visual companion that "fires" from the barrels).
+func _fire_turret_shot() -> void:
+	_flash_turret_muzzle()
+	SoundManager.play_by_id("sfx_turret_fire")
+
+
+## Update the diagetic barrel colour to reflect the current heat.
+## 0.0  → cool dark‑metal grey
+## 0.6+ → warm orange
+## 1.0  → bright red (overheated)
+func _update_turret_barrel_color() -> void:
+	if _turret_barrel_mats.is_empty():
+		return
+	var hot: Color = Color(1.0, 0.25, 0.1, 1)
+	var normal: Color = _turret_default_color
+	# Two‑stage ramp: cool → warm orange → red.
+	var t: float = clamp(_turret_heat, 0.0, 1.0)
+	var col: Color
+	if t < 0.5:
+		col = normal.lerp(Color(1.0, 0.7, 0.2), t * 2.0)
+	else:
+		col = Color(1.0, 0.7, 0.2).lerp(hot, (t - 0.5) * 2.0)
+	for mat in _turret_barrel_mats:
+		if mat == null:
+			continue
+		mat.albedo_color = col
+		mat.emission = col * (0.5 + t * 2.0)
+		mat.emission_energy_multiplier = 0.5 + t * 3.0
+
+
 ## Brief muzzle flash on the turret barrels when firing.
 ## Creates a temporary bright point light + particle burst at the
 ## barrel tips. Auto-cleans up after a few frames.
@@ -1199,7 +1271,10 @@ func _create_diagetic_visuals() -> void:
 	_turret_mount.material_override = turret_mat
 	_turret_mount.position = Vector3(0, 0, 0)
 	turret_root.add_child(_turret_mount)
-	# Add barrel(s) to the turret
+	# Add barrel(s) to the turret and remember their materials so
+	# we can swap the colour between cool and overheated.
+	_turret_barrel_mats.clear()
+	_turret_default_color = Color(0.2, 0.2, 0.25, 1)
 	for i in [-1, 1]:
 		var barrel := MeshInstance3D.new()
 		var barrel_mesh := CylinderMesh.new()
@@ -1208,13 +1283,17 @@ func _create_diagetic_visuals() -> void:
 		barrel_mesh.height = 0.6
 		barrel.mesh = barrel_mesh
 		var barrel_mat := StandardMaterial3D.new()
-		barrel_mat.albedo_color = Color(0.2, 0.2, 0.25, 1)
+		barrel_mat.albedo_color = _turret_default_color
 		barrel_mat.metallic = 0.9
 		barrel_mat.roughness = 0.4
+		barrel_mat.emission_enabled = true
+		barrel_mat.emission = _turret_default_color * 0.3
+		barrel_mat.emission_energy_multiplier = 0.5
 		barrel.material_override = barrel_mat
 		barrel.position = Vector3(0.08 * i, 0.1, -0.3)
 		barrel.rotation = Vector3(PI * 0.5, 0, 0)
 		turret_root.add_child(barrel)
+		_turret_barrel_mats.append(barrel_mat)
 	_turret_mount.visible = false
 	for child in turret_root.get_children():
 		child.visible = false
@@ -1542,6 +1621,22 @@ func _apply_skill_stats() -> void:
 	if PlayerSkills.is_unlocked("mining_efficiency"): mining_fuel_red += 2
 	if PlayerSkills.is_unlocked("mining_efficiency_2"): mining_fuel_red += 2
 	_eff_fuel_per_mine = max(1.0, _eff_fuel_per_mine - float(mining_fuel_red))
+
+	# Turret cool rate — base 0.35/s, improved by skills.
+	_eff_turret_cool_rate = 0.35
+	if PlayerSkills.is_unlocked("turret_rapid_fire"):
+		_eff_turret_cool_rate += 0.25
+	if PlayerSkills.is_unlocked("turret_rapid_fire_2"):
+		_eff_turret_cool_rate += 0.30
+	if PlayerSkills.is_unlocked("turret_rapid_fire_3"):
+		_eff_turret_cool_rate += 0.50
+	# Turret heat‑per‑shot — skills reduce heat build‑up.
+	if PlayerSkills.is_unlocked("turret_rapid_fire"):
+		turret_heat_per_shot = 0.04
+	if PlayerSkills.is_unlocked("turret_rapid_fire_2"):
+		turret_heat_per_shot = 0.025
+	if PlayerSkills.is_unlocked("turret_rapid_fire_3"):
+		turret_heat_per_shot = 0.015
 	
 	# Gem Yield
 	if PlayerSkills.is_unlocked("mining_yield"): _eff_bonus_gems += 1
@@ -1634,6 +1729,8 @@ func _reset_effective_stats() -> void:
 	_eff_afterburner_speed_pct = 0.0
 	_eff_afterburner_fuel_cost = 0.0
 	_eff_afterburner_efficiency_pct = 0.0
+	_eff_turret_cool_rate = 0.35
+	turret_heat_per_shot = 0.06
 	_shield_ready = false
 	_shield_timer = 0.0
 

@@ -14,9 +14,9 @@ signal asteroid_destroyed( world_pos: Vector3, gem_count: int )
 
 enum Size { LARGE, MEDIUM, SMALL }
 static var SIZE_DEFS := [
-	[ Size.LARGE,  2.0,  3.5, 100.0, 3, 0 ],
-	[ Size.MEDIUM, 1.2,  2.0,  40.0, 3, 0 ],
-	[ Size.SMALL,  0.5,  1.2,  15.0, 0, 3 ],
+	[ Size.LARGE,  2.0,  3.5, 100.0, 3, 3 ],
+	[ Size.MEDIUM, 1.2,  2.0,  40.0, 3, 2 ],
+	[ Size.SMALL,  0.5,  1.2,  15.0, 0, 1 ],
 ]
 
 var positions: PackedVector3Array
