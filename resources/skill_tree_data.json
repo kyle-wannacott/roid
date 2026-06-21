@@ -699,8 +699,8 @@
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": 125.0,
-		"y": 804.0
+		"x": 87.0,
+		"y": 874.0
 	},
 	{
 		"cost": 3.0,
@@ -713,8 +713,8 @@
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -141.0,
-		"y": 793.0
+		"x": -160.0,
+		"y": 876.0
 	},
 	{
 		"cost": 2.0,
@@ -777,7 +777,7 @@
 		"y": 288.0
 	},
 	{
-		"cost": 2,
+		"cost": 2.0,
 		"desc": "Increase maximum gem capacity by 25.",
 		"direction": "right-down",
 		"effects": {
@@ -794,7 +794,7 @@
 		"y": 56.0
 	},
 	{
-		"cost": 3,
+		"cost": 3.0,
 		"desc": "Increase maximum gem capacity by 50.",
 		"direction": "right",
 		"effects": {
@@ -811,7 +811,7 @@
 		"y": -107.0
 	},
 	{
-		"cost": 4,
+		"cost": 4.0,
 		"desc": "Increase maximum gem capacity by 100.",
 		"direction": "right",
 		"effects": {

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b4missilesc01"]
+
+[ext_resource type="Script" path="res://scripts/Missile.gd" id="1_msl"]
+
+[node name="Missile" type="Node3D"]
+script = ExtResource("1_msl")

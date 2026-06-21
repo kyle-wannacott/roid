@@ -143,6 +143,13 @@ var _solar_panel_right: MeshInstance3D = null
 var _turret_mount: MeshInstance3D = null
 var _missile_pod_left: MeshInstance3D = null
 var _missile_pod_right: MeshInstance3D = null
+var _missile_ammo_left: bool = false
+var _missile_ammo_right: bool = false
+var _missile_cooldown: float = 0.0
+@export var missile_scene: PackedScene = preload("res://scenes/Missile.tscn")
+@export var missile_fire_cooldown: float = 0.5
+@export var missile_speed: float = 80.0
+@export var missile_lifetime: float = 3.0
 var _afterburner_particles: GPUParticles3D = null
 var _afterburner_trail: MeshInstance3D = null
 var _cargo_bay: MeshInstance3D = null
@@ -329,22 +336,29 @@ func _physics_flying(delta: float) -> void:
 			_barrel_roll_progress = 0.0
 
 	# --- Turret fire (right click) ------------------------------
-	# Only fires if the turret_unlock skill has been purchased.
-	# Once enemies are added, this will spawn projectiles.
-	if Input.is_action_just_pressed("turret_fire") and PlayerSkills and PlayerSkills.is_unlocked("turret_unlock"):
-		var now_ms: int = Time.get_ticks_msec()
-		if now_ms >= _turret_fire_until_ms:
+	# Fires a missile from each wing pod that still has ammo.
+	# Requires the turret_unlock skill.  Missiles rearm at the station.
+	_missile_cooldown = max(0.0, _missile_cooldown - delta)
+	if Input.is_action_just_pressed("turret_fire") \
+			and PlayerSkills and PlayerSkills.is_unlocked("turret_unlock") \
+			and _missile_cooldown <= 0.0:
+		var any_fired: bool = false
+		if _missile_ammo_left and _missile_pod_left:
+			_fire_missile_from_pod(_missile_pod_left)
+			_missile_ammo_left = false
+			any_fired = true
+		if _missile_ammo_right and _missile_pod_right:
+			_fire_missile_from_pod(_missile_pod_right)
+			_missile_ammo_right = false
+			any_fired = true
+		if any_fired:
 			SoundManager.play_by_id("sfx_turret_fire")
-			# Throttle to one shot every 0.12 seconds (~8 RPS base)
-			var fire_rate: int = 120
-			if PlayerSkills.is_unlocked("turret_rapid_fire"):
-				var lvl: int = 1
-				if PlayerSkills.is_unlocked("turret_rapid_fire_2"): lvl = 2
-				if PlayerSkills.is_unlocked("turret_rapid_fire_3"): lvl = 3
-				fire_rate = maxi(40, 120 - lvl * 30)
-			_turret_fire_until_ms = now_ms + fire_rate
-			# Muzzle flash on the turret mount
-			_flash_turret_muzzle()
+			_missile_cooldown = missile_fire_cooldown
+
+	# Refill missile ammo when docked at the station.
+	if state == State.DOCKED:
+		_missile_ammo_left = true
+		_missile_ammo_right = true
 
 	var current_max_speed: float = _eff_max_speed
 	if _afterburner_active:
@@ -537,6 +551,10 @@ func _set_state(new_state: State) -> void:
 	if new_state != State.HARPOON_FLY and new_state != State.HARPOON_REEL:
 		harpoon_claw.visible = false
 		harpoon_cable.visible = false
+	# Rearm missiles whenever the ship reaches the station.
+	if new_state == State.DOCKED:
+		_missile_ammo_left = true
+		_missile_ammo_right = true
 
 
 # ---------------------------------------------------------------------
@@ -1023,6 +1041,30 @@ func _flash_shield_break() -> void:
 	mat.emission_energy_multiplier = 5.0
 
 
+## Spawn a missile from the given wing pod, flying in the ship's
+## forward direction.
+func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
+	if missile_scene == null:
+		return
+	var missile: Node3D = missile_scene.instantiate() as Node3D
+	if missile == null:
+		return
+	# Start the missile at the pod's world position, facing the
+	# ship's forward direction.
+	get_tree().current_scene.add_child(missile)
+	missile.global_position = pod.global_position
+	# Rotate the missile to face the ship's forward direction.
+	missile.global_rotation = global_rotation
+	# Set the owner so the missile knows which way to fly.
+	if "shooter" in missile:
+		missile.shooter = self
+	# Set the missile's flight parameters.
+	if missile.has_method("set_flight_params"):
+		missile.set_flight_params(missile_speed, missile_lifetime)
+	# Hide the corresponding pod until rearmed.
+	pod.visible = false
+
+
 ## Brief muzzle flash on the turret barrels when firing.
 ## Creates a temporary bright point light + particle burst at the
 ## barrel tips. Auto-cleans up after a few frames.
@@ -1337,15 +1379,18 @@ func _update_diagetic_visuals() -> void:
 		node.visible = turret_unlocked
 	
 	# --- Missile pod visual ---
+	# Visible when any missile-related skill is unlocked AND that
+	# wing's missile has ammo (hidden after firing until rearm).
 	var missile_unlocked := PlayerSkills and (
 		PlayerSkills.is_unlocked("missile_unlock") or
 		PlayerSkills.is_unlocked("missile_heat_seeking") or
-		PlayerSkills.is_unlocked("missile_splash_area")
+		PlayerSkills.is_unlocked("missile_splash_area") or
+		PlayerSkills.is_unlocked("turret_unlock")
 	)
 	if _missile_pod_left:
-		_missile_pod_left.visible = missile_unlocked
+		_missile_pod_left.visible = missile_unlocked and _missile_ammo_left
 	if _missile_pod_right:
-		_missile_pod_right.visible = missile_unlocked
+		_missile_pod_right.visible = missile_unlocked and _missile_ammo_right
 	
 	# --- Cargo bay visual: grows with gem_capacity skills ---
 	if _cargo_bay:
