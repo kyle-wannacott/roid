@@ -102,6 +102,7 @@ camera_toggle={
 [autoload]
 
 PlayerSkills="*res://scripts/PlayerSkills.gd"
+SoundManager="*res://scripts/sound_manager.gd"
 
 [rendering]
 

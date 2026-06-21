@@ -691,6 +691,7 @@ func _on_unlock_button_pressed() -> void:
 	if PlayerSkills == null or not PlayerSkills.can_unlock(skill_id, selected_skill):
 		return
 	if PlayerSkills.unlock_skill(skill_id, selected_skill):
+		SoundManager.play_by_id("sfx_unlock_skill")
 		_update_gems_label()
 		build_tree()
 

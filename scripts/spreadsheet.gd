@@ -7,6 +7,11 @@ const DATA_SOURCES := {
 		"title": "Skill Tree Data",
 		"entries_as_rows": true,
 	},
+	"sounds": {
+		"title": "Sound Effects",
+		"path": "res://resources/sounds_data.tres",
+		"entries_as_rows": true,
+	},
 }
 
 ## Properties to skip in the grid.
@@ -89,6 +94,17 @@ func _sync_top_scroll(v: float) -> void:
 	_top_scroll.scroll_horizontal = int(v)
 
 func _load_data() -> void:
+	var info: Dictionary = DATA_SOURCES.get(_current_source, {})
+	match _current_source:
+		"skill_tree":
+			_load_skill_tree()
+		"sounds":
+			_load_sounds()
+		_:
+			_collection = null
+
+
+func _load_skill_tree() -> void:
 	# Build SkillDataCollection from the JSON file
 	var col := SkillDataCollection.new()
 	var json_path := "res://resources/skill_tree_data.json"
@@ -132,9 +148,33 @@ func _load_data() -> void:
 	_collection = col
 	_title_label.text = "Skill Tree Data"
 
+
+func _load_sounds() -> void:
+	# Load SoundDataCollection from the .tres resource
+	var path := "res://resources/sounds_data.tres"
+	if not ResourceLoader.exists(path):
+		printerr("Spreadsheet: sounds data not found at ", path)
+		_collection = SoundDataCollection.new()
+		return
+	var res = load(path)
+	if res == null or not (res is SoundDataCollection):
+		printerr("Spreadsheet: failed to load sounds data")
+		_collection = SoundDataCollection.new()
+		return
+	_collection = res
+	_title_label.text = "Sound Effects"
+
 func _save_collection_to_json() -> void:
 	if _collection == null:
 		return
+	match _current_source:
+		"skill_tree":
+			_save_skill_tree()
+		"sounds":
+			_save_sounds()
+
+
+func _save_skill_tree() -> void:
 	var types: Array = _get_types()
 	var json_array: Array[Dictionary] = []
 	for t in types:
@@ -162,6 +202,15 @@ func _save_collection_to_json() -> void:
 	if f:
 		f.store_string(json_str)
 		_set_status("Saved!")
+
+
+func _save_sounds() -> void:
+	# Save the SoundDataCollection back to the .tres resource.
+	var result := ResourceSaver.save(_collection, "res://resources/sounds_data.tres")
+	if result == OK:
+		_set_status("Saved!")
+	else:
+		_set_status("Save failed!", true)
 
 func _get_types() -> Array:
 	if _collection == null:
@@ -243,6 +292,250 @@ func _make_cell(entry: Resource, key: String, entry_name: String, ei: int) -> Li
 		cell.focus_exited.connect(func(): _on_cell_contract(cell))
 
 	return cell
+
+
+## Create a special cell for the "stream" property of a sound entry.
+## Shows the current stream path with a "Play" button (to preview) and
+## a "Load" button (to browse audio files). The stream is stored on
+## the entry as an AudioStream resource.
+func _make_sound_cell(entry: Resource, key: String, entry_name: String, ei: int) -> HBoxContainer:
+	var hbox := HBoxContainer.new()
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# Text showing the stream path
+	var path_edit := LineEdit.new()
+	path_edit.text = _value_to_string(entry, key)
+	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	path_edit.placeholder_text = "(no stream — silent)"
+	path_edit.custom_minimum_size = Vector2(0, 24)
+	path_edit.tooltip_text = key + " ; " + entry_name
+	hbox.add_child(path_edit)
+
+	# Play button
+	var play_btn := Button.new()
+	play_btn.text = "▶"
+	play_btn.tooltip_text = "Preview this sound"
+	play_btn.custom_minimum_size = Vector2(28, 24)
+	play_btn.pressed.connect(func():
+		var stream: AudioStream = entry.get("stream") as AudioStream
+		if stream != null and SoundManager:
+			SoundManager.play_sfx(stream)
+	)
+	hbox.add_child(play_btn)
+
+	# Load button
+	var load_btn := Button.new()
+	load_btn.text = "📂 Load"
+	load_btn.tooltip_text = "Browse for an audio file"
+	load_btn.custom_minimum_size = Vector2(50, 24)
+	load_btn.pressed.connect(func():
+		_open_audio_picker_for_sound(entry, path_edit)
+	)
+	hbox.add_child(load_btn)
+
+	return hbox
+
+
+## Open the audio file picker to assign a stream to a sound entry.
+func _open_audio_picker_for_sound(entry: Resource, path_edit: LineEdit) -> void:
+	var win := Window.new()
+	win.title = "Select Audio File"
+	win.size = Vector2i(620, 540)
+	win.wrap_controls = true
+	win.exclusive = true
+	if PlayerSkills:
+		PlayerSkills.editor_modal_open = true
+	add_child(win)
+
+	var root := VBoxContainer.new()
+	root.anchor_right = 1.0
+	root.anchor_bottom = 1.0
+	root.offset_left = 8.0; root.offset_right = -8.0
+	root.offset_top = 6.0;  root.offset_bottom = -6.0
+	root.add_theme_constant_override("separation", 4)
+	win.add_child(root)
+
+	var search := LineEdit.new()
+	search.placeholder_text = "Filter audio files…"
+	root.add_child(search)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(scroll)
+
+	var list_vbox := VBoxContainer.new()
+	list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list_vbox)
+
+	var loading_label := Label.new()
+	loading_label.text = "Loading audio files…"
+	list_vbox.add_child(loading_label)
+
+	var bottom_hbox := HBoxContainer.new()
+	root.add_child(bottom_hbox)
+
+	var sel_label := Label.new()
+	sel_label.text = ""
+	sel_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bottom_hbox.add_child(sel_label)
+
+	var cancel := Button.new()
+	cancel.text = "Cancel"
+	cancel.pressed.connect(func():
+		if PlayerSkills: PlayerSkills.editor_modal_open = false
+		win.queue_free())
+	bottom_hbox.add_child(cancel)
+
+	win.close_requested.connect(func():
+		if PlayerSkills: PlayerSkills.editor_modal_open = false
+		win.queue_free())
+
+	win.popup_centered()
+
+	# Defer the file scan to avoid blocking the UI
+	call_deferred("_finish_audio_picker", win, loading_label, list_vbox, search, path_edit, entry)
+
+
+## Populate the audio picker with actual file rows.
+func _finish_audio_picker(win: Window, loading_label: Label, list_vbox: VBoxContainer,
+		search: LineEdit, path_edit: LineEdit, entry: Resource) -> void:
+	if is_instance_valid(loading_label):
+		loading_label.queue_free()
+	if not is_instance_valid(win):
+		return
+	# Collect and display files
+	var all_files: Array[Dictionary] = []
+	_collect_audio_files("res://sounds", all_files)
+	all_files.sort_custom(func(a, b): return a.name.naturalnocasecmp_to(b.name) < 0)
+
+	var rows: Array = []
+	for af: Dictionary in all_files:
+		if not is_instance_valid(list_vbox):
+			return
+		var row_hbox := HBoxContainer.new()
+		row_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var af_path: String = af.path
+		var play_btn := Button.new()
+		play_btn.text = "▶"
+		play_btn.tooltip_text = "Preview this sound"
+		play_btn.custom_minimum_size = Vector2(24, 22)
+		play_btn.pressed.connect(func():
+			var loaded := load(af_path)
+			if loaded is AudioStream and SoundManager:
+				SoundManager.play_sfx(loaded)
+		)
+		row_hbox.add_child(play_btn)
+
+		var name_btn := Button.new()
+		name_btn.text = af.name
+		name_btn.tooltip_text = af_path.trim_prefix("res://")
+		name_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		name_btn.pressed.connect(func():
+			if not is_instance_valid(win): return
+			var loaded := load(af_path)
+			if loaded is AudioStream:
+				entry.set("stream", loaded)
+				path_edit.text = af_path
+				_needs_save = true
+				_auto_save()
+			if PlayerSkills: PlayerSkills.editor_modal_open = false
+			win.queue_free()
+		)
+		row_hbox.add_child(name_btn)
+		list_vbox.add_child(row_hbox)
+		rows.append(row_hbox)
+
+	# Search filter
+	search.text_changed.connect(func(t: String):
+		var f := t.to_lower()
+		for r in rows:
+			if not is_instance_valid(r): continue
+			# Find the name label in the row
+			for c in r.get_children():
+				if c is Button and not c.text.begins_with("▶") and not c.text.begins_with("📂"):
+					c.visible = f.is_empty() or c.text.to_lower().contains(f)
+	)
+
+
+func build_deferred() -> void:
+	# Sound audio picker: scan res://sounds/ and let user pick a file.
+	# The picker was opened by _open_audio_picker_for_sound. The window
+	# and its layout are stored as class members via the build closure.
+	pass  # actual picker implementation handled by _build_audio_picker()
+
+
+## Build the audio file list for a sound entry's stream picker.
+func _build_audio_picker(picker: Window, list_vbox: VBoxContainer, sel_label: Label,
+		search: LineEdit, path_edit: LineEdit, entry: Resource) -> void:
+	# Scan res://sounds/ for .ogg/.wav/.mp3 files
+	var all_files: Array[Dictionary] = []
+	_collect_audio_files("res://sounds", all_files)
+	all_files.sort_custom(func(a, b): return a.name.naturalnocasecmp_to(b.name) < 0)
+
+	# Build rows
+	for af: Dictionary in all_files:
+		if not is_instance_valid(list_vbox):
+			return
+		var row_hbox := HBoxContainer.new()
+		row_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var af_path: String = af.path
+		var play_btn := Button.new()
+		play_btn.text = "▶"
+		play_btn.tooltip_text = "Preview this sound"
+		play_btn.custom_minimum_size = Vector2(24, 22)
+		play_btn.pressed.connect(func():
+			var loaded := load(af_path)
+			var stream: AudioStream = loaded as AudioStream if loaded is AudioStream else null
+			if stream != null and SoundManager:
+				SoundManager.play_sfx(stream)
+		)
+		row_hbox.add_child(play_btn)
+
+		var name_btn := Button.new()
+		name_btn.text = af.name
+		name_btn.tooltip_text = af_path.trim_prefix("res://")
+		name_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		name_btn.pressed.connect(func():
+			if not is_instance_valid(picker): return
+			sel_label.text = af_path.trim_prefix("res://")
+			var loaded := load(af_path)
+			if loaded is AudioStream:
+				entry.set("stream", loaded as AudioStream)
+				path_edit.text = af_path
+				_needs_save = true
+				_auto_save()
+			if PlayerSkills: PlayerSkills.editor_modal_open = false
+			picker.queue_free()
+		)
+		row_hbox.add_child(name_btn)
+
+		list_vbox.add_child(row_hbox)
+
+
+## Recursively collect audio files under a directory.
+func _collect_audio_files(dir_path: String, result: Array[Dictionary]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if fname == "." or fname == "..":
+			fname = dir.get_next()
+			continue
+		var full := dir_path.path_join(fname)
+		if dir.current_is_dir():
+			_collect_audio_files(full, result)
+		elif fname.ends_with(".ogg") or fname.ends_with(".wav") or fname.ends_with(".mp3"):
+			result.append({"path": full, "name": fname})
+		fname = dir.get_next()
+	dir.list_dir_end()
 
 func _get_entries_as_rows() -> bool:
 	var info: Dictionary = DATA_SOURCES.get(_current_source, {})
@@ -349,13 +642,18 @@ func _add_entry_rows(container: VBoxContainer, items: Array, n_stats: int) -> vo
 
 		for si in range(n_stats):
 			var key: String = _stat_keys[si]
-			var cell := _make_cell(entry, key, entry_name, ei)
+			# Use the sound cell for the "stream" field of sound entries
+			var cell: Control
+			if _current_source == "sounds" and key == "stream":
+				cell = _make_sound_cell(entry, key, entry_name, ei)
+			else:
+				cell = _make_cell(entry, key, entry_name, ei)
 
 			if not _cells.has(ei):
 				_cells[ei] = {}
 			_cells[ei][key] = cell
 
-			if cell.editable:
+			if cell is LineEdit and (cell as LineEdit).editable:
 				var ei_bind := ei
 				var key_bind := key
 				cell.text_submitted.connect(func(_t: String): _on_text_submitted(ei_bind, key_bind))

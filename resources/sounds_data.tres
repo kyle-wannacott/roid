@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="SoundDataCollection" format=3]
+
+[ext_resource type="Script" path="res://scripts/sound_data.gd" id="1_data"]
+[ext_resource type="Script" path="res://scripts/sound_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="SoundEntry_laser_beam"]
+script = ExtResource("2_entry")
+id = "sfx_laser_beam"
+display_name = "Laser Beam"
+stream = null
+category = "weapons"
+
+[sub_resource type="Resource" id="SoundEntry_laser_hit"]
+script = ExtResource("2_entry")
+id = "sfx_laser_hit_rock"
+display_name = "Laser Hit Rock"
+stream = null
+category = "weapons"
+
+[sub_resource type="Resource" id="SoundEntry_afterburner"]
+script = ExtResource("2_entry")
+id = "sfx_afterburner"
+display_name = "Afterburner"
+stream = null
+category = "ship"
+
+[sub_resource type="Resource" id="SoundEntry_unlock_skill"]
+script = ExtResource("2_entry")
+id = "sfx_unlock_skill"
+display_name = "Unlock Skill"
+stream = null
+category = "ui"
+
+[sub_resource type="Resource" id="SoundEntry_dock"]
+script = ExtResource("2_entry")
+id = "sfx_dock"
+display_name = "Dock at Station"
+stream = null
+category = "ship"
+
+[sub_resource type="Resource" id="SoundEntry_gem_collect"]
+script = ExtResource("2_entry")
+id = "sfx_gem_collect"
+display_name = "Collect Gem"
+stream = null
+category = "ui"
+
+[sub_resource type="Resource" id="SoundEntry_shield_recharge"]
+script = ExtResource("2_entry")
+id = "sfx_shield_recharge"
+display_name = "Shield Recharge"
+stream = null
+category = "ship"
+
+[sub_resource type="Resource" id="SoundEntry_ship_hit"]
+script = ExtResource("2_entry")
+id = "sfx_ship_hit"
+display_name = "Ship Hit Asteroid"
+stream = null
+category = "ship"
+
+[sub_resource type="Resource" id="SoundEntry_ship_destroyed"]
+script = ExtResource("2_entry")
+id = "sfx_ship_destroyed"
+display_name = "Ship Destroyed"
+stream = null
+category = "ship"
+
+[sub_resource type="Resource" id="SoundEntry_harpoon_fire"]
+script = ExtResource("2_entry")
+id = "sfx_harpoon_fire"
+display_name = "Harpoon Fire"
+stream = null
+category = "weapons"
+
+[sub_resource type="Resource" id="SoundEntry_turret_fire"]
+script = ExtResource("2_entry")
+id = "sfx_turret_fire"
+display_name = "Turret Fire"
+stream = null
+category = "weapons"
+
+[sub_resource type="Resource" id="SoundEntry_barrel_roll"]
+script = ExtResource("2_entry")
+id = "sfx_barrel_roll"
+display_name = "Barrel Roll"
+stream = null
+category = "ship"
+
+[resource]
+script = ExtResource("1_data")
+entries = [SubResource("SoundEntry_laser_beam"), SubResource("SoundEntry_laser_hit"), SubResource("SoundEntry_afterburner"), SubResource("SoundEntry_unlock_skill"), SubResource("SoundEntry_dock"), SubResource("SoundEntry_gem_collect"), SubResource("SoundEntry_shield_recharge"), SubResource("SoundEntry_ship_hit"), SubResource("SoundEntry_ship_destroyed"), SubResource("SoundEntry_harpoon_fire"), SubResource("SoundEntry_turret_fire"), SubResource("SoundEntry_barrel_roll")]

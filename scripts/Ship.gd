@@ -178,6 +178,10 @@ var current_bank: float = 0.0
 var _last_want_forward: float = 0.0
 var _last_yaw_input: float = 0.0
 var _last_chain_hit_index: int = -1  # Track when the chain already fired for this main hit
+# Throttle timers for sound playback (use ticks_msec since SceneTreeTimer
+# has no is_stopped() method)
+var _afterburner_sound_until_ms: int = 0
+var _laser_sound_until_ms: int = 0
 
 # Barrel-roll state (Q/E one-shot 360° spins).
 var _barrel_roll_dir: int = 0   # 0 = none, 1 = left, -1 = right
@@ -247,6 +251,8 @@ func _physics_process(delta: float) -> void:
 		if _barrel_roll_progress >= 1.0:
 			_barrel_roll_dir = 0
 			_barrel_roll_progress = 0.0
+			# Play barrel roll sound when the roll completes
+			SoundManager.play_by_id("sfx_barrel_roll")
 
 	# Lock the ship to the ground altitude. Vertical movement is not
 	# part of this game.
@@ -286,6 +292,11 @@ func _physics_flying(delta: float) -> void:
 		if fuel > ab_fuel_cost * delta:
 			fuel -= ab_fuel_cost * delta
 			_afterburner_active = true
+			# Play afterburner sound (throttled to every 0.5s)
+			var now_ms: int = Time.get_ticks_msec()
+			if now_ms >= _afterburner_sound_until_ms:
+				SoundManager.play_by_id("sfx_afterburner")
+				_afterburner_sound_until_ms = now_ms + 500
 	_update_afterburner_visuals()
 
 	# --- Thrust (horizontal only) --------------------------------
@@ -537,6 +548,8 @@ func _try_auto_dock() -> void:
 			harpoon_claw.visible = false
 			harpoon_cable.visible = false
 			_set_state(State.DOCKED)
+			# Play dock sound
+			SoundManager.play_by_id("sfx_dock")
 			return
 
 
@@ -585,6 +598,8 @@ func _fire_harpoon() -> void:
 	var stations := get_tree().get_nodes_in_group("station")
 	if stations.is_empty():
 		return
+	# Play harpoon fire sound
+	SoundManager.play_by_id("sfx_harpoon_fire")
 	var best: Node3D = null
 	var best_d: float = INF
 	for s in stations:
@@ -671,9 +686,17 @@ func _update_mining(want_mine: bool, delta: float) -> void:
 	laser_hit.global_position = hit_pos
 	_laser_stretch(laser_origin, hit_pos)
 
+	# Play laser beam sound (throttled to every 0.15s)
+	var now_ms2: int = Time.get_ticks_msec()
+	if now_ms2 >= _laser_sound_until_ms:
+		SoundManager.play_by_id("sfx_laser_beam")
+		_laser_sound_until_ms = now_ms2 + 150
+
 	# Spawn rock chips at the hit point.
 	if asteroid_mgr != null and hit_index >= 0:
 		asteroid_mgr.spawn_chips(hit_pos)
+		# Play laser hit rock sound (throttled)
+		SoundManager.play_by_id("sfx_laser_hit_rock")
 
 	# Chain laser: if we hit an asteroid and have chain levels, fire
 	# additional beams to nearby asteroids in sequence.
@@ -906,6 +929,8 @@ func _process(delta: float) -> void:
 			# Gems stay orbiting the ship until capacity frees up.
 			if gems < _eff_gem_capacity:
 				gem.queue_free()
+				# Play gem collect sound
+				SoundManager.play_by_id("sfx_gem_collect")
 				gems += 1
 				gems_changed.emit(gems)
 				# Gem heal from nanobot_gem_heal skill (only when actually collected)
@@ -935,6 +960,8 @@ func _process(delta: float) -> void:
 		if _shield_timer >= _eff_shield_cooldown:
 			_shield_timer = _eff_shield_cooldown
 			_shield_ready = true
+			# Play shield recharge sound
+			SoundManager.play_by_id("sfx_shield_recharge")
 	
 	# Emit shield state
 	if _eff_shield_cooldown > 0.0:
@@ -958,6 +985,8 @@ func take_damage(amount: float) -> void:
 		# Shield blocks all damage — just emit a visual cue
 		health_changed.emit(health, _eff_max_health)
 		return
+	# Play ship-hit sound (only on actual damage, not shield absorb)
+	SoundManager.play_by_id("sfx_ship_hit")
 	health = max(0.0, health - amount)
 	_damage_cooldown = 0.4
 	health_changed.emit(health, _eff_max_health)
@@ -976,6 +1005,7 @@ func _flash_shield_break() -> void:
 
 
 func _on_ship_destroyed() -> void:
+	SoundManager.play_by_id("sfx_ship_destroyed")
 	_apply_skill_stats()
 	respawn_at_station()
 

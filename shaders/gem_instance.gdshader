@@ -1,26 +1,27 @@
 // Gem material shader.
-//  • Per‑instance colour via the MultiMesh's INSTANCE_CUSTOM
-//    (set via set_instance_color).  The COLOR built-in only reads
-//    from per‑vertex mesh colors, which we don't bake.
-//  • Round‑cut diamond shape has a vertical brightness gradient
-//    (model‑space Y so the gradient is fixed to the gem, not the world).
-//  • Facet "fire" — each face catches light differently based on its
-//    normal direction (fixed pattern, doesn't swim as the gem tumbles).
-//  • Fresnel edge glow for the glassy crystal look.
-//  • Fake refraction by sampling the screen texture with normal‑offset UVs.
-//  • Twinkle — each gem pulses on its own phase derived from INSTANCE_CUSTOM.a.
+//
+// Per-instance color: In a SPATIAL shader, per-instance colors
+// (set via MultiMesh.set_instance_color() with use_colors = true)
+// are accessed via the COLOR built-in in the fragment function.
+// (INSTANCE_CUSTOM is only for particles/sky shaders in Godot 4.)
+//
+// Each gem has a unique hue from the manager's weighted palette.
+// The shader adds a vertical brightness gradient (model-space Y,
+// locked to the gem so it doesn't swim as it tumbles), a subtle
+// per-facet "fire" pattern, a fresnel edge glow, a screen-space
+// refraction sample, and a per-instance twinkle.
 
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_disabled, diffuse_lambert;
 
 uniform float fresnel_power       : hint_range(0.0, 6.0)   = 2.5;
-uniform float refraction_strength : hint_range(0.0, 0.15) = 0.05;
-uniform float emission_strength   : hint_range(0.0, 4.0)  = 1.4;
+uniform float refraction_strength : hint_range(0.0, 0.15) = 0.04;
+uniform float emission_strength   : hint_range(0.0, 4.0)  = 1.5;
 uniform float gradient_top        : hint_range(0.0, 2.0)  = 1.3;
 uniform float gradient_bottom     : hint_range(0.0, 2.0)  = 0.5;
-uniform float facet_fire          : hint_range(0.0, 0.6)  = 0.35;
-uniform float twinkle_amount      : hint_range(0.0, 0.5)  = 0.15;
-uniform float alpha_val           : hint_range(0.0, 1.0)  = 0.82;
+uniform float facet_fire          : hint_range(0.0, 0.6)  = 0.30;
+uniform float twinkle_amount      : hint_range(0.0, 0.5)  = 0.12;
+uniform float alpha_val           : hint_range(0.0, 1.0)  = 0.90;
 uniform sampler2D screen_tex : hint_screen_texture, repeat_disable, filter_linear;
 
 varying float v_local_y;
@@ -34,17 +35,16 @@ void vertex() {
 }
 
 void fragment() {
-	// Per‑instance base hue (MultiMesh per‑instance color, set via
-	// set_instance_color on the MultiMesh).
-	vec3 base = INSTANCE_CUSTOM.rgb;
+	// Per-instance base hue (MultiMesh per-instance color flows
+	// into the COLOR built-in for spatial shaders).
+	vec3 base = COLOR.rgb;
 
 	// Vertical gradient — brighter at the table, darker at the culet.
 	float t = clamp((v_local_y + 0.55) / 1.0, 0.0, 1.0);
 	vec3 graded = base * mix(gradient_bottom, gradient_top, t);
 
-	// Fixed "fire" pattern across the facets.  The exact direction is
-	// arbitrary but it doesn't change as the gem rotates, so the
-	// pattern is locked to the gem itself.
+	// Fixed "fire" pattern across the facets.  Locked to the gem so
+	// it doesn't swim as the gem tumbles.
 	vec3 fire_dir = normalize(vec3(0.5, 1.0, 0.3));
 	float facet = dot(normalize(v_normal), fire_dir) * 0.5 + 0.5;
 	graded *= (1.0 - facet_fire + facet_fire * facet);
@@ -61,8 +61,8 @@ void fragment() {
 	// the gem's own colour (with gradient + facet).
 	vec3 col = mix(refractive, graded, fresnel);
 
-	// Per‑instance twinkle — phase from INSTANCE_CUSTOM.a.
-	float twinkle = 0.5 + 0.5 * sin(TIME * 4.0 + INSTANCE_CUSTOM.a * 6.28);
+	// Per-instance twinkle — phase from COLOR.a.
+	float twinkle = 0.5 + 0.5 * sin(TIME * 4.0 + COLOR.a * 6.28);
 	col *= (1.0 + twinkle_amount * twinkle);
 
 	// Strong emission so the gem glows in the dark.
