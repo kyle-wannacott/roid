@@ -44,6 +44,20 @@ transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.43
 light_color = Color(0.9, 0.92, 1, 1)
 light_energy = 0.45
 shadow_enabled = true
+groups = ["sun"]
+
+[node name="Sun2" type="DirectionalLight3D" parent="." unique_id=270824989]
+transform = Transform3D(-0.866025, 0.25, -0.433013, 0, 0.866025, -0.5, 0.5, 0.433013, 0.75, 0, -20, 30)
+light_color = Color(1, 0.8, 0.6, 1)
+light_energy = 0.35
+shadow_enabled = false
+groups = ["sun"]
+
+[node name="Sun2" type="DirectionalLight3D" parent="." unique_id=270824989]
+transform = Transform3D(-0.866025, 0.25, -0.433013, 0, 0.866025, -0.5, 0.5, 0.433013, 0.75, 0, -20, 30)
+light_color = Color(1, 0.8, 0.6, 1)
+light_energy = 0.35
+shadow_enabled = false
 
 [node name="SunManager" type="Node" parent="." unique_id=888999999]
 script = ExtResource("11_sunmgr")
