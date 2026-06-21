@@ -46,6 +46,11 @@ const PROPERTY_ORDER := [
 	"direction", "effects", "exclusive_children", "unlock_color", "x", "y",
 ]
 
+## Property order for sound entries.
+const SOUND_PROPERTY_ORDER := [
+	"id", "display_name", "stream", "category",
+]
+
 ## If cell text exceeds this many characters, expand the cell on focus.
 const CELL_EXPAND_CHAR_LIMIT := 30
 
@@ -215,8 +220,12 @@ func _save_sounds() -> void:
 func _get_types() -> Array:
 	if _collection == null:
 		return []
+	# SkillDataCollection uses "types", SoundDataCollection uses "entries".
+	# Return whichever is present.
 	if _collection.get("types") is Array:
 		return _collection.get("types") as Array
+	if _collection.get("entries") is Array:
+		return _collection.get("entries") as Array
 	return []
 
 func _gather_stat_keys() -> void:
@@ -237,13 +246,16 @@ func _gather_stat_keys() -> void:
 		keys.append(k)
 	keys.sort()
 
-	# Sort by PROPERTY_ORDER
+	# Sort by PROPERTY_ORDER (skill) or SOUND_PROPERTY_ORDER (sounds)
 	var sorted := PackedStringArray()
-	for k in PROPERTY_ORDER:
+	var order_list: PackedStringArray = PROPERTY_ORDER
+	if _current_source == "sounds":
+		order_list = SOUND_PROPERTY_ORDER
+	for k in order_list:
 		if k in seen:
 			sorted.append(k)
 	for k in keys:
-		if k not in PROPERTY_ORDER:
+		if k not in order_list:
 			sorted.append(k)
 
 	_stat_keys = sorted
@@ -687,6 +699,9 @@ func _value_to_string(entry: Resource, key: String) -> String:
 		for k in val:
 			parts.append("%s:%s" % [k, str(val[k])])
 		return ",".join(parts)
+	elif val is AudioStream:
+		# Show the resource path so users can see/identify the audio file
+		return val.resource_path if val.resource_path != "" else ""
 	elif val == null:
 		return ""
 	return str(val)

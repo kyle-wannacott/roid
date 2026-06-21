@@ -18,9 +18,17 @@ signal gem_collected( slot_idx: int )
 # Pre‑baked gem mesh (flat‑shaded octahedron).  Built once in _ready.
 var _gem_mesh: ArrayMesh
 
-# Gem material: ShaderMaterial that reads INSTANCE_CUSTOM for the
-# per‑instance colour.
+# Gem material: ShaderMaterial that reads the per‑instance colour
+# from a 1D palette texture (indexed by INSTANCE_ID) rather than
+# relying on `COLOR` or `INSTANCE_CUSTOM` — neither of those built‑ins
+# are reliably exposed in the current Godot 4 spatial‑shader pipeline.
 var _gem_material: ShaderMaterial
+
+# 1D palette texture — pixel (x, 0) holds the colour for the gem
+# whose INSTANCE_ID equals x.  Built once and updated in place
+# when a gem is spawned.
+var _palette_image: Image
+var _palette_tex: ImageTexture
 
 # Parallel arrays.
 var positions: PackedVector3Array
@@ -54,6 +62,10 @@ func _ready() -> void:
 	colors.resize(max_gems)
 	alive.resize(max_gems)
 	rb_refs.resize(max_gems)
+	# 1×W palette: each pixel is the colour for a given instance.
+	_palette_image = Image.create(max_gems, 1, false, Image.FORMAT_RGBA8)
+	_palette_image.fill(Color(1, 1, 1, 1))
+	_palette_tex = ImageTexture.create_from_image(_palette_image)
 
 	_setup_multimesh()
 	_setup_palette_weights()
@@ -69,10 +81,12 @@ func _setup_multimesh() -> void:
 	_gem_mesh = gem_mesh if gem_mesh != null else _build_gem_mesh()
 	_gem_material = ShaderMaterial.new()
 	_gem_material.shader = preload("res://shaders/gem_instance.gdshader")
+	_gem_material.set_shader_parameter("palette", _palette_tex)
+	_gem_material.set_shader_parameter("palette_size", float(max_gems))
 
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
+	mm.use_colors = false  # we use the palette texture instead
 	mm.mesh = _gem_mesh
 	mm.instance_count = max_gems
 	mmi.multimesh = mm
@@ -83,12 +97,11 @@ func _setup_multimesh() -> void:
 func set_gem_mesh(new_mesh: ArrayMesh) -> void:
 	gem_mesh = new_mesh
 	_setup_multimesh()
-	# Re‑push existing alive instances so their transforms/colours
-	# still apply against the new mesh.
+	# Re‑push existing alive instances so their transforms still apply
+	# against the new mesh.
 	for i in _count:
 		if alive[i]:
 			mmi.multimesh.set_instance_transform(i, Transform3D(Basis(), positions[i]))
-			mmi.multimesh.set_instance_color(i, colors[i])
 
 
 # ── Spawn / collect ────────────────────────────────────────────
@@ -104,8 +117,12 @@ func spawn_gem(at: Vector3) -> int:
 	positions[idx] = at
 	colors[idx] = color
 	alive[idx] = 1
+	# Write the per‑instance colour into the palette texture so the
+	# shader can sample it by INSTANCE_ID.  The alpha channel carries
+	# the twinkle phase so each gem pulses on its own beat.
+	_palette_image.set_pixel(idx, 0, color)
+	_palette_tex.update(_palette_image)
 	mmi.multimesh.set_instance_transform(idx, Transform3D.IDENTITY.translated(at))
-	mmi.multimesh.set_instance_color(idx, color)
 	_live += 1
 	return idx
 

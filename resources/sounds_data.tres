@@ -2,91 +2,114 @@
 
 [ext_resource type="Script" path="res://scripts/sound_data.gd" id="1_data"]
 [ext_resource type="Script" path="res://scripts/sound_entry.gd" id="2_entry"]
-
-[sub_resource type="Resource" id="SoundEntry_laser_beam"]
+[ext_resource type="AudioStream" path="res://sounds/laser.ogg" id="3_snd0"]
+[ext_resource type="AudioStream" path="res://sounds/laser.ogg" id="3_snd1"]
+[ext_resource type="AudioStream" path="res://sounds/afterburner.ogg" id="3_snd2"]
+[ext_resource type="AudioStream" path="res://sounds/skill_point_spent.ogg" id="3_snd3"]
+[ext_resource type="AudioStream" path="res://sounds/ship_repair.ogg" id="3_snd4"]
+[ext_resource type="AudioStream" path="res://sounds/cookie_collect.ogg" id="3_snd5"]
+[ext_resource type="AudioStream" path="res://sounds/shield_up.ogg" id="3_snd6"]
+[ext_resource type="AudioStream" path="res://sounds/player_ship_hit.ogg" id="3_snd7"]
+[ext_resource type="AudioStream" path="res://sounds/ship_explode.ogg" id="3_snd8"]
+[ext_resource type="AudioStream" path="res://sounds/lasso_launch.ogg" id="3_snd9"]
+[ext_resource type="AudioStream" path="res://sounds/turret_fire.ogg" id="3_snd10"]
+[ext_resource type="AudioStream" path="res://sounds/afterburner.ogg" id="3_snd11"]
+[sub_resource type="Resource" id="SoundEntry_sfx_laser_beam"]
 script = ExtResource("2_entry")
 id = "sfx_laser_beam"
 display_name = "Laser Beam"
-stream = null
+stream = ExtResource("3_snd0")
 category = "weapons"
 
-[sub_resource type="Resource" id="SoundEntry_laser_hit"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_laser_hit_rock"]
 script = ExtResource("2_entry")
 id = "sfx_laser_hit_rock"
 display_name = "Laser Hit Rock"
-stream = null
+stream = ExtResource("3_snd1")
 category = "weapons"
 
-[sub_resource type="Resource" id="SoundEntry_afterburner"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_afterburner"]
 script = ExtResource("2_entry")
 id = "sfx_afterburner"
 display_name = "Afterburner"
-stream = null
+stream = ExtResource("3_snd2")
 category = "ship"
 
-[sub_resource type="Resource" id="SoundEntry_unlock_skill"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_unlock_skill"]
 script = ExtResource("2_entry")
 id = "sfx_unlock_skill"
 display_name = "Unlock Skill"
-stream = null
+stream = ExtResource("3_snd3")
 category = "ui"
 
-[sub_resource type="Resource" id="SoundEntry_dock"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_dock"]
 script = ExtResource("2_entry")
 id = "sfx_dock"
 display_name = "Dock at Station"
-stream = null
+stream = ExtResource("3_snd4")
 category = "ship"
 
-[sub_resource type="Resource" id="SoundEntry_gem_collect"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_gem_collect"]
 script = ExtResource("2_entry")
 id = "sfx_gem_collect"
 display_name = "Collect Gem"
-stream = null
+stream = ExtResource("3_snd5")
 category = "ui"
 
-[sub_resource type="Resource" id="SoundEntry_shield_recharge"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_shield_recharge"]
 script = ExtResource("2_entry")
 id = "sfx_shield_recharge"
 display_name = "Shield Recharge"
-stream = null
+stream = ExtResource("3_snd6")
 category = "ship"
 
-[sub_resource type="Resource" id="SoundEntry_ship_hit"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_ship_hit"]
 script = ExtResource("2_entry")
 id = "sfx_ship_hit"
 display_name = "Ship Hit Asteroid"
-stream = null
+stream = ExtResource("3_snd7")
 category = "ship"
 
-[sub_resource type="Resource" id="SoundEntry_ship_destroyed"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_ship_destroyed"]
 script = ExtResource("2_entry")
 id = "sfx_ship_destroyed"
 display_name = "Ship Destroyed"
-stream = null
+stream = ExtResource("3_snd8")
 category = "ship"
 
-[sub_resource type="Resource" id="SoundEntry_harpoon_fire"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_harpoon_fire"]
 script = ExtResource("2_entry")
 id = "sfx_harpoon_fire"
 display_name = "Harpoon Fire"
-stream = null
+stream = ExtResource("3_snd9")
 category = "weapons"
 
-[sub_resource type="Resource" id="SoundEntry_turret_fire"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_turret_fire"]
 script = ExtResource("2_entry")
 id = "sfx_turret_fire"
 display_name = "Turret Fire"
-stream = null
+stream = ExtResource("3_snd10")
 category = "weapons"
 
-[sub_resource type="Resource" id="SoundEntry_barrel_roll"]
+
+[sub_resource type="Resource" id="SoundEntry_sfx_barrel_roll"]
 script = ExtResource("2_entry")
 id = "sfx_barrel_roll"
 display_name = "Barrel Roll"
-stream = null
+stream = ExtResource("3_snd11")
 category = "ship"
+
 
 [resource]
 script = ExtResource("1_data")
-entries = [SubResource("SoundEntry_laser_beam"), SubResource("SoundEntry_laser_hit"), SubResource("SoundEntry_afterburner"), SubResource("SoundEntry_unlock_skill"), SubResource("SoundEntry_dock"), SubResource("SoundEntry_gem_collect"), SubResource("SoundEntry_shield_recharge"), SubResource("SoundEntry_ship_hit"), SubResource("SoundEntry_ship_destroyed"), SubResource("SoundEntry_harpoon_fire"), SubResource("SoundEntry_turret_fire"), SubResource("SoundEntry_barrel_roll")]
+entries = [SubResource("SoundEntry_sfx_laser_beam"), SubResource("SoundEntry_sfx_laser_hit_rock"), SubResource("SoundEntry_sfx_afterburner"), SubResource("SoundEntry_sfx_unlock_skill"), SubResource("SoundEntry_sfx_dock"), SubResource("SoundEntry_sfx_gem_collect"), SubResource("SoundEntry_sfx_shield_recharge"), SubResource("SoundEntry_sfx_ship_hit"), SubResource("SoundEntry_sfx_ship_destroyed"), SubResource("SoundEntry_sfx_harpoon_fire"), SubResource("SoundEntry_sfx_turret_fire"), SubResource("SoundEntry_sfx_barrel_roll")]
