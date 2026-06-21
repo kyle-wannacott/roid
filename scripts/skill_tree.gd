@@ -886,7 +886,7 @@ func _input(event: InputEvent) -> void:
 			elif mbe.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				_zoom_at_point(mbe.global_position, -ZOOM_STEP)
 				get_viewport().set_input_as_handled()
-	elif event is InputEventMouseMotion and _dragging:
+	elif event is InputEventMouseMotion and _dragging and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_pan_offset = _drag_start_pan + (event.global_position - _drag_start_mouse)
 		_apply_canvas_transform()
 		get_viewport().set_input_as_handled()
@@ -902,8 +902,10 @@ func _on_skill_button_gui_input(event: InputEvent, skill_id: String) -> void:
 	if not is_visible_in_tree():
 		return
 	# Mouse motion while held → pan
+	# Only pan if the LEFT mouse button is actually held down. This
+	# prevents the tree from moving when the user just hovers.
 	if event is InputEventMouseMotion:
-		if _sb_press_pos != Vector2.ZERO:
+		if _sb_press_pos != Vector2.ZERO and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			var delta = event.global_position - _sb_press_pos
 			if not _sb_btn_dragging and delta.length() > _DRAG_THRESHOLD:
 				_sb_btn_dragging = true

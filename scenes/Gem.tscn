@@ -1,16 +1,44 @@
-[gd_scene load_steps=3 format=3 uid="uid://b4gemspace01"]
+[gd_scene format=4 uid="uid://b4gemspace01"]
 
-[ext_resource type="Script" path="res://scripts/Gem.gd" id="1_gem"]
+[ext_resource type="Script" uid="uid://dt14grts805cv" path="res://scripts/Gem.gd" id="1_gem"]
+[ext_resource type="Shader" uid="uid://clftvdt586ntm" path="res://shaders/gem_instance.gdshader" id="2_shader"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_gem"]
 radius = 0.35
 
-[node name="Gem" type="RigidBody3D"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wfabg"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/roughness = 0.2
+shader_parameter/metallic = 0.1
+shader_parameter/iridescence_scale = 4.0
+shader_parameter/iridescence_intensity = 1.0
+shader_parameter/color_strength = 0.5
+shader_parameter/brightness = 2.0
+shader_parameter/emission_glow = 0.25
+shader_parameter/alpha_val = 1.0
+shader_parameter/_PreviewColor = Color(0.2, 0.8, 0.4, 1)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_o8oug"]
+_surfaces = [{
+"aabb": AABB(-0.42, -0.55, -0.36373067, 0.84, 1, 0.72746134),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 72,
+"vertex_data": PackedByteArray("AAAAAGZm5j4AAAAArkfhPWZm5j4kGUM+rkdhPmZm5j4AAAAAAAAAAGZm5j4AAAAArkfhvWZm5j4kGUM+rkfhPWZm5j4kGUM+AAAAAGZm5j4AAAAArkdhvmZm5j6Kf/gjrkfhvWZm5j4kGUM+AAAAAGZm5j4AAAAArkfhvWZm5j4kGUO+rkdhvmZm5j6Kf/gjAAAAAGZm5j4AAAAArkfhPWZm5j4kGUO+rkfhvWZm5j4kGUO+AAAAAGZm5j4AAAAArkdhPmZm5j4AAAAArkfhPWZm5j4kGUO+rkdhPmZm5j4AAAAAPQpXPgAAAADoOro+PQrXPgAAAAAAAAAArkdhPmZm5j4AAAAArkfhPWZm5j4kGUM+PQpXPgAAAADoOro+rkfhPWZm5j4kGUM+PQpXvgAAAADoOro+PQpXPgAAAADoOro+rkfhPWZm5j4kGUM+rkfhvWZm5j4kGUM+PQpXvgAAAADoOro+rkfhvWZm5j4kGUM+PQrXvgAAAADtM20kPQpXvgAAAADoOro+rkfhvWZm5j4kGUM+rkdhvmZm5j6Kf/gjPQrXvgAAAADtM20krkdhvmZm5j6Kf/gjPQpXvgAAAADoOrq+PQrXvgAAAADtM20krkdhvmZm5j6Kf/gjrkfhvWZm5j4kGUO+PQpXvgAAAADoOrq+rkfhvWZm5j4kGUO+PQpXPgAAAADoOrq+PQpXvgAAAADoOrq+rkfhvWZm5j4kGUO+rkfhPWZm5j4kGUO+PQpXPgAAAADoOrq+rkfhPWZm5j4kGUO+PQrXPgAAAAAAAAAAPQpXPgAAAADoOrq+rkfhPWZm5j4kGUO+rkdhPmZm5j4AAAAAPQrXPgAAAAAAAAAAAAAAAM3MDL8AAAAAPQrXPgAAAAAAAAAAPQpXPgAAAADoOro+AAAAAM3MDL8AAAAAPQpXPgAAAADoOro+PQpXvgAAAADoOro+AAAAAM3MDL8AAAAAPQpXvgAAAADoOro+PQrXvgAAAADtM20kAAAAAM3MDL8AAAAAPQrXvgAAAADtM20kPQpXvgAAAADoOrq+AAAAAM3MDL8AAAAAPQpXvgAAAADoOrq+PQpXPgAAAADoOrq+AAAAAM3MDL8AAAAAPQpXPgAAAADoOrq+PQrXPgAAAAAAAAAA/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/Tr8inLRRUMNOvyKctFFQw06/Ipy0UVDDTr8inLRRUMNOvyKctFFQw06/Ipy0UVDD/3+So6BzQJb/f5KjoHNAlv9/kqOgc0CW/3+So6BzQJb/f5KjoHNAlv9/kqOgc0CWsEAinCKUYKuwQCKcIpRgq7BAIpwilGCrsEAinCKUYKuwQCKcIpRgq7BAIpwilGCrIxyvwM1UUaojHK/AzVRRqiMcr8DNVFGqIxyvwM1UUaojHK/AzVRRqiMcr8DNVFGqbNz//35TLoZs3P//flMuhmzc//9+Uy6GbNz//35TLoZs3P//flMuhmzc//9+Uy6G2+OvwGKnwsXb46/AYqfCxdvjr8Bip8LF2+OvwGKnwsXb46/AYqfCxdvjr8Bip8LFrLY+VkJLEqestj5WQksSp6y2PlZCSxKn/38LTf08VY3/fwtN/TxVjf9/C039PFWNUkk+VkB/q9tSST5WQH+r21JJPlZAf6vbwCmtNgBPFMnAKa02AE8UycAprTYATxTJC80AAFJlgKELzQAAUmWAoQvNAABSZYChPtatNrR/ZaQ+1q02tH9lpD7WrTa0f2Wk")
+}]
+
+[node name="Gem" type="RigidBody3D" unique_id=1234965650]
 collision_layer = 4
 collision_mask = 0
 mass = 0.3
 gravity_scale = 0.0
 script = ExtResource("1_gem")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=302305953]
 shape = SubResource("SphereShape3D_gem")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1390055746]
+material_override = SubResource("ShaderMaterial_wfabg")
+mesh = SubResource("ArrayMesh_o8oug")

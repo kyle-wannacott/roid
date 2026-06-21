@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://bspreadsheet01" path="res://scenes/spreadsheet.tscn" id="1_ss"]
 [ext_resource type="PackedScene" uid="uid://b4asteroidmgr01" path="res://scenes/AsteroidManager.tscn" id="9_astmgr"]
 [ext_resource type="PackedScene" uid="uid://b4gemmanager01" path="res://scenes/GemManager.tscn" id="10_gemmgr"]
+[ext_resource type="Script" path="res://scripts/SunManager.gd" id="11_sunmgr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("8_sky_shader")
@@ -43,6 +44,9 @@ transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.43
 light_color = Color(0.9, 0.92, 1, 1)
 light_energy = 0.45
 shadow_enabled = true
+
+[node name="SunManager" type="Node" parent="." unique_id=888999999]
+script = ExtResource("11_sunmgr")
 
 [node name="SpaceStation" parent="." unique_id=669203851 instance=ExtResource("3_station")]
 

@@ -12,27 +12,27 @@ render_mode specular_schlick_ggx, blend_mix, depth_draw_opaque, cull_disabled;
 
 // ── Tuning uniforms ─────────────────────────────────────────────
 
-uniform float roughness         : hint_range(0.0, 1.0) = 0.2;
-uniform float metallic          : hint_range(0.0, 1.0) = 0.1;
+uniform float roughness         : hint_range(0.0, 1.0) = 0.08;
+uniform float metallic          : hint_range(0.0, 1.0) = 1.0;
 
 // Iridescence — the rainbow "fire" effect
 uniform float iridescence_scale     : hint_range(0.0, 12.0) = 4.0;
-uniform float iridescence_intensity : hint_range(0.0, 1.0)  = 1.0;
+uniform float iridescence_intensity : hint_range(0.0, 1.0)  = 0.45;
 
 // How much of the gem's own colour shows through vs the iridescence
-uniform float color_strength     : hint_range(0.0, 1.0) = 0.5;
+uniform float color_strength     : hint_range(0.0, 1.0) = 0.55;
 
 // Overall brightness
-uniform float brightness         : hint_range(0.0, 3.0) = 2.0;
+uniform float brightness         : hint_range(0.0, 2.0) = 1.1;
 
 // Faint glow in shadow
-uniform float emission_glow      : hint_range(0.0, 0.5) = 0.25;
+uniform float emission_glow      : hint_range(0.0, 0.5) = 0.08;
 
 // Alpha
-uniform float alpha_val          : hint_range(0.0, 1.0) = 1.0;
+uniform float alpha_val          : hint_range(0.0, 1.0) = 0.85;
 
 // Optional editor preview colour — overrides COLOR when non‑black.
-uniform vec3  _PreviewColor      : source_color = vec3(0.0);
+uniform vec3  _PreviewColor      : source_color = vec3(0.3, 0.85, 1.0);
 
 // ── Varyings ────────────────────────────────────────────────────
 

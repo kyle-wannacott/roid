@@ -19,16 +19,8 @@ signal gem_collected( slot_idx: int )
 var _gem_mesh: ArrayMesh
 
 # Gem material: ShaderMaterial that reads the per‑instance colour
-# from a 1D palette texture (indexed by INSTANCE_ID) rather than
-# relying on `COLOR` or `INSTANCE_CUSTOM` — neither of those built‑ins
-# are reliably exposed in the current Godot 4 spatial‑shader pipeline.
+# from the built‑in COLOR variable (set via set_instance_color).
 var _gem_material: ShaderMaterial
-
-# 1D palette texture — pixel (x, 0) holds the colour for the gem
-# whose INSTANCE_ID equals x.  Built once and updated in place
-# when a gem is spawned.
-var _palette_image: Image
-var _palette_tex: ImageTexture
 
 # Parallel arrays.
 var positions: PackedVector3Array
@@ -62,11 +54,6 @@ func _ready() -> void:
 	colors.resize(max_gems)
 	alive.resize(max_gems)
 	rb_refs.resize(max_gems)
-	# 1×W palette: each pixel is the colour for a given instance.
-	_palette_image = Image.create(max_gems, 1, false, Image.FORMAT_RGBA8)
-	_palette_image.fill(Color(1, 1, 1, 1))
-	_palette_tex = ImageTexture.create_from_image(_palette_image)
-
 	_setup_multimesh()
 	_setup_palette_weights()
 
@@ -81,15 +68,14 @@ func _setup_multimesh() -> void:
 	_gem_mesh = gem_mesh if gem_mesh != null else _build_gem_mesh()
 	_gem_material = ShaderMaterial.new()
 	_gem_material.shader = preload("res://shaders/gem_instance.gdshader")
-	_gem_material.set_shader_parameter("palette", _palette_tex)
-	_gem_material.set_shader_parameter("palette_size", float(max_gems))
 
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = false  # we use the palette texture instead
+	mm.use_colors = true  # per‑instance COLOR built‑in
 	mm.mesh = _gem_mesh
 	mm.instance_count = max_gems
 	mmi.multimesh = mm
+	mmi.material_override = _gem_material
 
 
 ## Swap the gem mesh at runtime (or from the editor after export).
@@ -117,11 +103,8 @@ func spawn_gem(at: Vector3) -> int:
 	positions[idx] = at
 	colors[idx] = color
 	alive[idx] = 1
-	# Write the per‑instance colour into the palette texture so the
-	# shader can sample it by INSTANCE_ID.  The alpha channel carries
-	# the twinkle phase so each gem pulses on its own beat.
-	_palette_image.set_pixel(idx, 0, color)
-	_palette_tex.update(_palette_image)
+	# Write the per‑instance colour so the shader reads it from COLOR.
+	mmi.multimesh.set_instance_color(idx, color)
 	mmi.multimesh.set_instance_transform(idx, Transform3D.IDENTITY.translated(at))
 	_live += 1
 	return idx

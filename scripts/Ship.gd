@@ -182,6 +182,7 @@ var _last_chain_hit_index: int = -1  # Track when the chain already fired for th
 # has no is_stopped() method)
 var _afterburner_sound_until_ms: int = 0
 var _laser_sound_until_ms: int = 0
+var _turret_fire_until_ms: int = 0  # Throttle turret fire rate
 
 # Barrel-roll state (Q/E one-shot 360° spins).
 var _barrel_roll_dir: int = 0   # 0 = none, 1 = left, -1 = right
@@ -326,6 +327,24 @@ func _physics_flying(delta: float) -> void:
 		elif roll_right_just:
 			_barrel_roll_dir = -1
 			_barrel_roll_progress = 0.0
+
+	# --- Turret fire (right click) ------------------------------
+	# Only fires if the turret_unlock skill has been purchased.
+	# Once enemies are added, this will spawn projectiles.
+	if Input.is_action_just_pressed("turret_fire") and PlayerSkills and PlayerSkills.is_unlocked("turret_unlock"):
+		var now_ms: int = Time.get_ticks_msec()
+		if now_ms >= _turret_fire_until_ms:
+			SoundManager.play_by_id("sfx_turret_fire")
+			# Throttle to one shot every 0.12 seconds (~8 RPS base)
+			var fire_rate: int = 120
+			if PlayerSkills.is_unlocked("turret_rapid_fire"):
+				var lvl: int = 1
+				if PlayerSkills.is_unlocked("turret_rapid_fire_2"): lvl = 2
+				if PlayerSkills.is_unlocked("turret_rapid_fire_3"): lvl = 3
+				fire_rate = maxi(40, 120 - lvl * 30)
+			_turret_fire_until_ms = now_ms + fire_rate
+			# Muzzle flash on the turret mount
+			_flash_turret_muzzle()
 
 	var current_max_speed: float = _eff_max_speed
 	if _afterburner_active:
@@ -1004,6 +1023,29 @@ func _flash_shield_break() -> void:
 	mat.emission_energy_multiplier = 5.0
 
 
+## Brief muzzle flash on the turret barrels when firing.
+## Creates a temporary bright point light + particle burst at the
+## barrel tips. Auto-cleans up after a few frames.
+func _flash_turret_muzzle() -> void:
+	if body_root == null:
+		return
+	# Find the turret root node (created in _create_diagetic_visuals)
+	var turret_root: Node3D = body_root.get_node_or_null("TurretRoot")
+	if turret_root == null:
+		# Fallback: spawn at body center
+		turret_root = body_root
+	var flash_light := OmniLight3D.new()
+	flash_light.light_color = Color(1.0, 0.9, 0.4, 1)
+	flash_light.light_energy = 6.0
+	flash_light.omni_range = 4.0
+	flash_light.position = Vector3(0, 0.5, -1.4)  # Near the barrels
+	turret_root.add_child(flash_light)
+	# Auto-cleanup via tween
+	var tween := create_tween()
+	tween.tween_property(flash_light, "light_energy", 0.0, 0.12)
+	tween.tween_callback(flash_light.queue_free)
+
+
 func _on_ship_destroyed() -> void:
 	SoundManager.play_by_id("sfx_ship_destroyed")
 	_apply_skill_stats()
@@ -1100,6 +1142,7 @@ func _create_diagetic_visuals() -> void:
 	# --- Turret mount: small cylinder + box on the ship's nose (above the laser) ---
 	_turret_mount = MeshInstance3D.new()
 	var turret_root := Node3D.new()
+	turret_root.name = "TurretRoot"
 	turret_root.position = Vector3(0, 0.35, -1.0)
 	body_root.add_child(turret_root)
 	var turret_base := CylinderMesh.new()
@@ -1257,25 +1300,18 @@ func _create_diagetic_visuals() -> void:
 func _update_diagetic_visuals() -> void:
 	# --- Shield visual ---
 	if _shield_mesh:
-		# Direct check of unlock state — not just the cached cooldown value.
-		# This ensures the shield is hidden at game start when nothing is unlocked.
+		# Direct check of unlock state. Shield is ONLY visible when
+		# the skill is unlocked AND the shield is fully charged. While
+		# recharging, the shield is completely hidden (not faded).
 		var shield_unlocked := PlayerSkills and PlayerSkills.is_unlocked("shield_unlock")
-		_shield_mesh.visible = shield_unlocked
-		if shield_unlocked and _eff_shield_cooldown > 0.0:
-			if _shield_ready:
-				# Full strength, ready
-				_shield_mesh.material_override.albedo_color.a = 0.25
-				_shield_mesh.material_override.emission_energy_multiplier = 1.5
-			else:
-				# Down — fading translucent while recharging
-				var t: float = 0.0
-				if _eff_shield_cooldown > 0.0:
-					t = _shield_timer / _eff_shield_cooldown
-				var alpha: float = 0.05 + t * 0.10
-				_shield_mesh.material_override.albedo_color.a = alpha
-				_shield_mesh.material_override.emission_energy_multiplier = 0.2 + t * 0.6
-		else:
-			_shield_mesh.visible = false
+		_shield_mesh.visible = shield_unlocked and _shield_ready
+		if _shield_mesh.visible:
+			# Reset to the default blue color (in case it was flashed white
+			# by _flash_shield_break). Then set alpha and emission.
+			var mat: StandardMaterial3D = _shield_mesh.material_override
+			mat.albedo_color = Color(0.3, 0.6, 1.0, 0.25)
+			mat.emission = Color(0.3, 0.6, 1.0, 0.8)
+			mat.emission_energy_multiplier = 1.5
 	
 	# --- Solar panels visual ---
 	if _solar_panel_left:
