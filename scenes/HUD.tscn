@@ -198,7 +198,7 @@ mouse_filter = 2
 mouse_filter = 2
 
 [node name="Controls" type="Label" parent="Root/Bottom/Center"]
-text = "W/S thrust   A/D turn   Q/E barrel roll   F/Click mine   H harpoon   Tab camera   R reset   F1 skill tree   F2 spreadsheet"
+text = "W/S thrust   A/D turn   Q/E barrel roll   RMB gatling   G missiles   F/Click mine   Tab camera   R reset   F1 skill tree   F2 spreadsheet"
 modulate = Color(0.8, 0.85, 1, 0.7)
 
 [node name="Message" type="Label" parent="Root"]

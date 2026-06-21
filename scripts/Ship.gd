@@ -139,6 +139,8 @@ var _nanobot_timer: float = 0.0
 
 # Diagetic visual nodes (created in _ready)
 var _shield_mesh: MeshInstance3D = null
+var _shield_shader_mat: ShaderMaterial = null
+@export var shield_color: Color = Color(0.3, 0.6, 1.0)
 var _solar_panel_left: MeshInstance3D = null
 var _solar_panel_right: MeshInstance3D = null
 var _turret_mount: MeshInstance3D = null
@@ -156,13 +158,18 @@ var _missile_cooldown: float = 0.0
 # Turret heat system.  Continuous fire builds heat; the turret
 # cools down when idle.  Above `overheat_threshold` the turret
 # is locked out and the barrels glow red.  Skills reduce the
-# cool‑down rate and the heat build‑up rate.
-var _turret_heat: float = 0.0  # 0.0 (cool) to 1.0 (overheated)
-var _turret_barrel_pick: int = 0  # alternates which barrel fires next
+# cool‑down rate and the heat build‑up rate.  Hysteresis: once
+# overheated, fire stays locked until heat drops below
+# `re_enable_threshold` so the red glow is a real lockout, not
+# a flicker at the threshold.
+var _turret_heat: float = 0.0
+var _turret_barrel_pick: int = 0
+var _turret_locked_out: bool = false
 @export var turret_overheat_threshold: float = 1.0
+@export var turret_re_enable_threshold: float = 0.35
 @export var turret_heat_per_shot: float = 0.06
 @export var turret_cool_per_sec: float = 0.35
-@export var turret_fire_rate: float = 0.10  # seconds between bullets
+@export var turret_fire_rate: float = 0.10
 var _turret_fire_remaining: float = 0.0
 var _turret_barrel_mats: Array[StandardMaterial3D] = []
 var _turret_default_color: Color = Color(0.2, 0.2, 0.25, 1)
@@ -354,31 +361,34 @@ func _physics_flying(delta: float) -> void:
 	# --- Turret fire (right click held) ---------------------------
 	# Unlimited ammo, but the turret overheats with continuous fire.
 	# Overheated turrets glow red diagetically and lock out until
-	# they cool.  Skills reduce cool‑down time and heat build‑up.
+	# they cool BELOW the re‑enable threshold (hysteresis: the
+	# lockout is a real, visible period, not a flicker).
 	_turret_fire_remaining = max(0.0, _turret_fire_remaining - delta)
 	var turret_unlocked_now: bool = PlayerSkills != null and PlayerSkills.is_unlocked("turret_unlock")
-	# Compute cool rate from skills (no ternary — be explicit).
 	var turret_cooling: float = turret_cool_per_sec
 	if PlayerSkills != null and PlayerSkills.is_unlocked("turret_rapid_fire"):
 		turret_cooling = _eff_turret_cool_rate
-	# Cool down at full rate when idle; slower when overheated (the
-	# soft‑lock); and full rate when firing (the player has to
-	# release to let it cool).
-	var firing: bool = Input.is_action_pressed("turret_fire")
+	# Cool down at full rate when idle; slower when overheated so
+	# the red glow lingers visibly.
 	if _turret_heat > 0.0:
 		if _turret_heat >= turret_overheat_threshold:
-			# Overheated: drain slowly so the red glow lingers.
-			_turret_heat = max(0.0, _turret_heat - turret_cooling * 0.3 * delta)
-		elif not firing:
-			# Idle: full cool rate.
+			_turret_heat = max(0.0, _turret_heat - turret_cooling * 0.4 * delta)
+		else:
 			_turret_heat = max(0.0, _turret_heat - turret_cooling * delta)
+	# Hysteresis: once overheated, stay locked out until heat
+	# drops well below the threshold.
+	if _turret_heat >= turret_overheat_threshold:
+		_turret_locked_out = true
+	elif _turret_heat <= turret_re_enable_threshold:
+		_turret_locked_out = false
 	# Update the diagetic barrel colour.
 	_update_turret_barrel_color()
-	# Fire while the right mouse button is held, when not overheated,
-	# and the fire‑rate cooldown is ready.
+	# Fire while the right mouse button is held, when not locked
+	# out, and the fire‑rate cooldown is ready.
+	var firing: bool = Input.is_action_pressed("turret_fire")
 	var can_fire: bool = (
 		turret_unlocked_now
-		and _turret_heat < turret_overheat_threshold
+		and not _turret_locked_out
 		and firing
 		and _turret_fire_remaining <= 0.0
 	)
@@ -388,10 +398,10 @@ func _physics_flying(delta: float) -> void:
 		_turret_fire_remaining = turret_fire_rate
 
 	# --- Wing‑pod missiles (separate from turret) ---------------
-	# Right‑click is held for the turret above; missiles are fired
-	# by a separate key (H) so the player has both weapons.
+	# Missiles are fired on the `missile_fire` action (G key) so the
+	# player has both weapons without one stealing the other.
 	_missile_cooldown = max(0.0, _missile_cooldown - delta)
-	if Input.is_action_just_pressed("harpoon") \
+	if Input.is_action_just_pressed("missile_fire") \
 			and turret_unlocked_now \
 			and _missile_cooldown <= 0.0:
 		var any_missile: bool = false
@@ -1233,7 +1243,24 @@ func _ensure_material(mi: MeshInstance3D) -> StandardMaterial3D:
 # ── Diagetic visuals ──────────────────────────────────────────────────────────
 
 func _create_diagetic_visuals() -> void:
-	# --- Shield: semi-transparent sphere around the ship ---
+	# --- Shield: a fresnel/hex shader applied as a next‑pass on
+	# the hull mesh.  This paints the energy shield directly on
+	# the ship's hull rather than a separate bubble sphere.
+	_shield_shader_mat = ShaderMaterial.new()
+	_shield_shader_mat.shader = preload("res://shaders/ship_shield.gdshader")
+	_shield_shader_mat.set_shader_parameter("shield_color",
+		Color(shield_color.r, shield_color.g, shield_color.b, 1.0))
+	# Attach the shield as a material overlay on the hull (Hull is
+	# the first child of body_root).  material_overlay renders an
+	# additional material on top of the base material, which is
+	# perfect for painting a shield effect onto the hull surface
+	# without changing the hull's own metallic appearance.
+	var hull: MeshInstance3D = body_root.get_node_or_null("Hull") as MeshInstance3D
+	if hull != null:
+		hull.material_overlay = _shield_shader_mat
+		hull.material_overlay.set_shader_parameter("shield_strength", 0.0)
+	# Keep the old bubble shield as a fallback for when we want the
+	# classic dome — but it's hidden by default.
 	_shield_mesh = MeshInstance3D.new()
 	var shield_sphere := SphereMesh.new()
 	shield_sphere.radius = 1.6
@@ -1247,8 +1274,8 @@ func _create_diagetic_visuals() -> void:
 	shield_mat.emission = Color(0.3, 0.6, 1.0, 0.8)
 	shield_mat.emission_energy_multiplier = 1.5
 	shield_mat.transparency = 1
-	shield_mat.cull_mode = 2  # double-sided
-	shield_mat.shading_mode = 0  # unshaded
+	shield_mat.cull_mode = 2
+	shield_mat.shading_mode = 0
 	_shield_mesh.material_override = shield_mat
 	_shield_mesh.visible = false
 	add_child(_shield_mesh)
@@ -1460,14 +1487,13 @@ func _update_diagetic_visuals() -> void:
 		# the skill is unlocked AND the shield is fully charged. While
 		# recharging, the shield is completely hidden (not faded).
 		var shield_unlocked := PlayerSkills and PlayerSkills.is_unlocked("shield_unlock")
-		_shield_mesh.visible = shield_unlocked and _shield_ready
-		if _shield_mesh.visible:
-			# Reset to the default blue color (in case it was flashed white
-			# by _flash_shield_break). Then set alpha and emission.
-			var mat: StandardMaterial3D = _shield_mesh.material_override
-			mat.albedo_color = Color(0.3, 0.6, 1.0, 0.25)
-			mat.emission = Color(0.3, 0.6, 1.0, 0.8)
-			mat.emission_energy_multiplier = 1.5
+		_shield_mesh.visible = false
+	# Drive the hull‑shield shader parameter: 0 when not ready,
+	# 1 when fully charged, so the hex‑pattern emission fades on
+	# the hull when the shield is down.
+	if _shield_shader_mat != null:
+		var strength: float = 1.0 if (PlayerSkills and PlayerSkills.is_unlocked("shield_unlock") and _shield_ready) else 0.0
+		_shield_shader_mat.set_shader_parameter("shield_strength", strength)
 	
 	# --- Solar panels visual ---
 	if _solar_panel_left:
