@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://b4skilltree01" path="res://scenes/skill_tree.tscn" id="1_st"]
 [ext_resource type="PackedScene" uid="uid://bspreadsheet01" path="res://scenes/spreadsheet.tscn" id="1_ss"]
 [ext_resource type="PackedScene" uid="uid://b4asteroidmgr01" path="res://scenes/AsteroidManager.tscn" id="9_astmgr"]
+[ext_resource type="PackedScene" uid="uid://b4gemmanager01" path="res://scenes/GemManager.tscn" id="10_gemmgr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("8_sky_shader")
@@ -52,6 +53,9 @@ asteroid_manager_path = NodePath("../AsteroidManager")
 
 
 [node name="AsteroidManager" parent="." unique_id=888888888 instance=ExtResource("9_astmgr")]
+gem_manager_path = NodePath("../GemManager")
+
+[node name="GemManager" parent="." unique_id=777777777 instance=ExtResource("10_gemmgr")]
 
 [node name="ChaseCamera" type="Camera3D" parent="." unique_id=1948202557]
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 20, 19.47021)

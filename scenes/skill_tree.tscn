@@ -95,15 +95,13 @@ unique_name_in_owner = true
 clip_children = 1
 clip_contents = true
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -428.0
-offset_top = -229.0
-offset_right = 425.0
-offset_bottom = 241.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 50.0
+offset_right = 0.0
+offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -183,4 +181,7 @@ layout_mode = 2
 disabled = true
 text = "Unlock"
 
+[connection signal="pressed" from="Header/ZoomOutBtn" to="." method="_on_zoom_out_btn_pressed"]
+[connection signal="pressed" from="Header/ZoomInBtn" to="." method="_on_zoom_in_btn_pressed"]
+[connection signal="pressed" from="Header/ZoomResetBtn" to="." method="_on_zoom_reset_btn_pressed"]
 [connection signal="pressed" from="InfoPanel/VBoxContainer/UnlockButton" to="." method="_on_unlock_button_pressed"]

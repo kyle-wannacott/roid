@@ -10,6 +10,7 @@ signal asteroid_destroyed( world_pos: Vector3, gem_count: int )
 @export var default_health: float = 100.0
 @export var gem_scene: PackedScene = preload("res://scenes/Gem.tscn")
 @export var instance_shader: Shader = preload("res://shaders/asteroid_instance.gdshader")
+@export var gem_manager_path: NodePath
 
 enum Size { LARGE, MEDIUM, SMALL }
 static var SIZE_DEFS := [
@@ -31,6 +32,16 @@ var _pool: Array[int] = []
 
 @onready var mmi: MultiMeshInstance3D = $MultiMeshInstance
 @onready var rng := RandomNumberGenerator.new()
+var _gem_manager: Node = null
+
+
+func _get_gem_manager() -> Node:
+	if _gem_manager != null and is_instance_valid(_gem_manager): return _gem_manager
+	if not gem_manager_path.is_empty():
+		_gem_manager = get_node_or_null(gem_manager_path)
+	if _gem_manager == null:
+		_gem_manager = get_tree().get_first_node_in_group("gem_manager")
+	return _gem_manager
 
 
 func _ready() -> void:
@@ -132,7 +143,43 @@ func hit_asteroid(origin: Vector3, dir: Vector3, max_dist: float, damage: float)
 	if best < 0: return null
 	health[best] -= damage
 	if health[best] <= 0.0: _break_asteroid(best)
-	return origin + dir * best_hd
+	# Return both the hit position and the asteroid index so callers
+	# (e.g. chain mining) can exclude the just-hit asteroid.
+	return {"position": origin + dir * best_hd, "index": best}
+
+
+## Return the index of the nearest live asteroid to `from`, optionally
+## excluding one index. Used by chain mining to avoid re-hitting the
+## same asteroid that was just damaged.
+func get_nearest_to_excluding(from: Vector3, max_range: float, exclude_idx: int) -> int:
+	var best: int = -1
+	var best_d: float = max_range
+	for i in _count:
+		if not alive[i]: continue
+		if i == exclude_idx: continue
+		var d: float = positions[i].distance_to(from)
+		if d > max_range: continue
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+
+## Return the nearest live asteroid excluding a list of indices.
+## Used by chain mining (Diablo 2 style) to ensure the chain never
+## bounces back to any previously-hit asteroid.
+func get_nearest_to_excluding_many(from: Vector3, max_range: float, exclude_indices: Array) -> int:
+	var best: int = -1
+	var best_d: float = max_range
+	for i in _count:
+		if not alive[i]: continue
+		if i in exclude_indices: continue
+		var d: float = positions[i].distance_to(from)
+		if d > max_range: continue
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
 
 
 static func _ray_sphere_hit(o: Vector3, d: Vector3, md: float, c: Vector3, r: float) -> float:
@@ -161,7 +208,9 @@ func _break_asteroid(idx: int) -> void:
 			var ci: int = _add_asteroid(cp, child_sz)
 			_bake(ci)
 	if gems > 0 and gem_scene:
-		var parent: Node = get_parent()
+		# Prefer the central GemManager (MultiMesh rendering).
+		var gm: Node = _get_gem_manager()
+		var parent: Node = get_parent() if gm == null else gm
 		for _g in gems:
 			var gem: Node3D = gem_scene.instantiate() as Node3D
 			if gem == null: continue

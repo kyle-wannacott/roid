@@ -42,6 +42,7 @@ var _move_skill_id: String = ""
 var _move_hint_label: Label = null
 var _undo_stack: Array = []
 var _redo_stack: Array = []
+var _suppress_view_reset: bool = false  # Prevent camera reset (used by move skill)
 const _MAX_UNDO := 50
 var _selected_skill_ids: Array[String] = []
 var _multi_move_offsets: Dictionary = {}
@@ -400,14 +401,40 @@ func build_tree() -> void:
 		btn.mouse_exited.connect(_on_skill_button_hover_end)
 		nodes_layer.add_child(btn)
 		skill_buttons[skill_id] = btn
+		# Add semiconductor-style gold pins behind the button.
+		# Root/Command Module gets pins on all 4 sides; others get
+		# left + right by default. Configurable per-skill via the
+		# pin_sides, pins_per_side, and pin_length fields in the JSON.
+		var pin_viz := SkillPinVisual.new()
+		pin_viz.name = "Pins_" + skill_id
+		pin_viz.position = positions[skill_id] + Vector2(NODE_SIZE * 0.5, NODE_SIZE * 0.5)
+		pin_viz.node_size = NODE_SIZE
+		# Pull pin config from skill data with sensible defaults
+		var pin_sides_val: Array = skill.get("pin_sides", [])
+		if pin_sides_val.is_empty():
+			# Default: DIP-style (left + right) for normal skills,
+			# QFP-style (all 4 sides) for the central command module
+			if skill_id == "root":
+				pin_sides_val = ["left", "right", "top", "bottom"]
+			else:
+				pin_sides_val = ["left", "right"]
+		pin_viz.pin_sides = pin_sides_val
+		pin_viz.pins_per_side = int(skill.get("pins_per_side", 4))
+		pin_viz.pin_length = float(skill.get("pin_length", 8.0))
+		pin_viz.pin_width = float(skill.get("pin_width", 3.0))
+		nodes_layer.add_child(pin_viz)
+		# Move it behind the button
+		nodes_layer.move_child(pin_viz, nodes_layer.get_children().size() - 2)
 	for sid in _selected_skill_ids:
 		_set_skill_glow(sid, true)
 	if _post_build_center_skill != "":
 		var _scs := _post_build_center_skill
 		_post_build_center_skill = ""
 		call_deferred("_center_on_skill", _scs)
-	else:
+	elif not _suppress_view_reset:
 		call_deferred("_open_default_view")
+	# Clear the suppress flag after this build cycle
+	_suppress_view_reset = false
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 
@@ -667,6 +694,17 @@ func _on_unlock_button_pressed() -> void:
 		_update_gems_label()
 		build_tree()
 
+
+## Zoom button handlers (connected via tscn signal connections)
+func _on_zoom_out_btn_pressed() -> void:
+	_zoom_at_point(tree_viewport.global_position + tree_viewport.size * 0.5, -ZOOM_STEP)
+
+func _on_zoom_in_btn_pressed() -> void:
+	_zoom_at_point(tree_viewport.global_position + tree_viewport.size * 0.5, ZOOM_STEP)
+
+func _on_zoom_reset_btn_pressed() -> void:
+	_center_view()
+
 func _update_gems_label() -> void:
 	if skill_points_label and PlayerSkills:
 		skill_points_label.text = "Gems: %d" % PlayerSkills.gems
@@ -820,6 +858,8 @@ func _input(event: InputEvent) -> void:
 				_move_skill_id = ""
 				if _move_hint_label:
 					_move_hint_label.visible = false
+				# Rebuild without resetting the camera view
+				_suppress_view_reset = true
 				call_deferred("build_tree")
 				get_viewport().set_input_as_handled()
 				return
@@ -914,6 +954,7 @@ func _show_context_menu(skill_id: String) -> void:
 	_context_menu.add_item("Edit Skill", 0)
 	_context_menu.add_item("Add Child Skill", 1)
 	_context_menu.add_item("Duplicate", 6)
+	_context_menu.add_item("Edit Pins", 7)
 	_context_menu.add_separator()
 	_context_menu.add_item("Move Skill", 4)
 	if _selected_skill_ids.size() > 1 and _selected_skill_ids.has(skill_id):
@@ -921,6 +962,9 @@ func _show_context_menu(skill_id: String) -> void:
 	if skill_id != "root":
 		_context_menu.add_separator()
 		_context_menu.add_item("Delete Skill", 2)
+		# Add "Relock Skill" only if it's currently unlocked
+		if PlayerSkills and PlayerSkills.is_unlocked(skill_id):
+			_context_menu.add_item("Relock Skill (refund gems)", 8)
 	var btn_global := Vector2i(0, 0)
 	if skill_buttons.has(skill_id):
 		btn_global = Vector2i(skill_buttons[skill_id].global_position) + Vector2i(0, int(NODE_SIZE))
@@ -934,6 +978,8 @@ func _on_context_menu_id_pressed(id: int) -> void:
 		4: _start_move_skill(_context_skill_id)
 		5: _start_multi_move(_context_skill_id)
 		6: _duplicate_skill(_context_skill_id)
+		7: _open_pin_edit_dialog(_context_skill_id)
+		8: _relock_skill(_context_skill_id)
 
 func _start_move_skill(skill_id: String) -> void:
 	_move_skill_id = skill_id
@@ -970,6 +1016,42 @@ func _delete_skill(skill_id: String) -> void:
 	if _context_skill_id != "" and _context_skill_id != skill_id:
 		_post_build_center_skill = _context_skill_id
 	call_deferred("build_tree")
+
+## Refund a single unlocked skill and all of its (now-orphaned) dependents.
+## Refunds the gem cost of each relocked skill back to PlayerSkills.gems.
+func _relock_skill(skill_id: String) -> void:
+	if skill_id == "root" or not PlayerSkills:
+		return
+	if not PlayerSkills.is_unlocked(skill_id):
+		return
+	# Recursively relock this skill and any skills that depend on it.
+	var to_relock: Array[String] = [skill_id]
+	var visited: Dictionary = {skill_id: true}
+	var changed := true
+	while changed:
+		changed = false
+		for s in SKILL_TREE:
+			var sid: String = str(s.get("id", ""))
+			if visited.has(sid):
+				continue
+			if PlayerSkills.is_unlocked(sid) and _depends_on_skill(s, skill_id):
+				visited[sid] = true
+				to_relock.append(sid)
+				changed = true
+	# Refund each relocked skill's cost
+	var total_refund := 0
+	for sid in to_relock:
+		var data := _find_skill(sid)
+		if not data.is_empty():
+			total_refund += int(data.get("cost", 1))
+		PlayerSkills.unlocked_skills.erase(sid)
+	PlayerSkills.gems += total_refund
+	PlayerSkills.save_data()
+	if PlayerSkills.has_signal("skills_reset"):
+		PlayerSkills.skills_reset.emit()
+	PlayerSkills.gems_changed.emit(PlayerSkills.gems)
+	_update_gems_label()
+	build_tree()
 
 func _duplicate_skill(skill_id: String) -> void:
 	if skill_id.is_empty() or skill_id == "root":
@@ -1102,6 +1184,139 @@ func _open_edit_dialog(context_skill_id: String, is_new: bool) -> void:
 	if skill_data.is_empty():
 		return
 	_build_edit_dialog(skill_data, is_new)
+
+
+## Open a small dialog to edit the semiconductor-style pins on a skill node.
+func _open_pin_edit_dialog(skill_id: String) -> void:
+	var skill_data := _find_skill(skill_id)
+	if skill_data.is_empty():
+		return
+	if PlayerSkills:
+		PlayerSkills.editor_modal_open = true
+
+	var win := Window.new()
+	win.title = "Edit Pins — " + str(skill_data.get("name", skill_id))
+	win.size = Vector2i(360, 320)
+	win.wrap_controls = true
+	win.exclusive = true
+	add_child(win)
+
+	var vb := VBoxContainer.new()
+	vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vb.add_theme_constant_override("separation", 6)
+	vb.offset_left = 12.0; vb.offset_right = -12.0
+	vb.offset_top = 8.0;   vb.offset_bottom = -8.0
+	win.add_child(vb)
+
+	var make_row := func(lbl_text: String) -> HBoxContainer:
+		var row := HBoxContainer.new()
+		var lbl := Label.new()
+		lbl.text = lbl_text
+		lbl.custom_minimum_size = Vector2(120, 0)
+		row.add_child(lbl)
+		return row
+
+	# Pins per side
+	var pps_row: HBoxContainer = make_row.call("Pins per side:") as HBoxContainer
+	var pps_spin := SpinBox.new()
+	pps_spin.min_value = 0
+	pps_spin.max_value = 20
+	pps_spin.value = int(skill_data.get("pins_per_side", 4))
+	pps_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pps_row.add_child(pps_spin)
+	vb.add_child(pps_row)
+
+	# Pin length
+	var len_row: HBoxContainer = make_row.call("Pin length (px):") as HBoxContainer
+	var len_spin := SpinBox.new()
+	len_spin.min_value = 0
+	len_spin.max_value = 30
+	len_spin.value = float(skill_data.get("pin_length", 8.0))
+	len_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	len_row.add_child(len_spin)
+	vb.add_child(len_row)
+
+	# Pin width
+	var wid_row: HBoxContainer = make_row.call("Pin width (px):") as HBoxContainer
+	var wid_spin := SpinBox.new()
+	wid_spin.min_value = 1
+	wid_spin.max_value = 10
+	wid_spin.value = float(skill_data.get("pin_width", 3.0))
+	wid_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wid_row.add_child(wid_spin)
+	vb.add_child(wid_row)
+
+	# Sides (checkboxes)
+	var sides_row: HBoxContainer = make_row.call("Pins on sides:") as HBoxContainer
+	var side_left := CheckButton.new()
+	side_left.text = "Left"
+	side_left.button_pressed = _side_enabled(skill_data, "left")
+	var side_right := CheckButton.new()
+	side_right.text = "Right"
+	side_right.button_pressed = _side_enabled(skill_data, "right")
+	var side_top := CheckButton.new()
+	side_top.text = "Top"
+	side_top.button_pressed = _side_enabled(skill_data, "top")
+	var side_bottom := CheckButton.new()
+	side_bottom.text = "Bottom"
+	side_bottom.button_pressed = _side_enabled(skill_data, "bottom")
+	sides_row.add_child(side_left)
+	sides_row.add_child(side_right)
+	sides_row.add_child(side_top)
+	sides_row.add_child(side_bottom)
+	vb.add_child(sides_row)
+
+	# Buttons
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 8)
+	var save_btn := Button.new()
+	save_btn.text = "Save"
+	save_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_row.add_child(save_btn)
+	btn_row.add_child(cancel_btn)
+	vb.add_child(btn_row)
+
+	save_btn.pressed.connect(func():
+		var sides: Array = []
+		if side_left.button_pressed: sides.append("left")
+		if side_right.button_pressed: sides.append("right")
+		if side_top.button_pressed: sides.append("top")
+		if side_bottom.button_pressed: sides.append("bottom")
+		_push_undo_state()
+		for i in SKILL_TREE.size():
+			if SKILL_TREE[i].get("id", "") == skill_id:
+				SKILL_TREE[i]["pin_sides"] = sides
+				SKILL_TREE[i]["pins_per_side"] = int(pps_spin.value)
+				SKILL_TREE[i]["pin_length"] = float(len_spin.value)
+				SKILL_TREE[i]["pin_width"] = float(wid_spin.value)
+				break
+		_save_skill_data()
+		if PlayerSkills: PlayerSkills.editor_modal_open = false
+		win.queue_free()
+		_post_build_center_skill = skill_id
+		call_deferred("build_tree"))
+
+	cancel_btn.pressed.connect(func():
+		if PlayerSkills: PlayerSkills.editor_modal_open = false
+		win.queue_free())
+	win.close_requested.connect(func():
+		if PlayerSkills: PlayerSkills.editor_modal_open = false
+		win.queue_free())
+	win.popup_centered()
+
+
+## Helper: is `side` in the skill's pin_sides list (with default fallback)?
+func _side_enabled(skill: Dictionary, side: String) -> bool:
+	var sides: Array = skill.get("pin_sides", [])
+	if sides.is_empty():
+		# Default: root on all 4 sides, others left+right
+		if str(skill.get("id", "")) == "root":
+			return true
+		return side == "left" or side == "right"
+	return side in sides
 
 func _build_edit_dialog(skill_data: Dictionary, is_new: bool) -> void:
 	var win := Window.new()

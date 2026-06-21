@@ -124,6 +124,7 @@ var gems: int = 0
 var _eff_gem_capacity: int = 50  # Base max gems before skills
 var _eff_gem_pickup_bonus: float = 0.0
 var _eff_gem_attract_bonus: float = 0.0
+var _eff_magnet_speed_mult: float = 1.0
 var mining_active: bool = false
 var can_mine: bool = false
 var current_target: Node3D = null
@@ -655,20 +656,28 @@ func _update_mining(want_mine: bool, delta: float) -> void:
 	var hit: Variant = asteroid_mgr.hit_asteroid(
 		laser_origin, forward, _eff_laser_range, dmg)
 	var hit_pos: Vector3 = laser_origin + (-global_transform.basis.z * _eff_laser_range)
-	if typeof(hit) == TYPE_VECTOR3:
+	var hit_index: int = -1
+	if typeof(hit) == TYPE_DICTIONARY:
+		var hd: Dictionary = hit as Dictionary
+		hit_pos = hd.get("position", hit_pos)
+		hit_index = int(hd.get("index", -1))
+	elif typeof(hit) == TYPE_VECTOR3:
+		# Backwards compatibility if manager still returns Vector3
 		hit_pos = hit as Vector3
 
 	laser_hit.global_position = hit_pos
 	_laser_stretch(laser_origin, hit_pos)
 
 	# Spawn rock chips at the hit point.
-	if asteroid_mgr != null and typeof(hit) == TYPE_VECTOR3:
+	if asteroid_mgr != null and hit_index >= 0:
 		asteroid_mgr.spawn_chips(hit_pos)
 
 	# Chain laser: if we hit an asteroid and have chain levels, fire
 	# additional beams to nearby asteroids in sequence.
-	if _eff_laser_chain_count > 0 and typeof(hit) == TYPE_VECTOR3:
-		_chain_laser(laser_origin, hit_pos, _eff_laser_chain_count)
+	# Pass hit_index as the first visited asteroid so the chain
+	# never bounces back to the initial target (Diablo 2 style).
+	if _eff_laser_chain_count > 0 and hit_index >= 0:
+		_chain_laser(laser_origin, hit_pos, _eff_laser_chain_count, [hit_index])
 
 
 func _laser_stretch(from_world: Vector3, to_world: Vector3) -> void:
@@ -684,35 +693,28 @@ func _laser_stretch(from_world: Vector3, to_world: Vector3) -> void:
 ## chain 3 = 12.5% of normal, etc. This means chained asteroids
 ## take progressively longer to destroy, matching the main laser's
 ## time-to-kill so the chain doesn't insta-destroy them.
-func _chain_laser(from_world: Vector3, last_hit: Vector3, remaining: int, depth: int = 1) -> void:
+## Works like Diablo 2's chain lightning: the chain only chains to
+## asteroids NOT in the visited list, so it never bounces back to
+## any previously-hit asteroid (including the initial target).
+func _chain_laser(from_world: Vector3, last_hit: Vector3, remaining: int, visited: Array = [], depth: int = 1) -> void:
 	if remaining <= 0 or asteroid_mgr == null:
 		return
 	# Damage is 50% weaker per depth level
 	var chain_damage_mult: float = pow(0.5, depth)
-	# Use the AsteroidManager to find the nearest live asteroid
-	# (the asteroids group may be empty if the manager is in use).
+	# Use the AsteroidManager to find the nearest live asteroid,
+	# EXCLUDING all previously-visited asteroids (Diablo 2 behavior).
 	var chain_range: float = 40.0
 	var nearest_idx: int = -1
-	if asteroid_mgr.has_method("get_nearest_to"):
-		nearest_idx = asteroid_mgr.get_nearest_to(last_hit, chain_range)
+	if asteroid_mgr.has_method("get_nearest_to_excluding_many"):
+		nearest_idx = asteroid_mgr.get_nearest_to_excluding_many(last_hit, chain_range, visited)
+	elif asteroid_mgr.has_method("get_nearest_to_excluding"):
+		# Fallback: only exclude the immediate previous
+		var prev := -1
+		if not visited.is_empty():
+			prev = visited[visited.size() - 1]
+		nearest_idx = asteroid_mgr.get_nearest_to_excluding(last_hit, chain_range, prev)
 	if nearest_idx < 0:
-		# Fallback: search the legacy "asteroids" group
-		var nearest_dist: float = INF
-		var nearest_node: Node3D = null
-		for ast in get_tree().get_nodes_in_group("asteroids"):
-			if not is_instance_valid(ast): continue
-			var d: float = last_hit.distance_to(ast.global_position)
-			if d > chain_range or d < 0.5: continue
-			if d < nearest_dist:
-				nearest_dist = d
-				nearest_node = ast
-		if nearest_node == null: return
-		nearest_node.take_damage(laser_damage_per_sec * chain_damage_mult)
-		if asteroid_mgr != null:
-			asteroid_mgr.spawn_chips(nearest_node.global_position)
-		_spawn_chain_beam(last_hit, nearest_node.global_position)
-		_chain_laser(from_world, nearest_node.global_position, remaining - 1, depth + 1)
-		return
+		return  # No more asteroids in range to chain to
 	var nearest_pos: Vector3 = asteroid_mgr.get_asteroid_pos(nearest_idx)
 	# Apply damage to the chained asteroid
 	# Start the ray slightly outside the asteroid so the ray-sphere
@@ -726,8 +728,11 @@ func _chain_laser(from_world: Vector3, last_hit: Vector3, remaining: int, depth:
 	asteroid_mgr.spawn_chips(nearest_pos)
 	# Visual chain beam: persistent cylinder mesh that fades out
 	_spawn_chain_beam(last_hit, nearest_pos)
-	# Recurse for multi-chain with increased depth
-	_chain_laser(from_world, nearest_pos, remaining - 1, depth + 1)
+	# Add this asteroid to the visited list so the chain doesn't bounce back
+	var new_visited: Array = visited.duplicate()
+	new_visited.append(nearest_idx)
+	# Recurse for multi-chain, excluding all previously-visited asteroids
+	_chain_laser(from_world, nearest_pos, remaining - 1, new_visited, depth + 1)
 
 func _spawn_chain_beam(from: Vector3, to: Vector3) -> void:
 	# Build a thin cylinder mesh between the two points
@@ -877,6 +882,10 @@ func _attract_nearby_gems() -> void:
 			continue
 		var d: float = global_position.distance_to(gem.global_position)
 		if d <= gem_attract_radius + _eff_gem_attract_bonus:
+			# Pass the current magnet speed multiplier so the gem
+			# travels at the upgraded speed.
+			if "home_speed_mult" in gem:
+				gem.home_speed_mult = _eff_magnet_speed_mult
 			gem.attract_to(self)
 
 
@@ -884,18 +893,19 @@ func _process(delta: float) -> void:
 	for gem in get_tree().get_nodes_in_group("gems"):
 		if not is_instance_valid(gem):
 			continue
-		if not (gem as Gem).being_attracted:
+		if not (gem.get("being_attracted") as bool):
 			continue
 		if global_position.distance_to(gem.global_position) < gem_pickup_radius + _eff_gem_pickup_bonus:
-			gem.queue_free()
-			# Respect gem capacity (don't overflow)
+			# Only collect the gem if we have room in the cargo hold.
+			# Gems stay orbiting the ship until capacity frees up.
 			if gems < _eff_gem_capacity:
-				gems = min(_eff_gem_capacity, gems + 1)
-			gems_changed.emit(gems)
-			# Gem heal from nanobot_gem_heal skill
-			if _eff_gem_heal > 0 and health < _eff_max_health:
-				health = min(_eff_max_health, health + _eff_gem_heal)
-				health_changed.emit(health, _eff_max_health)
+				gem.queue_free()
+				gems += 1
+				gems_changed.emit(gems)
+				# Gem heal from nanobot_gem_heal skill (only when actually collected)
+				if _eff_gem_heal > 0 and health < _eff_max_health:
+					health = min(_eff_max_health, health + _eff_gem_heal)
+					health_changed.emit(health, _eff_max_health)
 	
 	# Nanobot auto-repair
 	if _eff_nanobot_heal > 0.0 and _eff_nanobot_interval > 0.0:
@@ -1495,6 +1505,7 @@ func _reset_effective_stats() -> void:
 	_eff_gem_capacity = 50
 	_eff_gem_pickup_bonus = 0.0
 	_eff_gem_attract_bonus = 0.0
+	_eff_magnet_speed_mult = 1.0
 	_eff_solar_regen = 0.0
 	_eff_nanobot_heal = 0.0
 	_eff_nanobot_interval = 0.0

@@ -4,7 +4,8 @@
 		"desc": "Central command system — foundation of all ship systems.",
 		"direction": "auto",
 		"effects": {},
-		"icon": "RPG_Crossed_Swords_Duel_PvP_Combat_Battle_War.png",
+		"exclusive_children": false,
+		"icon": "Software_Hardware_CPU_Processor_Computing.png",
 		"id": "root",
 		"name": "Command Module",
 		"parent": "",
@@ -111,6 +112,15 @@
 		"name": "Solar Panels",
 		"parent": "fuel_efficiency_2",
 		"parent_skill_id": "fuel_capacity_4",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right",
+			"top",
+			"bottom"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4,
 		"unlock_color": "#44aaff",
 		"x": -27.0,
 		"y": -24.0
@@ -232,6 +242,13 @@
 		"name": "Armor Plating",
 		"parent": "root",
 		"parent_skill_id": "",
+		"pin_length": 6.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4,
 		"unlock_color": "#66cc66",
 		"x": 700.0,
 		"y": 470.0
@@ -265,8 +282,8 @@
 		"parent": "armor_plating_2",
 		"parent_skill_id": "",
 		"unlock_color": "#66cc66",
-		"x": 700.0,
-		"y": 710.0
+		"x": 596.0,
+		"y": 703.0
 	},
 	{
 		"cost": 3.0,
@@ -277,7 +294,7 @@
 			"nanobot_interval": 5.0
 		},
 		"exclusive_children": false,
-		"icon": "Alchemy_Life.png",
+		"icon": "RPG_Creature_Archetypes_Robot_Mechanical.png",
 		"id": "nanorobots",
 		"name": "Nanorobots",
 		"parent": "armor_plating_2",
@@ -293,7 +310,8 @@
 		"effects": {
 			"gem_heal_amount": 2.0
 		},
-		"icon": "Alchemy_Life.png",
+		"exclusive_children": false,
+		"icon": "RPG_Creature_Archetypes_Robot_Mechanical.png",
 		"id": "nanobot_gem_heal",
 		"name": "Gem Nanobots",
 		"parent": "nanorobots",
@@ -316,8 +334,8 @@
 		"parent": "armor_plating_3",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 636.0,
-		"y": 796.0
+		"x": 431.0,
+		"y": 717.0
 	},
 	{
 		"cost": 3.0,
@@ -332,8 +350,8 @@
 		"parent": "shield_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 506.0,
-		"y": 876.0
+		"x": 301.0,
+		"y": 797.0
 	},
 	{
 		"cost": 4.0,
@@ -348,8 +366,8 @@
 		"parent": "shield_recharge",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 376.0,
-		"y": 936.0
+		"x": 310.0,
+		"y": 918.0
 	},
 	{
 		"cost": 2.0,
@@ -464,8 +482,8 @@
 		"parent": "root",
 		"parent_skill_id": "",
 		"unlock_color": "#88aaff",
-		"x": 697.0,
-		"y": 130.0
+		"x": 821.0,
+		"y": 465.0
 	},
 	{
 		"cost": 2.0,
@@ -481,8 +499,8 @@
 		"parent": "harpoon_extended",
 		"parent_skill_id": "",
 		"unlock_color": "#88aaff",
-		"x": 684.0,
-		"y": -15.0
+		"x": 948.0,
+		"y": 596.0
 	},
 	{
 		"cost": 3.0,
@@ -498,8 +516,8 @@
 		"parent": "harpoon_speed",
 		"parent_skill_id": "",
 		"unlock_color": "#88aaff",
-		"x": 681.0,
-		"y": -144.0
+		"x": 1031.0,
+		"y": 741.0
 	},
 	{
 		"cost": 3.0,
@@ -507,7 +525,7 @@
 		"direction": "left-down",
 		"effects": {},
 		"exclusive_children": false,
-		"icon": "RPG_Item_Weapon_Pistol_Gun_Ranged.png",
+		"icon": "Warfare_Medieval_Siege_Engine_Ballista_Turret.png",
 		"id": "turret_unlock",
 		"name": "Gatling Turret",
 		"parent": "root",
@@ -535,7 +553,8 @@
 		"desc": "Faster turret projectiles travel further.",
 		"direction": "left-up",
 		"effects": {},
-		"icon": "RPG_Item_Weapon_Arrow_Ranged_Pierce_Damage.png",
+		"exclusive_children": false,
+		"icon": "Travel_Car_Driving_Speedometer_Graph.png",
 		"id": "turret_projectile_speed",
 		"name": "High-Velocity Rounds",
 		"parent": "turret_unlock",
@@ -583,6 +602,13 @@
 		"name": "Critical Strike",
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
+		"pin_length": 6.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 2.0,
+		"pins_per_side": 4,
 		"unlock_color": "#ffdd00",
 		"x": 482.0,
 		"y": 561.0
@@ -607,7 +633,8 @@
 		"desc": "Turret fires +1 additional projectile per level in a spread.",
 		"direction": "left",
 		"effects": {},
-		"icon": "RPG_Combat_Types_Sword_Arrow_Staff_Melee_Ranged_Magic.png",
+		"exclusive_children": false,
+		"icon": "RPG_Skill_Multishot_Arrows_Ranged_Attack.png",
 		"id": "multi_shot",
 		"name": "Multi-Shot",
 		"parent": "turret_rapid_fire",
@@ -650,7 +677,8 @@
 		"desc": "Unlock missile pods (enemies required).",
 		"direction": "right-down",
 		"effects": {},
-		"icon": "RPG_Item_Weapon_Arrow_Ranged_Pierce_Damage.png",
+		"exclusive_children": false,
+		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
 		"id": "missile_unlock",
 		"name": "Missile System",
 		"parent": "turret_rapid_fire",
@@ -664,7 +692,8 @@
 		"desc": "Missiles automatically target the nearest enemy.",
 		"direction": "right",
 		"effects": {},
-		"icon": "RPG_Item_Weapon_Arrow_Ranged_Pierce_Damage.png",
+		"exclusive_children": false,
+		"icon": "Weather_Heat_Hot_Desert_Baking.png",
 		"id": "missile_heat_seeking",
 		"name": "Heat Seeking",
 		"parent": "missile_unlock",
@@ -684,11 +713,11 @@
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": 125.0,
-		"y": 684.0
+		"x": -141.0,
+		"y": 793.0
 	},
 	{
-		"cost": 2,
+		"cost": 2.0,
 		"desc": "Mining laser becomes wider, hitting a larger area.",
 		"direction": "right-up",
 		"effects": {},
@@ -703,7 +732,7 @@
 		"y": 457.0
 	},
 	{
-		"cost": 3,
+		"cost": 3.0,
 		"desc": "Mining laser becomes even wider.",
 		"direction": "right-up",
 		"effects": {},
@@ -748,52 +777,55 @@
 		"y": 288.0
 	},
 	{
-		"cost": 2.0,
+		"cost": 2,
 		"desc": "Increase maximum gem capacity by 25.",
 		"direction": "right-down",
 		"effects": {
 			"gem_capacity_bonus": 25.0
 		},
-		"icon": "Alchemy_Potion_Vial_Bottle_Heart_Health_Life_Full.png",
+		"exclusive_children": false,
+		"icon": "Software_Package_Box_Crate_Archive_Open.png",
 		"id": "gem_capacity",
 		"name": "Cargo Hold",
 		"parent": "root",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd44",
-		"x": 862.0,
-		"y": 505.0
+		"x": 800.0,
+		"y": 56.0
 	},
 	{
-		"cost": 3.0,
+		"cost": 3,
 		"desc": "Increase maximum gem capacity by 50.",
 		"direction": "right",
 		"effects": {
 			"gem_capacity_bonus": 50.0
 		},
-		"icon": "Alchemy_Potion_Vial_Bottle_Heart_Health_Life_Full.png",
+		"exclusive_children": false,
+		"icon": "Software_Package_Box_Crate_Archive_Open.png",
 		"id": "gem_capacity_2",
 		"name": "Cargo Hold II",
 		"parent": "gem_capacity",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd44",
-		"x": 961.0,
-		"y": 674.0
+		"x": 812.0,
+		"y": -107.0
 	},
 	{
-		"cost": 4.0,
+		"cost": 4,
 		"desc": "Increase maximum gem capacity by 100.",
 		"direction": "right",
 		"effects": {
 			"gem_capacity_bonus": 100.0
 		},
-		"icon": "Alchemy_Potion_Vial_Bottle_Heart_Health_Life_Full.png",
+		"exclusive_children": false,
+		"icon": "Software_Package_Box_Crate_Archive_Open.png",
 		"id": "gem_capacity_3",
 		"name": "Cargo Hold III",
 		"parent": "gem_capacity_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd44",
-		"x": 1057.0,
-		"y": 860.0
+		"x": 812.0,
+		"y": -280.0
 	},
 	{
 		"cost": 2.0,
@@ -808,8 +840,8 @@
 		"parent": "root",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 494.0,
-		"y": 27.0
+		"x": 644.0,
+		"y": 86.0
 	},
 	{
 		"cost": 3.0,
@@ -824,8 +856,8 @@
 		"parent": "gem_magnet",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 421.0,
-		"y": -113.0
+		"x": 571.0,
+		"y": -54.0
 	},
 	{
 		"cost": 4.0,
@@ -840,8 +872,8 @@
 		"parent": "gem_magnet_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 391.0,
-		"y": -203.0
+		"x": 359.0,
+		"y": -214.0
 	},
 	{
 		"cost": 2.0,
@@ -893,5 +925,56 @@
 		"unlock_color": "#ff9944",
 		"x": 38.0,
 		"y": 121.0
+	},
+	{
+		"cost": 2.0,
+		"desc": "Gems travel 50% faster to the ship.",
+		"direction": "right",
+		"effects": {
+			"magnet_speed_mult": 0.5
+		},
+		"exclusive_children": false,
+		"icon": "RPG_Stat_Magnetism.png",
+		"id": "magnet_speed_1",
+		"name": "Magnet Speed I",
+		"parent": "gem_magnet",
+		"parent_skill_id": "",
+		"unlock_color": "#ff88cc",
+		"x": 688.0,
+		"y": -85.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Gems travel 100% faster to the ship.",
+		"direction": "right",
+		"effects": {
+			"magnet_speed_mult": 1.0
+		},
+		"exclusive_children": false,
+		"icon": "RPG_Stat_Magnetism.png",
+		"id": "magnet_speed_2",
+		"name": "Magnet Speed II",
+		"parent": "magnet_speed_1",
+		"parent_skill_id": "",
+		"unlock_color": "#ff88cc",
+		"x": 620.0,
+		"y": -254.0
+	},
+	{
+		"cost": 4.0,
+		"desc": "Gems travel 150% faster to the ship.",
+		"direction": "right",
+		"effects": {
+			"magnet_speed_mult": 1.5
+		},
+		"exclusive_children": false,
+		"icon": "RPG_Stat_Magnetism.png",
+		"id": "magnet_speed_3",
+		"name": "Magnet Speed III",
+		"parent": "magnet_speed_2",
+		"parent_skill_id": "",
+		"unlock_color": "#ff88cc",
+		"x": 616.0,
+		"y": -409.0
 	}
 ]
