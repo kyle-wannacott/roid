@@ -125,44 +125,57 @@ func _process(_delta: float) -> void:
 			mmi.multimesh.set_instance_transform(i, Transform3D(Basis(), positions[i]))
 
 
-# ── Gem mesh: faceted octahedron (diamond) ─────────────────────
+# ── Gem mesh: round‑cut brilliant diamond ─────────────────────
+# 6‑fold symmetry: flat hexagonal table at top, crown facets sloping
+# outward to a wider girdle, then pavilion facets converging to a
+# culet (point) at the bottom.  24 flat‑shaded facets total so each
+# catches light differently — the classic "fire" of a real gem.
 
 func _build_gem_mesh() -> ArrayMesh:
-	var top_y: float = 0.5
-	var bot_y: float = -0.3
-	var r: float = 0.32
+	var top_y:    float = 0.45   # table height
+	var girdle_y: float = 0.0    # widest part
+	var culet_y:  float = -0.55  # bottom point
+	var table_r:  float = 0.22   # radius of the flat top
+	var girdle_r: float = 0.42   # radius at the widest part (girdle)
+	var sides:    int = 6        # 6‑fold symmetry
 
-	# 6 unique vertex positions
-	var top := Vector3(0, top_y, 0)
-	var e := Vector3(r, 0, 0)
-	var n := Vector3(0, 0, r)
-	var w := Vector3(-r, 0, 0)
-	var s := Vector3(0, 0, -r)
-	var bot := Vector3(0, bot_y, 0)
+	var top_center := Vector3(0, top_y, 0)
+	var bot_center := Vector3(0, culet_y, 0)
 
-	# 8 faces, each with its own 3 duplicated vertices for flat shading
-	var faces: Array = [
-		# Top cap (4 triangles)
-		[top, e, n], [top, n, w], [top, w, s], [top, s, e],
-		# Bottom cap (4 triangles) – winding reversed for outward normals
-		[bot, n, e], [bot, w, n], [bot, s, w], [bot, e, s],
-	]
+	# Table ring (hex) at the top, girdle ring (hex) at the widest part.
+	var table_ring: PackedVector3Array = PackedVector3Array()
+	var girdle_ring: PackedVector3Array = PackedVector3Array()
+	for i in sides:
+		var a: float = TAU * float(i) / float(sides)
+		table_ring.append(Vector3(cos(a) * table_r, top_y, sin(a) * table_r))
+		girdle_ring.append(Vector3(cos(a) * girdle_r, girdle_y, sin(a) * girdle_r))
 
-	var verts := PackedVector3Array()
-	var normals := PackedVector3Array()
-	verts.resize(faces.size() * 3)
-	normals.resize(faces.size() * 3)
-	for fi in faces.size():
-		var face: Array = faces[fi]
-		var v0: Vector3 = face[0]; var v1: Vector3 = face[1]; var v2: Vector3 = face[2]
-		var fn: Vector3 = (v1 - v0).cross(v2 - v0).normalized()
-		var base: int = fi * 3
-		verts[base]     = v0
-		verts[base + 1] = v1
-		verts[base + 2] = v2
-		normals[base]     = fn
-		normals[base + 1] = fn
-		normals[base + 2] = fn
+	# Build faces with duplicated vertices so each is flat‑shaded.
+	var verts: PackedVector3Array = PackedVector3Array()
+	var normals: PackedVector3Array = PackedVector3Array()
+
+	# 1) Table: 6 fan triangles from the table centre to each table‑ring edge.
+	for i in sides:
+		var v0: Vector3 = top_center
+		var v1: Vector3 = table_ring[i]
+		var v2: Vector3 = table_ring[(i + 1) % sides]
+		_emit_flat_face(verts, normals, v0, v1, v2)
+
+	# 2) Crown: 6 quads (12 triangles) connecting table ring to girdle ring.
+	for i in sides:
+		var tv0: Vector3 = table_ring[i]
+		var tv1: Vector3 = table_ring[(i + 1) % sides]
+		var gv0: Vector3 = girdle_ring[i]
+		var gv1: Vector3 = girdle_ring[(i + 1) % sides]
+		_emit_flat_face(verts, normals, tv0, gv0, gv1)
+		_emit_flat_face(verts, normals, tv0, gv1, tv1)
+
+	# 3) Pavilion: 6 fan triangles from the girdle ring down to the culet.
+	for i in sides:
+		var gv0: Vector3 = girdle_ring[i]
+		var gv1: Vector3 = girdle_ring[(i + 1) % sides]
+		# Winding: bot → gv1 → gv0 so the normal points outward.
+		_emit_flat_face(verts, normals, bot_center, gv1, gv0)
 
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -171,3 +184,19 @@ func _build_gem_mesh() -> ArrayMesh:
 	var m := ArrayMesh.new()
 	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return m
+
+
+## Helper: append a single flat‑shaded triangle to the growing arrays.
+## The winding is auto‑fixed so the normal always points outward from
+## the gem's centre line.
+func _emit_flat_face(verts: PackedVector3Array, normals: PackedVector3Array, a: Vector3, b: Vector3, c: Vector3) -> void:
+	var n: Vector3 = (b - a).cross(c - a).normalized()
+	var center: Vector3 = (a + b + c) / 3.0
+	# If the normal is pointing inward, flip the winding.
+	if n.dot(center) < 0.0:
+		var tmp: Vector3 = b
+		b = c
+		c = tmp
+		n = -n
+	verts.append(a); verts.append(b); verts.append(c)
+	normals.append(n); normals.append(n); normals.append(n)

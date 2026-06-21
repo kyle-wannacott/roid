@@ -177,6 +177,7 @@ var current_pitch_tilt: float = 0.0
 var current_bank: float = 0.0
 var _last_want_forward: float = 0.0
 var _last_yaw_input: float = 0.0
+var _last_chain_hit_index: int = -1  # Track when the chain already fired for this main hit
 
 # Barrel-roll state (Q/E one-shot 360° spins).
 var _barrel_roll_dir: int = 0   # 0 = none, 1 = left, -1 = right
@@ -623,6 +624,8 @@ func _update_mining(want_mine: bool, delta: float) -> void:
 		mining_active = false
 		laser.visible = false
 		laser_hit.visible = false
+		# Reset chain tracker so the next mining session can chain again
+		_last_chain_hit_index = -1
 		return
 
 	# Find the closest asteroid in the forward cone via the manager.
@@ -674,9 +677,12 @@ func _update_mining(want_mine: bool, delta: float) -> void:
 
 	# Chain laser: if we hit an asteroid and have chain levels, fire
 	# additional beams to nearby asteroids in sequence.
-	# Pass hit_index as the first visited asteroid so the chain
-	# never bounces back to the initial target (Diablo 2 style).
-	if _eff_laser_chain_count > 0 and hit_index >= 0:
+	# Only fire the chain when the main hit target changes — this
+	# ensures the chain fires ONCE per target (like Diablo 2's chain
+	# lightning) instead of forking to multiple asteroids over time
+	# as each chain target gets destroyed.
+	if _eff_laser_chain_count > 0 and hit_index >= 0 and hit_index != _last_chain_hit_index:
+		_last_chain_hit_index = hit_index
 		_chain_laser(laser_origin, hit_pos, _eff_laser_chain_count, [hit_index])
 
 
