@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyBullet.gd" id="1"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_bullet"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_bullet"]
+albedo_color = Color(1, 0.2, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.2, 0.2, 1)
+emission_energy_multiplier = 2.0
+
+[node name="EnemyBullet" type="MeshInstance3D" groups=["enemy_projectiles"]]
+script = ExtResource("1")
+mesh = SubResource("SphereMesh_bullet")
+material_override = SubResource("Mat_bullet")

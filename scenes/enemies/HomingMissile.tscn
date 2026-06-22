@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/HomingMissile.gd" id="1"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_body"]
+top_radius = 0.05
+bottom_radius = 0.1
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(0.6, 0.2, 0.2, 1)
+metallic = 0.5
+
+[node name="HomingMissile" type="MeshInstance3D" groups=["enemy_projectiles"]]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+script = ExtResource("1")
+mesh = SubResource("CylinderMesh_body")
+material_override = SubResource("Mat_body")
+
+[node name="EngineGlow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+light_color = Color(1, 0.5, 0.2, 1)
+light_energy = 1.0
+omni_range = 2.0

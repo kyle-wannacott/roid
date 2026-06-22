@@ -11,6 +11,9 @@
 [ext_resource type="PackedScene" uid="uid://bms8yfasqfv7e" path="res://scenes/AsteroidManager.tscn" id="9_astmgr"]
 [ext_resource type="PackedScene" uid="uid://bluo6dw8e5rvs" path="res://scenes/GemManager.tscn" id="10_gemmgr"]
 [ext_resource type="Script" uid="uid://bbnwp8sc4sqi4" path="res://scripts/SunManager.gd" id="11_sunmgr"]
+[ext_resource type="PackedScene" path="res://scenes/EnemyManager.tscn" id="12_enemy_mgr"]
+[ext_resource type="PackedScene" path="res://scenes/SpawnPointGenerator.tscn" id="13_spawn_gen"]
+[ext_resource type="PackedScene" path="res://scenes/DangerHUD.tscn" id="14_danger_hud"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("8_sky_shader")
@@ -86,3 +89,12 @@ visible = false
 visible = false
 offset_top = 0.0
 offset_bottom = 0.0
+
+[node name="EnemyManager" parent="." instance=ExtResource("12_enemy_mgr")]
+ship_path = NodePath("Ship")
+world_seed = 42
+
+[node name="SpawnPointGenerator" parent="." instance=ExtResource("13_spawn_gen")]
+world_seed = 42
+
+[node name="DangerHUD" parent="." instance=ExtResource("14_danger_hud")]

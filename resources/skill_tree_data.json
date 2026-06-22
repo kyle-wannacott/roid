@@ -126,6 +126,21 @@
 		"y": -24.0
 	},
 	{
+		"cost": 3.0,
+		"desc": "Solar panels continue charging fuel even while the ship is moving.",
+		"direction": "down",
+		"effects": {},
+		"exclusive_children": false,
+		"icon": "Weather_Sun_Holy_Light_Rays_Summer_Season.png",
+		"id": "solar_while_moving",
+		"name": "Solar While Moving",
+		"parent": "solar_panels",
+		"parent_skill_id": "",
+		"unlock_color": "#44aaff",
+		"x": -27.0,
+		"y": 46.0
+	},
+	{
 		"cost": 2.0,
 		"desc": "Improve ship speed and maneuverability. +10% top speed, +15% yaw rate.",
 		"direction": "right",
@@ -282,8 +297,8 @@
 		"parent": "armor_plating_2",
 		"parent_skill_id": "",
 		"unlock_color": "#66cc66",
-		"x": 596.0,
-		"y": 703.0
+		"x": 689.0,
+		"y": 730.0
 	},
 	{
 		"cost": 3.0,
@@ -334,8 +349,8 @@
 		"parent": "armor_plating_3",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 431.0,
-		"y": 717.0
+		"x": 524.0,
+		"y": 744.0
 	},
 	{
 		"cost": 3.0,
@@ -350,8 +365,8 @@
 		"parent": "shield_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 301.0,
-		"y": 797.0
+		"x": 394.0,
+		"y": 824.0
 	},
 	{
 		"cost": 4.0,
@@ -366,8 +381,8 @@
 		"parent": "shield_recharge",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 310.0,
-		"y": 918.0
+		"x": 403.0,
+		"y": 945.0
 	},
 	{
 		"cost": 2.0,
@@ -545,8 +560,36 @@
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff6633",
-		"x": 150.0,
-		"y": 582.0
+		"x": -174.0,
+		"y": 606.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Further reduce heat build‑up and increase cool‑down rate.",
+		"direction": "right",
+		"effects": {},
+		"icon": "RPG_Item_Weapon_Bow_Drawn_Ranged_Shooting.png",
+		"id": "turret_rapid_fire_2",
+		"name": "Improved Cooling",
+		"parent": "turret_rapid_fire",
+		"parent_skill_id": "",
+		"unlock_color": "#ff6633",
+		"x": -69.0,
+		"y": 724.0
+	},
+	{
+		"cost": 4.0,
+		"desc": "Maximum cool‑down rate — the turret can fire for longer before overheating.",
+		"direction": "right",
+		"effects": {},
+		"icon": "RPG_Item_Weapon_Bow_Drawn_Ranged_Shooting.png",
+		"id": "turret_rapid_fire_3",
+		"name": "Overclocked",
+		"parent": "turret_rapid_fire_2",
+		"parent_skill_id": "",
+		"unlock_color": "#ff6633",
+		"x": 61.0,
+		"y": 724.0
 	},
 	{
 		"cost": 2.0,
@@ -589,8 +632,8 @@
 		"parent": "turret_projectile_speed",
 		"parent_skill_id": "",
 		"unlock_color": "#ffaa44",
-		"x": 20.0,
-		"y": 492.0
+		"x": -89.0,
+		"y": 487.0
 	},
 	{
 		"cost": 2.0,
@@ -610,8 +653,8 @@
 		"pin_width": 2.0,
 		"pins_per_side": 4.0,
 		"unlock_color": "#ffdd00",
-		"x": 482.0,
-		"y": 561.0
+		"x": 453.0,
+		"y": 517.0
 	},
 	{
 		"cost": 3.0,
@@ -622,11 +665,11 @@
 		"icon": "RPG_Stat_Luck_Four_Leaf_Clover.png",
 		"id": "critical_multiplier",
 		"name": "Critical Power",
-		"parent": "gatling_turret",
+		"parent": "turret_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd00",
-		"x": 384.0,
-		"y": 704.0
+		"x": 296.0,
+		"y": 632.0
 	},
 	{
 		"cost": 3.0,
@@ -640,8 +683,8 @@
 		"parent": "turret_rapid_fire",
 		"parent_skill_id": "",
 		"unlock_color": "#ff9966",
-		"x": 20.0,
-		"y": 612.0
+		"x": -304.0,
+		"y": 636.0
 	},
 	{
 		"cost": 4.0,
@@ -684,8 +727,8 @@
 		"parent": "turret_rapid_fire",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -10.0,
-		"y": 744.0
+		"x": -334.0,
+		"y": 768.0
 	},
 	{
 		"cost": 3.0,
@@ -699,8 +742,8 @@
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": 87.0,
-		"y": 874.0
+		"x": -237.0,
+		"y": 898.0
 	},
 	{
 		"cost": 3.0,
@@ -713,12 +756,59 @@
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -160.0,
-		"y": 876.0
+		"x": -484.0,
+		"y": 900.0
+	},
+	{
+		"cost": 2.0,
+		"desc": "Carry +2 missiles per wing pod (4 total).",
+		"direction": "down",
+		"effects": {},
+		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
+		"id": "missile_capacity",
+		"name": "Extended Magazine",
+		"parent": "missile_unlock",
+		"parent_skill_id": "",
+		"unlock_color": "#ff3344",
+		"x": -334.0,
+		"y": 898.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Carry +4 missiles per wing pod (8 total).",
+		"direction": "down",
+		"effects": {},
+		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
+		"id": "missile_capacity_2",
+		"name": "Ammo Belt",
+		"parent": "missile_capacity",
+		"parent_skill_id": "",
+		"unlock_color": "#ff3344",
+		"x": -334.0,
+		"y": 1028.0
+	},
+	{
+		"cost": 4.0,
+		"desc": "Carry +6 missiles per wing pod (12 total).",
+		"direction": "down",
+		"effects": {},
+		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
+		"id": "missile_capacity_3",
+		"name": "Ordnance Expansion",
+		"parent": "missile_capacity_2",
+		"parent_skill_id": "",
+		"unlock_color": "#ff3344",
+		"x": -334.0,
+		"y": 1158.0
 	},
 	{
 		"cost": 2.0,
 		"desc": "Mining laser becomes wider, hitting a larger area.",
+		"direction": "right-up",
+		"effects": {},
+		"exclusive_children": false,
+		"icon": "Cosmetics_Mascara.png",
+		"id": "laser_width",
 		"direction": "right-up",
 		"effects": {},
 		"exclusive_children": false,

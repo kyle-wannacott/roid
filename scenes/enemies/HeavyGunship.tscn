@@ -1,0 +1,144 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/HeavyGunship.gd" id="1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(2.5, 1.0, 3.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurtbox"]
+size = Vector3(2.8, 1.2, 3.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hull"]
+size = Vector3(2.0, 0.8, 3.0)
+
+[sub_resource type="StandardMaterial3D" id="Mat_hull"]
+albedo_color = Color(0.35, 0.35, 0.4, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_turret_base"]
+top_radius = 0.3
+bottom_radius = 0.35
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_turret"]
+albedo_color = Color(0.3, 0.3, 0.35, 1)
+metallic = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_barrel"]
+size = Vector3(0.1, 0.1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_barrel"]
+albedo_color = Color(0.25, 0.25, 0.3, 1)
+metallic = 0.9
+
+[sub_resource type="TorusMesh" id="TorusMesh_shield"]
+inner_radius = 1.5
+outer_radius = 1.7
+rings = 16
+ring_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="Mat_shield"]
+transparency = 1
+albedo_color = Color(0.3, 0.5, 1, 0.1)
+cull_mode = 2
+emission_enabled = true
+emission = Color(0.3, 0.5, 1, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="SphereMesh" id="SphereMesh_engine"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_engine"]
+albedo_color = Color(0.4, 0.6, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.6, 1, 1)
+emission_energy_multiplier = 2.0
+
+[node name="HeavyGunship" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+max_health = 80.0
+move_speed = 40.0
+rotation_speed = 1.5
+collision_damage = 20.0
+reward_gems = 8
+fire_rate = 2.0
+projectile_damage = 8.0
+detection_range = 180.0
+attack_range = 150.0
+turret_count = 2
+burst_count = 5
+burst_delay = 0.15
+volley_cooldown = 2.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_collision")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Hull" type="MeshInstance3D" parent="Body"]
+mesh = SubResource("BoxMesh_hull")
+material_override = SubResource("Mat_hull")
+
+[node name="TurretLeft" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.6, 0)
+
+[node name="Base" type="MeshInstance3D" parent="Body/TurretLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_turret_base")
+material_override = SubResource("Mat_turret")
+
+[node name="Barrel" type="MeshInstance3D" parent="Body/TurretLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("BoxMesh_barrel")
+material_override = SubResource("Mat_barrel")
+
+[node name="TurretRight" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.6, 0)
+
+[node name="Base" type="MeshInstance3D" parent="Body/TurretRight"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_turret_base")
+material_override = SubResource("Mat_turret")
+
+[node name="Barrel" type="MeshInstance3D" parent="Body/TurretRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("BoxMesh_barrel")
+material_override = SubResource("Mat_barrel")
+
+[node name="ShieldRing" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("TorusMesh_shield")
+material_override = SubResource("Mat_shield")
+
+[node name="EngineLeft" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, 1.8)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineRight" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 1.8)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineGlowLeft" type="OmniLight3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, 2.0)
+light_color = Color(0.4, 0.6, 1, 1)
+light_energy = 0.8
+omni_range = 4.0
+
+[node name="EngineGlowRight" type="OmniLight3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 2.0)
+light_color = Color(0.4, 0.6, 1, 1)
+light_energy = 0.8
+omni_range = 4.0
+
+[node name="HurtboxArea" type="Area3D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 4
+collision_mask = 1
+
+[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea"]
+shape = SubResource("BoxShape3D_hurtbox")

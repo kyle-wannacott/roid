@@ -14,6 +14,8 @@ extends Node3D
 @onready var camera: Camera3D = $ChaseCamera
 @onready var _skill_tree: Control = $ToolsLayer/SkillTree
 @onready var _spreadsheet: Control = $ToolsLayer/Spreadsheet
+@onready var enemy_mgr: Node3D = $EnemyManager
+@onready var spawn_gen: Node3D = $SpawnPointGenerator
 
 
 var _was_docked := false
@@ -27,6 +29,12 @@ func _ready() -> void:
 	# Sync initial gems to PlayerSkills
 	if ship.has_method("get_gems"):
 		PlayerSkills.set_gems(ship.get_gems())
+	
+	# Setup enemy manager
+	if enemy_mgr:
+		enemy_mgr.enemy_destroyed.connect(_on_enemy_destroyed)
+		enemy_mgr.encounter_started.connect(_on_encounter_started)
+		enemy_mgr.encounter_completed.connect(_on_encounter_completed)
 
 
 func _wire_signals() -> void:
@@ -81,6 +89,30 @@ func _process(_delta: float) -> void:
 func _on_asteroid_destroyed(world_pos: Vector3, gem_count: int) -> void:
 	# Could play a sound, spawn particles, etc.
 	pass
+
+
+func _on_enemy_destroyed(enemy: Node3D, position: Vector3, gems: int) -> void:
+	# Award gems to player
+	if ship and ship.has_method("add_gems"):
+		ship.add_gems(gems)
+	elif ship and "gems" in ship:
+		ship.gems += gems
+		if ship.has_signal("gems_changed"):
+			ship.gems_changed.emit(ship.gems)
+	
+	# Play explosion sound
+	# TODO: Add sound effect here
+	print("Enemy destroyed at ", position, ", awarded ", gems, " gems")
+
+
+func _on_encounter_started(encounter_id: int) -> void:
+	print("Boss encounter started: ", encounter_id)
+	# Could show boss health bar, play music, etc.
+
+
+func _on_encounter_completed(encounter_id: int) -> void:
+	print("Boss encounter completed: ", encounter_id)
+	# Could award bonus rewards, play victory fanfare, etc.
 
 
 # ── Tool editors toggle ────────────────────────────────────────────────────────

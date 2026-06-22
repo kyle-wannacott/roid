@@ -146,8 +146,11 @@ var _solar_panel_right: MeshInstance3D = null
 var _turret_mount: MeshInstance3D = null
 var _missile_pod_left: MeshInstance3D = null
 var _missile_pod_right: MeshInstance3D = null
-var _missile_ammo_left: bool = false
-var _missile_ammo_right: bool = false
+var _missile_tubes_left: Array[MeshInstance3D] = []
+var _missile_tubes_right: Array[MeshInstance3D] = []
+var _missile_ammo_left: int = 0
+var _missile_ammo_right: int = 0
+var _eff_missile_max_per_pod: int = 1  # per pod, set by skills
 var _missile_cooldown: float = 0.0
 @export var missile_scene: PackedScene = preload("res://scenes/Missile.tscn")
 @export var missile_fire_cooldown: float = 0.5
@@ -167,11 +170,12 @@ var _turret_barrel_pick: int = 0
 var _turret_locked_out: bool = false
 @export var turret_overheat_threshold: float = 1.0
 @export var turret_re_enable_threshold: float = 0.35
-@export var turret_heat_per_shot: float = 0.06
-@export var turret_cool_per_sec: float = 0.35
+@export var turret_heat_per_shot: float = 0.09
+@export var turret_cool_per_sec: float = 0.25
 @export var turret_fire_rate: float = 0.10
 var _turret_fire_remaining: float = 0.0
 var _turret_barrel_mats: Array[StandardMaterial3D] = []
+var _turret_barrels: Array[MeshInstance3D] = []
 var _turret_default_color: Color = Color(0.2, 0.2, 0.25, 1)
 var _afterburner_particles: GPUParticles3D = null
 var _afterburner_trail: MeshInstance3D = null
@@ -309,9 +313,10 @@ func _physics_flying(delta: float) -> void:
 	# --- Idle drain + solar regen --------------------------------
 	fuel = max(0.0, fuel - fuel_idle_drain * delta)
 	if _eff_solar_regen > 0.0:
-		# Solar regen only when not thrusting
+		# Solar regen only when not thrusting (unless upgraded skill)
+		var solar_while_moving: bool = PlayerSkills != null and PlayerSkills.is_unlocked("solar_while_moving")
 		var any_thrust_input: bool = thrust_forward > 0.01 or thrust_back > 0.01
-		if not any_thrust_input:
+		if not any_thrust_input or solar_while_moving:
 			fuel = min(_eff_fuel_max, fuel + _eff_solar_regen * delta)
 
 	# --- Afterburner (Space key) ---------------------------------
@@ -394,8 +399,24 @@ func _physics_flying(delta: float) -> void:
 	)
 	if can_fire:
 		_fire_turret_shot()
+		# Barrel recoil: push the barrel back then return it.
+		var barrel_idx: int = _turret_barrel_pick % _turret_barrels.size()
+		var barrel_node: MeshInstance3D = _turret_barrels[barrel_idx]
+		if is_instance_valid(barrel_node):
+			var recoil_tween := create_tween()
+			recoil_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			# Push back along the barrel's local forward axis (+Y in local space).
+			recoil_tween.tween_method(func(v: Vector3): barrel_node.position = v, \
+				barrel_node.position, barrel_node.position + Vector3(0, 0, 0.06), 0.04)
+			recoil_tween.tween_method(func(v: Vector3): barrel_node.position = v, \
+				barrel_node.position + Vector3(0, 0, 0.06), barrel_node.position, 0.08)
 		_turret_heat = min(1.0, _turret_heat + turret_heat_per_shot)
 		_turret_fire_remaining = turret_fire_rate
+		# Lockout check MUST run after the heat increase above,
+		# otherwise heat always peaks at 1.0 after the shot then
+		# cools just below 1.0 before the next frame's check.
+		if _turret_heat >= turret_overheat_threshold:
+			_turret_locked_out = true
 
 	# --- Wing‑pod missiles (separate from turret) ---------------
 	# Missiles are fired on the `missile_fire` action (G key) so the
@@ -405,13 +426,13 @@ func _physics_flying(delta: float) -> void:
 			and turret_unlocked_now \
 			and _missile_cooldown <= 0.0:
 		var any_missile: bool = false
-		if _missile_ammo_left and _missile_pod_left:
+		if _missile_ammo_left > 0 and _missile_pod_left:
 			_fire_missile_from_pod(_missile_pod_left)
-			_missile_ammo_left = false
+			_missile_ammo_left -= 1
 			any_missile = true
-		if _missile_ammo_right and _missile_pod_right:
+		if _missile_ammo_right > 0 and _missile_pod_right:
 			_fire_missile_from_pod(_missile_pod_right)
-			_missile_ammo_right = false
+			_missile_ammo_right -= 1
 			any_missile = true
 		if any_missile:
 			SoundManager.play_by_id("sfx_turret_fire")
@@ -419,8 +440,8 @@ func _physics_flying(delta: float) -> void:
 
 	# Refill missile ammo when docked at the station.
 	if state == State.DOCKED:
-		_missile_ammo_left = true
-		_missile_ammo_right = true
+		_missile_ammo_left = _eff_missile_max_per_pod
+		_missile_ammo_right = _eff_missile_max_per_pod
 
 	var current_max_speed: float = _eff_max_speed
 	if _afterburner_active:
@@ -615,8 +636,8 @@ func _set_state(new_state: State) -> void:
 		harpoon_cable.visible = false
 	# Rearm missiles whenever the ship reaches the station.
 	if new_state == State.DOCKED:
-		_missile_ammo_left = true
-		_missile_ammo_right = true
+		_missile_ammo_left = _eff_missile_max_per_pod
+		_missile_ammo_right = _eff_missile_max_per_pod
 
 
 # ---------------------------------------------------------------------
@@ -1130,6 +1151,8 @@ func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
 ## Fire one shot from the turret.  Spawns a bullet from each barrel
 ## (alternating left/right) flying forward in the ship's facing
 ## direction.  Also plays the muzzle flash and sound.
+## When Multi‑Shot is unlocked, fires an additional projectile
+## with a slight angular spread.
 func _fire_turret_shot() -> void:
 	_flash_turret_muzzle()
 	SoundManager.play_by_id("sfx_turret_fire")
@@ -1141,45 +1164,72 @@ func _fire_turret_shot() -> void:
 			barrels.append(node)
 	if barrels.is_empty():
 		return
-	# Pick a barrel — alternate between the two so fire looks even.
-	var idx: int = _turret_barrel_pick % barrels.size()
-	var barrel: MeshInstance3D = barrels[idx]
-	_turret_barrel_pick += 1
-	var b: Node3D = bullet_scene.instantiate() as Node3D
-	if b == null:
-		return
-	# Position the bullet at the barrel tip in world space.
-	var tip: Vector3 = barrel.global_position + (-barrel.global_transform.basis.y * 0.3)
-	get_tree().current_scene.add_child(b)
-	b.global_position = tip
-	# Orient the bullet to face the ship's forward direction.
-	b.global_rotation = global_rotation
-	if b.has_method("set_flight_params"):
-		b.set_flight_params(120.0, 1.5)
+	
+	# Determine projectile count and spread.
+	# Without multi‑shot: fires 1 bullet alternating barrels.
+	# With multi‑shot:     fires 4 bullets in a spread pattern from both barrels.
+	var multi_shot: bool = PlayerSkills != null and PlayerSkills.is_unlocked("multi_shot")
+	var count: int = 4 if multi_shot else 1
+	var spread_rad: float = 0.06  # ~3.4 degrees
+	
+	for i in count:
+		# Pick a barrel — alternate between the two so fire looks even.
+		var idx: int = _turret_barrel_pick % barrels.size()
+		var barrel: MeshInstance3D = barrels[idx]
+		_turret_barrel_pick += 1
+		
+		var b: Node3D = bullet_scene.instantiate() as Node3D
+		if b == null:
+			continue
+		# Position the bullet at the barrel tip in world space.
+		var tip: Vector3 = barrel.global_position + (-barrel.global_transform.basis.y * 0.3)
+		get_tree().current_scene.add_child(b)
+		b.global_position = tip
+		# Orient the bullet to face the ship's forward direction.
+		b.global_rotation = global_rotation
+		
+		# Apply symmetric spread so bullets fan out.
+		if multi_shot:
+			var offset: float = 0.0
+			match i:
+				0:  offset = -spread_rad * 1.5
+				1:  offset = -spread_rad * 0.5
+				2:  offset =  spread_rad * 0.5
+				3:  offset =  spread_rad * 1.5
+			b.rotate_object_local(Vector3.UP, offset)
+		
+		if b.has_method("set_flight_params"):
+			b.set_flight_params(120.0, 1.5)
 
 
 ## Update the diagetic barrel colour to reflect the current heat.
 ## 0.0  → cool dark‑metal grey
-## 0.6+ → warm orange
-## 1.0  → bright red (overheated)
+## 0.3  → warm orange (starting to glow)
+## 0.6  → bright orange-red
+## 1.0  → white‑hot (overheated)
 func _update_turret_barrel_color() -> void:
 	if _turret_barrel_mats.is_empty():
 		return
-	var hot: Color = Color(1.0, 0.25, 0.1, 1)
-	var normal: Color = _turret_default_color
-	# Two‑stage ramp: cool → warm orange → red.
 	var t: float = clamp(_turret_heat, 0.0, 1.0)
+	# Three‑stage ramp: cool grey → orange → red‑orange → white‑hot.
 	var col: Color
-	if t < 0.5:
-		col = normal.lerp(Color(1.0, 0.7, 0.2), t * 2.0)
+	if t < 0.01:
+		col = _turret_default_color
+	elif t < 0.3:
+		var p: float = t / 0.3
+		col = _turret_default_color.lerp(Color(1.0, 0.5, 0.1), p)
+	elif t < 0.6:
+		var p: float = (t - 0.3) / 0.3
+		col = Color(1.0, 0.5, 0.1).lerp(Color(1.0, 0.15, 0.05), p)
 	else:
-		col = Color(1.0, 0.7, 0.2).lerp(hot, (t - 0.5) * 2.0)
+		col = Color(1.0, 0.3, 0.1)  # bright red-orange at full heat
+	var emission_str: float = 1.0 + t * 6.0
 	for mat in _turret_barrel_mats:
 		if mat == null:
 			continue
 		mat.albedo_color = col
-		mat.emission = col * (0.5 + t * 2.0)
-		mat.emission_energy_multiplier = 0.5 + t * 3.0
+		mat.emission = col * emission_str
+		mat.emission_energy_multiplier = 1.0 + t * 5.0
 
 
 ## Brief muzzle flash on the turret barrels when firing.
@@ -1355,6 +1405,7 @@ func _create_diagetic_visuals() -> void:
 		barrel.position = Vector3(0.08 * i, 0.1, -0.3)
 		barrel.rotation = Vector3(PI * 0.5, 0, 0)
 		turret_root.add_child(barrel)
+		_turret_barrels.append(barrel)
 		_turret_barrel_mats.append(barrel_mat)
 	_turret_mount.visible = false
 	for child in turret_root.get_children():
@@ -1388,8 +1439,9 @@ func _create_diagetic_visuals() -> void:
 			_missile_pod_left = pod
 		else:
 			_missile_pod_right = pod
-		# Add 3 small missile tubes inside each pod (visible visual)
-		for i in range(3):
+		# Add visible missile tubes inside each pod (up to 6 per pod).
+		var tube_list: Array[MeshInstance3D] = []
+		for i in range(6):
 			var tube := MeshInstance3D.new()
 			var tube_mesh := CylinderMesh.new()
 			tube_mesh.top_radius = 0.025
@@ -1402,9 +1454,14 @@ func _create_diagetic_visuals() -> void:
 			tube_mat.emission = Color(0.8, 0.2, 0.1, 1)
 			tube_mat.emission_energy_multiplier = 0.3
 			tube.material_override = tube_mat
-			tube.position = Vector3(0, 0, -0.05 + i * 0.05)
+			tube.position = Vector3(0, 0, -0.12 + i * 0.045)
 			tube.rotation = Vector3(PI * 0.5, 0, 0)
 			pod.add_child(tube)
+			tube_list.append(tube)
+		if wing_pos.x < 0:
+			_missile_tubes_left = tube_list
+		else:
+			_missile_tubes_right = tube_list
 	
 	# --- Afterburner particle trail ---
 	_afterburner_particles = GPUParticles3D.new()
@@ -1519,18 +1576,17 @@ func _update_diagetic_visuals() -> void:
 		node.visible = turret_unlocked
 	
 	# --- Missile pod visual ---
-	# Visible when any missile-related skill is unlocked AND that
-	# wing's missile has ammo (hidden after firing until rearm).
+	# Visible when any missile-related skill is unlocked.
+	# The pod itself stays visible as long as there's capacity.
+	# Individual tubes show/hide based on remaining ammo count.
 	var missile_unlocked := PlayerSkills and (
 		PlayerSkills.is_unlocked("missile_unlock") or
 		PlayerSkills.is_unlocked("missile_heat_seeking") or
 		PlayerSkills.is_unlocked("missile_splash_area") or
 		PlayerSkills.is_unlocked("turret_unlock")
 	)
-	if _missile_pod_left:
-		_missile_pod_left.visible = missile_unlocked and _missile_ammo_left
-	if _missile_pod_right:
-		_missile_pod_right.visible = missile_unlocked and _missile_ammo_right
+	_show_missile_ammo(missile_unlocked, _missile_pod_left, _missile_tubes_left, _missile_ammo_left)
+	_show_missile_ammo(missile_unlocked, _missile_pod_right, _missile_tubes_right, _missile_ammo_right)
 	
 	# --- Cargo bay visual: grows with gem_capacity skills ---
 	if _cargo_bay:
@@ -1583,6 +1639,17 @@ func _update_afterburner_visuals() -> void:
 
 func _on_skill_unlocked(_skill_id: String) -> void:
 	_apply_skill_stats()
+
+
+## Show/hide missile pod and its tubes based on remaining ammo.
+func _show_missile_ammo(unlocked: bool, pod: MeshInstance3D, tubes: Array[MeshInstance3D], ammo: int) -> void:
+	if pod == null:
+		return
+	pod.visible = unlocked and _eff_missile_max_per_pod > 0
+	# Show one tube per remaining missile, hide the rest.
+	for i in tubes.size():
+		if is_instance_valid(tubes[i]):
+			tubes[i].visible = unlocked and i < ammo
 
 
 func _on_skills_reset() -> void:
@@ -1683,21 +1750,21 @@ func _apply_skill_stats() -> void:
 	if PlayerSkills.is_unlocked("mining_efficiency_2"): mining_fuel_red += 2
 	_eff_fuel_per_mine = max(1.0, _eff_fuel_per_mine - float(mining_fuel_red))
 
-	# Turret cool rate — base 0.35/s, improved by skills.
-	_eff_turret_cool_rate = 0.35
+	# Turret cool rate — base 0.25/s, improved by skills.
+	_eff_turret_cool_rate = 0.25
 	if PlayerSkills.is_unlocked("turret_rapid_fire"):
-		_eff_turret_cool_rate += 0.25
+		_eff_turret_cool_rate += 0.05
 	if PlayerSkills.is_unlocked("turret_rapid_fire_2"):
-		_eff_turret_cool_rate += 0.30
+		_eff_turret_cool_rate += 0.05
 	if PlayerSkills.is_unlocked("turret_rapid_fire_3"):
-		_eff_turret_cool_rate += 0.50
+		_eff_turret_cool_rate += 0.05
 	# Turret heat‑per‑shot — skills reduce heat build‑up.
 	if PlayerSkills.is_unlocked("turret_rapid_fire"):
-		turret_heat_per_shot = 0.04
+		turret_heat_per_shot = 0.06
 	if PlayerSkills.is_unlocked("turret_rapid_fire_2"):
-		turret_heat_per_shot = 0.025
+		turret_heat_per_shot = 0.055
 	if PlayerSkills.is_unlocked("turret_rapid_fire_3"):
-		turret_heat_per_shot = 0.015
+		turret_heat_per_shot = 0.05
 	
 	# Gem Yield
 	if PlayerSkills.is_unlocked("mining_yield"): _eff_bonus_gems += 1
@@ -1751,6 +1818,16 @@ func _apply_skill_stats() -> void:
 	if PlayerSkills.is_unlocked("harpoon_speed"): _eff_harpoon_reel_speed += 5
 	if PlayerSkills.is_unlocked("harpoon_speed_2"): _eff_harpoon_reel_speed += 5
 	
+	# Missile capacity — extra missiles per wing pod
+	_eff_missile_max_per_pod = 1
+	if PlayerSkills.is_unlocked("missile_capacity"): _eff_missile_max_per_pod = 2
+	if PlayerSkills.is_unlocked("missile_capacity_2"): _eff_missile_max_per_pod = 4
+	if PlayerSkills.is_unlocked("missile_capacity_3"): _eff_missile_max_per_pod = 6
+	
+	# Ensure current missile counts don't exceed new capacity
+	_missile_ammo_left = mini(_missile_ammo_left, _eff_missile_max_per_pod)
+	_missile_ammo_right = mini(_missile_ammo_right, _eff_missile_max_per_pod)
+	
 	# Ensure current fuel/health don't exceed new max
 	fuel = min(fuel, _eff_fuel_max)
 	health = min(health, _eff_max_health)
@@ -1790,8 +1867,8 @@ func _reset_effective_stats() -> void:
 	_eff_afterburner_speed_pct = 0.0
 	_eff_afterburner_fuel_cost = 0.0
 	_eff_afterburner_efficiency_pct = 0.0
-	_eff_turret_cool_rate = 0.35
-	turret_heat_per_shot = 0.06
+	_eff_turret_cool_rate = 0.25
+	turret_heat_per_shot = 0.09
 	_shield_ready = false
 	_shield_timer = 0.0
 

@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/MissileCruiser.gd" id="1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(1.8, 0.8, 3.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurtbox"]
+size = Vector3(2.0, 1.0, 3.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hull"]
+size = Vector3(1.2, 0.6, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_hull"]
+albedo_color = Color(0.45, 0.4, 0.45, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_missile_pod"]
+size = Vector3(0.3, 0.3, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_pod"]
+albedo_color = Color(0.5, 0.2, 0.2, 1)
+metallic = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tube"]
+top_radius = 0.08
+bottom_radius = 0.08
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_tube"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_radar"]
+top_radius = 0.4
+bottom_radius = 0.0
+height = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_radar"]
+albedo_color = Color(0.6, 0.6, 0.65, 1)
+metallic = 0.8
+
+[sub_resource type="SphereMesh" id="SphereMesh_engine"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_engine"]
+albedo_color = Color(0.5, 0.3, 1, 1)
+emission_enabled = true
+emission = Color(0.5, 0.3, 1, 1)
+emission_energy_multiplier = 2.0
+
+[node name="MissileCruiser" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+max_health = 60.0
+move_speed = 50.0
+rotation_speed = 1.8
+collision_damage = 15.0
+reward_gems = 10
+fire_rate = 0.5
+projectile_damage = 15.0
+detection_range = 250.0
+attack_range = 200.0
+missile_damage = 15.0
+missile_speed = 120.0
+missile_turn_rate = 2.5
+missile_lifetime = 5.0
+missiles_per_volley = 2
+volley_cooldown = 3.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_collision")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Hull" type="MeshInstance3D" parent="Body"]
+mesh = SubResource("BoxMesh_hull")
+material_override = SubResource("Mat_hull")
+
+[node name="MissilePodLeft" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, 0)
+
+[node name="Pod" type="MeshInstance3D" parent="Body/MissilePodLeft"]
+mesh = SubResource("BoxMesh_missile_pod")
+material_override = SubResource("Mat_pod")
+
+[node name="Tube1" type="MeshInstance3D" parent="Body/MissilePodLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -0.1, 0.5)
+mesh = SubResource("CylinderMesh_tube")
+material_override = SubResource("Mat_tube")
+
+[node name="Tube2" type="MeshInstance3D" parent="Body/MissilePodLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.1, 0.5)
+mesh = SubResource("CylinderMesh_tube")
+material_override = SubResource("Mat_tube")
+
+[node name="MissilePodRight" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
+
+[node name="Pod" type="MeshInstance3D" parent="Body/MissilePodRight"]
+mesh = SubResource("BoxMesh_missile_pod")
+material_override = SubResource("Mat_pod")
+
+[node name="Tube1" type="MeshInstance3D" parent="Body/MissilePodRight"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -0.1, 0.5)
+mesh = SubResource("CylinderMesh_tube")
+material_override = SubResource("Mat_tube")
+
+[node name="Tube2" type="MeshInstance3D" parent="Body/MissilePodRight"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.1, 0.5)
+mesh = SubResource("CylinderMesh_tube")
+material_override = SubResource("Mat_tube")
+
+[node name="RadarDish" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CylinderMesh_radar")
+material_override = SubResource("Mat_radar")
+
+[node name="EngineLeft" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 1.5)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineRight" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 1.5)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineGlowLeft" type="OmniLight3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 1.7)
+light_color = Color(0.5, 0.3, 1, 1)
+light_energy = 0.6
+omni_range = 3.0
+
+[node name="EngineGlowRight" type="OmniLight3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 1.7)
+light_color = Color(0.5, 0.3, 1, 1)
+light_energy = 0.6
+omni_range = 3.0
+
+[node name="HurtboxArea" type="Area3D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 4
+collision_mask = 1
+
+[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea"]
+shape = SubResource("BoxShape3D_hurtbox")

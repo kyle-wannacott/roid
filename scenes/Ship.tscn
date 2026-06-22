@@ -143,7 +143,10 @@ bottom_radius = 0.08
 height = 1.0
 radial_segments = 8
 
-[node name="Ship" type="CharacterBody3D" unique_id=1956836986]
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurtbox"]
+size = Vector3(1.5, 0.8, 2.5)
+
+[node name="Ship" type="CharacterBody3D" unique_id=1956836986 groups=["player_ship"]]
 collision_mask = 2
 script = ExtResource("1_ship")
 
@@ -298,3 +301,10 @@ mesh = SubResource("CylinderMesh_claw_prong")
 visible = false
 material_override = SubResource("Material_cable")
 mesh = SubResource("CylinderMesh_cable")
+
+[node name="HurtboxArea" type="Area3D" parent="." groups=["player_hurtbox"]]
+collision_layer = 0
+collision_mask = 4
+
+[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea"]
+shape = SubResource("BoxShape3D_hurtbox")

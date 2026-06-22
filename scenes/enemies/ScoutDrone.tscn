@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/ScoutDrone.gd" id="1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(1.2, 0.5, 1.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurtbox"]
+size = Vector3(1.4, 0.6, 2.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(0.8, 0.3, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(0.4, 0.4, 0.5, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_wing"]
+size = Vector3(0.8, 0.05, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wing"]
+albedo_color = Color(0.3, 0.3, 0.4, 1)
+metallic = 0.8
+
+[sub_resource type="SphereMesh" id="SphereMesh_engine"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_engine"]
+albedo_color = Color(0.3, 0.5, 1, 1)
+emission_enabled = true
+emission = Color(0.3, 0.5, 1, 1)
+emission_energy_multiplier = 2.0
+
+[node name="ScoutDrone" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+max_health = 30.0
+move_speed = 80.0
+rotation_speed = 2.0
+collision_damage = 10.0
+reward_gems = 3
+fire_rate = 0.8
+projectile_damage = 5.0
+detection_range = 150.0
+attack_range = 120.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_collision")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Hull" type="MeshInstance3D" parent="Body"]
+mesh = SubResource("BoxMesh_body")
+material_override = SubResource("Mat_body")
+
+[node name="WingLeft" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, 0)
+mesh = SubResource("BoxMesh_wing")
+material_override = SubResource("Mat_wing")
+
+[node name="WingRight" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0, 0)
+mesh = SubResource("BoxMesh_wing")
+material_override = SubResource("Mat_wing")
+
+[node name="EngineLeft" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 0.7)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineRight" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.7)
+mesh = SubResource("SphereMesh_engine")
+material_override = SubResource("Mat_engine")
+
+[node name="EngineGlow" type="OmniLight3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.8)
+light_color = Color(0.3, 0.5, 1, 1)
+light_energy = 0.5
+omni_range = 3.0
+
+[node name="HurtboxArea" type="Area3D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 4
+collision_mask = 1
+
+[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea"]
+shape = SubResource("BoxShape3D_hurtbox")
