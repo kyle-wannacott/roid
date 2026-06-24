@@ -16,6 +16,11 @@ run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+PlayerSkills="*res://scripts/PlayerSkills.gd"
+SoundManager="*res://scripts/sound_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280
@@ -88,7 +93,7 @@ harpoon={
 }
 turret_fire={
 "deadzone": 0.5,
-"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":2,"canceled":false,"pressed":false,"double_click":false,"script":null)
+"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":2,"canceled":false,"pressed":false,"double_click":false,"script":null)
 ]
 }
 camera_toggle={
@@ -108,11 +113,6 @@ missile_fire={
 3d/default_gravity=0.0
 3d/default_linear_damp=0.0
 3d/default_angular_damp=0.0
-
-[autoload]
-
-PlayerSkills="*res://scripts/PlayerSkills.gd"
-SoundManager="*res://scripts/sound_manager.gd"
 
 [rendering]
 

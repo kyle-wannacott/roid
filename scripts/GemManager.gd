@@ -150,50 +150,58 @@ func _process(_delta: float) -> void:
 # catches light differently — the classic "fire" of a real gem.
 
 func _build_gem_mesh() -> ArrayMesh:
-	var top_y:    float = 0.45   # table height
-	var girdle_y: float = 0.0    # widest part
-	var culet_y:  float = -0.55  # bottom point
-	var table_r:  float = 0.22   # radius of the flat top
-	var girdle_r: float = 0.42   # radius at the widest part (girdle)
-	var sides:    int = 6        # 6‑fold symmetry
+	var top_y:        float = 0.45   # table height
+	var girdle_top_y: float = 0.06   # top of the girdle band
+	var girdle_bot_y: float = -0.06  # bottom of the girdle band
+	var culet_y:      float = -0.55  # bottom point
+	var table_r:      float = 0.24   # radius of the flat top
+	var girdle_r:     float = 0.42   # radius at the widest part (girdle)
+	var sides:        int = 16       # 16-fold symmetry for a round cut
 
 	var top_center := Vector3(0, top_y, 0)
 	var bot_center := Vector3(0, culet_y, 0)
 
-	# Table ring (hex) at the top, girdle ring (hex) at the widest part.
 	var table_ring: PackedVector3Array = PackedVector3Array()
-	var girdle_ring: PackedVector3Array = PackedVector3Array()
+	var girdle_top_ring: PackedVector3Array = PackedVector3Array()
+	var girdle_bot_ring: PackedVector3Array = PackedVector3Array()
 	for i in sides:
 		var a: float = TAU * float(i) / float(sides)
-		table_ring.append(Vector3(cos(a) * table_r, top_y, sin(a) * table_r))
-		girdle_ring.append(Vector3(cos(a) * girdle_r, girdle_y, sin(a) * girdle_r))
+		var cos_a: float = cos(a)
+		var sin_a: float = sin(a)
+		table_ring.append(Vector3(cos_a * table_r, top_y, sin_a * table_r))
+		girdle_top_ring.append(Vector3(cos_a * girdle_r, girdle_top_y, sin_a * girdle_r))
+		girdle_bot_ring.append(Vector3(cos_a * girdle_r, girdle_bot_y, sin_a * girdle_r))
 
-	# Build faces with duplicated vertices so each is flat‑shaded.
 	var verts: PackedVector3Array = PackedVector3Array()
 	var normals: PackedVector3Array = PackedVector3Array()
 
-	# 1) Table: 6 fan triangles from the table centre to each table‑ring edge.
+	# 1) Table
 	for i in sides:
-		var v0: Vector3 = top_center
-		var v1: Vector3 = table_ring[i]
-		var v2: Vector3 = table_ring[(i + 1) % sides]
-		_emit_flat_face(verts, normals, v0, v1, v2)
+		_emit_flat_face(verts, normals, top_center, table_ring[i], table_ring[(i + 1) % sides])
 
-	# 2) Crown: 6 quads (12 triangles) connecting table ring to girdle ring.
+	# 2) Crown (Table to Girdle Top)
 	for i in sides:
-		var tv0: Vector3 = table_ring[i]
-		var tv1: Vector3 = table_ring[(i + 1) % sides]
-		var gv0: Vector3 = girdle_ring[i]
-		var gv1: Vector3 = girdle_ring[(i + 1) % sides]
+		var tv0 = table_ring[i]
+		var tv1 = table_ring[(i + 1) % sides]
+		var gv0 = girdle_top_ring[i]
+		var gv1 = girdle_top_ring[(i + 1) % sides]
 		_emit_flat_face(verts, normals, tv0, gv0, gv1)
 		_emit_flat_face(verts, normals, tv0, gv1, tv1)
 
-	# 3) Pavilion: 6 fan triangles from the girdle ring down to the culet.
+	# 3) Girdle band (vertical sides)
 	for i in sides:
-		var gv0: Vector3 = girdle_ring[i]
-		var gv1: Vector3 = girdle_ring[(i + 1) % sides]
-		# Winding: bot → gv1 → gv0 so the normal points outward.
-		_emit_flat_face(verts, normals, bot_center, gv1, gv0)
+		var gt0 = girdle_top_ring[i]
+		var gt1 = girdle_top_ring[(i + 1) % sides]
+		var gb0 = girdle_bot_ring[i]
+		var gb1 = girdle_bot_ring[(i + 1) % sides]
+		_emit_flat_face(verts, normals, gt0, gb0, gb1)
+		_emit_flat_face(verts, normals, gt0, gb1, gt1)
+
+	# 4) Pavilion (Girdle Bottom to Culet)
+	for i in sides:
+		var gb0 = girdle_bot_ring[i]
+		var gb1 = girdle_bot_ring[(i + 1) % sides]
+		_emit_flat_face(verts, normals, bot_center, gb1, gb0)
 
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)

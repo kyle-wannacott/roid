@@ -137,8 +137,8 @@
 		"parent": "solar_panels",
 		"parent_skill_id": "",
 		"unlock_color": "#44aaff",
-		"x": -27.0,
-		"y": 46.0
+		"x": -140.0,
+		"y": -81.0
 	},
 	{
 		"cost": 2.0,
@@ -804,11 +804,6 @@
 	{
 		"cost": 2.0,
 		"desc": "Mining laser becomes wider, hitting a larger area.",
-		"direction": "right-up",
-		"effects": {},
-		"exclusive_children": false,
-		"icon": "Cosmetics_Mascara.png",
-		"id": "laser_width",
 		"direction": "right-up",
 		"effects": {},
 		"exclusive_children": false,

@@ -144,10 +144,14 @@ var _shield_shader_mat: ShaderMaterial = null
 var _solar_panel_left: MeshInstance3D = null
 var _solar_panel_right: MeshInstance3D = null
 var _turret_mount: MeshInstance3D = null
-var _missile_pod_left: MeshInstance3D = null
-var _missile_pod_right: MeshInstance3D = null
+var _missile_pod_left: Node3D = null
+var _missile_pod_right: Node3D = null
 var _missile_tubes_left: Array[MeshInstance3D] = []
 var _missile_tubes_right: Array[MeshInstance3D] = []
+var _last_rendered_max_capacity_left: int = -1
+var _last_rendered_ammo_left: int = -1
+var _last_rendered_max_capacity_right: int = -1
+var _last_rendered_ammo_right: int = -1
 var _missile_ammo_left: int = 0
 var _missile_ammo_right: int = 0
 var _eff_missile_max_per_pod: int = 1  # per pod, set by skills
@@ -177,10 +181,12 @@ var _turret_fire_remaining: float = 0.0
 var _turret_barrel_mats: Array[StandardMaterial3D] = []
 var _turret_barrels: Array[MeshInstance3D] = []
 var _turret_default_color: Color = Color(0.2, 0.2, 0.25, 1)
-var _afterburner_particles: GPUParticles3D = null
+var _afterburner_particles: CPUParticles3D = null
+var _thruster_particles_left: CPUParticles3D = null
+var _thruster_particles_right: CPUParticles3D = null
 var _afterburner_trail: MeshInstance3D = null
 var _cargo_bay: MeshInstance3D = null
-var _magnet_ring: MeshInstance3D = null
+var _magnet_ring: Node3D = null
 var _magnet_field: MeshInstance3D = null
 
 @onready var body_root: Node3D = $Body
@@ -218,6 +224,13 @@ var _afterburner_sound_until_ms: int = 0
 var _laser_sound_until_ms: int = 0
 var _turret_fire_until_ms: int = 0  # Throttle turret fire rate
 
+# Docking / Launching Hangar Animation States
+var is_docking_animation: bool = false
+var is_launching_animation: bool = false
+var dock_animation_time: float = 0.0
+var dock_start_pos: Vector3 = Vector3.ZERO
+var dock_start_rot_y: float = 0.0
+
 # Barrel-roll state (Q/E one-shot 360° spins).
 var _barrel_roll_dir: int = 0   # 0 = none, 1 = left, -1 = right
 var _barrel_roll_progress: float = 0.0
@@ -244,10 +257,137 @@ func _ready() -> void:
 	_update_wing_bars(1.0)
 
 	_create_diagetic_visuals()
+	_upgrade_ship_visuals()
 	_update_diagetic_visuals()  # Apply current skill states to new visuals
 
 	# Initial HUD gem capacity display
 	gems_changed.emit(gems)
+
+
+func _upgrade_ship_visuals() -> void:
+	# 1) Sleek titanium hull material
+	var hull_mat := StandardMaterial3D.new()
+	hull_mat.albedo_color = Color(0.68, 0.72, 0.8, 1.0) # Sleek grey-blue titanium
+	hull_mat.metallic = 0.85
+	hull_mat.roughness = 0.22
+	
+	# Apply to main hull parts
+	for node_name in ["Hull", "Nose", "WingLeft/WingMesh", "WingRight/WingMesh"]:
+		var part := body_root.get_node_or_null(node_name) as MeshInstance3D
+		if part != null:
+			part.material_override = hull_mat
+
+	# 2) Glowing energy accent material (cyan neon theme)
+	var accent_mat := StandardMaterial3D.new()
+	accent_mat.albedo_color = Color(0.1, 0.3, 0.5, 1.0)
+	accent_mat.metallic = 0.6
+	accent_mat.roughness = 0.3
+	accent_mat.emission_enabled = true
+	accent_mat.emission = Color(0.0, 0.8, 1.0, 1.0) # Electric cyan glow
+	accent_mat.emission_energy_multiplier = 1.5
+	
+	for node_name in ["HullAccent", "NoseCone", "TopFin", "WingLeft/WingTipLight", "WingRight/WingTipLight"]:
+		var part := body_root.get_node_or_null(node_name) as MeshInstance3D
+		if part != null:
+			part.material_override = accent_mat
+
+	# 3) Cockpit - glossy gold-tinted reflective glass
+	var cockpit := body_root.get_node_or_null("Cockpit") as MeshInstance3D
+	if cockpit != null:
+		var glass_mat := StandardMaterial3D.new()
+		glass_mat.albedo_color = Color(0.1, 0.12, 0.18, 1.0)
+		glass_mat.metallic = 0.95
+		glass_mat.roughness = 0.05 # highly reflective
+		glass_mat.emission_enabled = true
+		glass_mat.emission = Color(0.05, 0.3, 0.6, 1.0) # internal blue instrumentation glow
+		glass_mat.emission_energy_multiplier = 0.5
+		cockpit.material_override = glass_mat
+
+	# 4) Add thruster nozzle bells
+	var nozzle_mat := StandardMaterial3D.new()
+	nozzle_mat.albedo_color = Color(0.15, 0.15, 0.18, 1) # dark titanium
+	nozzle_mat.metallic = 0.9
+	nozzle_mat.roughness = 0.35
+	
+	# Main center thruster nozzle
+	var nozzle_center := MeshInstance3D.new()
+	var nozzle_center_mesh := CylinderMesh.new()
+	nozzle_center_mesh.top_radius = 0.24
+	nozzle_center_mesh.bottom_radius = 0.32
+	nozzle_center_mesh.height = 0.35
+	nozzle_center_mesh.radial_segments = 16
+	nozzle_center.mesh = nozzle_center_mesh
+	nozzle_center.material_override = nozzle_mat
+	nozzle_center.position = Vector3(0, 0, 0.95)
+	nozzle_center.rotation = Vector3(PI * 0.5, 0, 0)
+	body_root.add_child(nozzle_center)
+	
+	# Left side thruster nozzle
+	var nozzle_left := MeshInstance3D.new()
+	var nozzle_left_mesh := CylinderMesh.new()
+	nozzle_left_mesh.top_radius = 0.18
+	nozzle_left_mesh.bottom_radius = 0.24
+	nozzle_left_mesh.height = 0.25
+	nozzle_left_mesh.radial_segments = 12
+	nozzle_left.mesh = nozzle_left_mesh
+	nozzle_left.material_override = nozzle_mat
+	nozzle_left.position = Vector3(-0.5, 0, 0.98)
+	nozzle_left.rotation = Vector3(PI * 0.5, 0, 0)
+	body_root.add_child(nozzle_left)
+	
+	# Right side thruster nozzle
+	var nozzle_right := MeshInstance3D.new()
+	var nozzle_right_mesh := CylinderMesh.new()
+	nozzle_right_mesh.top_radius = 0.18
+	nozzle_right_mesh.bottom_radius = 0.24
+	nozzle_right_mesh.height = 0.25
+	nozzle_right_mesh.radial_segments = 12
+	nozzle_right.mesh = nozzle_right_mesh
+	nozzle_right.material_override = nozzle_mat
+	nozzle_right.position = Vector3(0.5, 0, 0.98)
+	nozzle_right.rotation = Vector3(PI * 0.5, 0, 0)
+	body_root.add_child(nozzle_right)
+
+	# 5) Add details like cooling intakes and copper power conduits
+	# Left cooling intake
+	var intake_left := MeshInstance3D.new()
+	var intake_mesh := BoxMesh.new()
+	intake_mesh.size = Vector3(0.25, 0.08, 0.4)
+	intake_left.mesh = intake_mesh
+	var intake_mat := StandardMaterial3D.new()
+	intake_mat.albedo_color = Color(0.1, 0.1, 0.12, 1)
+	intake_mat.metallic = 0.8
+	intake_mat.roughness = 0.4
+	intake_mat.emission_enabled = true
+	intake_mat.emission = Color(0.8, 0.2, 0.1, 1) # glowing hot exhaust internal
+	intake_mat.emission_energy_multiplier = 0.6
+	intake_left.material_override = intake_mat
+	intake_left.position = Vector3(-0.85, 0.08, -0.1)
+	body_root.add_child(intake_left)
+
+	# Right cooling intake
+	var intake_right := MeshInstance3D.new()
+	intake_right.mesh = intake_mesh
+	intake_right.material_override = intake_mat
+	intake_right.position = Vector3(0.85, 0.08, -0.1)
+	body_root.add_child(intake_right)
+
+	# Copper power conduits running along the top of the ship
+	for i in [-1, 1]:
+		var pipe := MeshInstance3D.new()
+		var pipe_mesh := CylinderMesh.new()
+		pipe_mesh.top_radius = 0.02
+		pipe_mesh.bottom_radius = 0.02
+		pipe_mesh.height = 1.4
+		pipe.mesh = pipe_mesh
+		var pipe_mat := StandardMaterial3D.new()
+		pipe_mat.albedo_color = Color(0.85, 0.45, 0.2, 1) # shiny copper
+		pipe_mat.metallic = 1.0
+		pipe_mat.roughness = 0.25
+		pipe.material_override = pipe_mat
+		pipe.position = Vector3(0.25 * i, 0.25, 0.1)
+		pipe.rotation = Vector3(PI * 0.5, 0, 0)
+		body_root.add_child(pipe)
 
 	laser.visible = false
 	laser_hit.visible = false
@@ -972,6 +1112,28 @@ func _set_engine_glow(forward: float) -> void:
 	if engine_glow_mat:
 		engine_glow_mat.emission_energy_multiplier = main_e
 
+	# Drive the CPUParticles3D thruster plumes based on thrust and afterburner.
+	# Scale emission amount so idling gives a small constant flicker and
+	# full thrust / afterburner gives a fat roaring plume.
+	var thrust_factor: float = clamp(forward, 0.0, 1.0)
+	var ab_factor: float = 2.8 if _afterburner_active else 1.0
+	for emitter in [_afterburner_particles, _thruster_particles_left, _thruster_particles_right]:
+		if emitter == null:
+			continue
+		# Always emitting – just scale amount up/down.
+		emitter.amount = int(lerp(6.0, 45.0, thrust_factor) * ab_factor)
+		emitter.initial_velocity_min = lerp(2.0, 6.0, thrust_factor) * ab_factor
+		emitter.initial_velocity_max = lerp(4.0, 10.0, thrust_factor) * ab_factor
+		emitter.spread = lerp(4.0, 10.0, thrust_factor)
+		# Afterburner = bright white-blue core; normal = orange-blue.
+		var hot_color: Color
+		if _afterburner_active:
+			hot_color = Color(0.3, 0.75, 1.0, 1.0) # blue-white plasma
+		else:
+			hot_color = Color(0.2, 0.7, 1.0, 1.0) # normal blue core
+		if emitter.color_ramp != null:
+			emitter.color_ramp.set_color(0, hot_color)
+
 
 # ---------------------------------------------------------------------
 # Health beacon
@@ -1126,7 +1288,7 @@ func _flash_shield_break() -> void:
 
 ## Spawn a missile from the given wing pod, flying in the ship's
 ## forward direction.
-func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
+func _fire_missile_from_pod(pod: Node3D) -> void:
 	if missile_scene == null:
 		return
 	var missile: Node3D = missile_scene.instantiate() as Node3D
@@ -1144,8 +1306,9 @@ func _fire_missile_from_pod(pod: MeshInstance3D) -> void:
 	# Set the missile's flight parameters.
 	if missile.has_method("set_flight_params"):
 		missile.set_flight_params(missile_speed, missile_lifetime)
-	# Hide the corresponding pod until rearmed.
-	pod.visible = false
+	# Force cache invalidation so the visual rebuilds with one fewer missile.
+	_last_rendered_ammo_left = -1
+	_last_rendered_ammo_right = -1
 
 
 ## Fire one shot from the turret.  Spawns a bullet from each barrel
@@ -1418,74 +1581,73 @@ func _create_diagetic_visuals() -> void:
 	turret_root.add_to_group("ship_turret_parts")
 	turret_root.visible = false
 	
-	# --- Missile pods: small boxes on the wing tips ---
-	for wing_pos in [Vector3(-1.55, 0.05, 0), Vector3(1.55, 0.05, 0)]:
-		var pod := MeshInstance3D.new()
-		var pod_mesh := BoxMesh.new()
-		pod_mesh.size = Vector3(0.12, 0.12, 0.5)
-		pod.mesh = pod_mesh
-		var pod_mat := StandardMaterial3D.new()
-		pod_mat.albedo_color = Color(0.4, 0.15, 0.15, 1)
-		pod_mat.metallic = 0.6
-		pod_mat.roughness = 0.4
-		pod_mat.emission_enabled = true
-		pod_mat.emission = Color(0.6, 0.1, 0.1, 1)
-		pod_mat.emission_energy_multiplier = 0.5
-		pod.material_override = pod_mat
-		pod.position = wing_pos
-		pod.visible = false
-		body_root.add_child(pod)
-		if wing_pos.x < 0:
-			_missile_pod_left = pod
-		else:
-			_missile_pod_right = pod
-		# Add visible missile tubes inside each pod (up to 6 per pod).
-		var tube_list: Array[MeshInstance3D] = []
-		for i in range(6):
-			var tube := MeshInstance3D.new()
-			var tube_mesh := CylinderMesh.new()
-			tube_mesh.top_radius = 0.025
-			tube_mesh.bottom_radius = 0.03
-			tube_mesh.height = 0.35
-			tube.mesh = tube_mesh
-			var tube_mat := StandardMaterial3D.new()
-			tube_mat.albedo_color = Color(0.7, 0.6, 0.5, 1)
-			tube_mat.emission_enabled = true
-			tube_mat.emission = Color(0.8, 0.2, 0.1, 1)
-			tube_mat.emission_energy_multiplier = 0.3
-			tube.material_override = tube_mat
-			tube.position = Vector3(0, 0, -0.12 + i * 0.045)
-			tube.rotation = Vector3(PI * 0.5, 0, 0)
-			pod.add_child(tube)
-			tube_list.append(tube)
-		if wing_pos.x < 0:
-			_missile_tubes_left = tube_list
-		else:
-			_missile_tubes_right = tube_list
+	# --- Missile pods: undercarriage pylons on left and right wings ---
+	_missile_pod_left = Node3D.new()
+	_missile_pod_left.name = "MissilePodLeft"
+	_missile_pod_left.position = Vector3(-0.7, -0.12, -0.1) # undercarriage left wing
+	wing_left.add_child(_missile_pod_left)
+
+	_missile_pod_right = Node3D.new()
+	_missile_pod_right.name = "MissilePodRight"
+	_missile_pod_right.position = Vector3(0.7, -0.12, -0.1) # undercarriage right wing
+	wing_right.add_child(_missile_pod_right)
+
+	# --- Triple Thruster Engine Plume Particles ---
+	var engines_info = [
+		{"pos": Vector3(0, 0, 1.22), "size": 0.09, "amount": 45},      # Main center engine
+		{"pos": Vector3(-0.5, 0, 1.20), "size": 0.065, "amount": 25},  # Left side engine
+		{"pos": Vector3(0.5, 0, 1.20), "size": 0.065, "amount": 25}    # Right side engine
+	]
 	
-	# --- Afterburner particle trail ---
-	_afterburner_particles = GPUParticles3D.new()
-	var pm := ParticleProcessMaterial.new()
-	pm.direction = Vector3(0, 0, 1)  # emit backward (ship faces -Z, so behind is +Z)
-	pm.spread = 15.0
-	pm.initial_velocity_min = 12.0
-	pm.initial_velocity_max = 18.0
-	pm.gravity = Vector3.ZERO
-	pm.damping_min = 1.0
-	pm.damping_max = 1.5
-	pm.scale_min = 0.15
-	pm.scale_max = 0.35
-	pm.color = Color(0.4, 0.8, 1.0, 0.9)
-	_afterburner_particles.process_material = pm
-	var pm_mesh := SphereMesh.new()
-	pm_mesh.radius = 0.08
-	pm_mesh.height = 0.16
-	_afterburner_particles.draw_pass_1 = pm_mesh
-	_afterburner_particles.amount = 80
-	_afterburner_particles.lifetime = 0.5
-	_afterburner_particles.emitting = false
-	_afterburner_particles.position = Vector3(0, 0, 1.2)
-	body_root.add_child(_afterburner_particles)
+	var part_mat := StandardMaterial3D.new()
+	part_mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+	part_mat.vertex_color_use_as_albedo = true
+	part_mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+	
+	var emitters: Array[CPUParticles3D] = []
+	for i in range(3):
+		var info = engines_info[i]
+		var emitter := CPUParticles3D.new()
+		emitter.amount = info["amount"]
+		emitter.lifetime = 0.35
+		emitter.explosiveness = 0.0
+		emitter.randomness = 0.2
+		emitter.position = info["pos"]
+		
+		var p_mesh := SphereMesh.new()
+		p_mesh.radius = info["size"]
+		p_mesh.height = info["size"] * 2.0
+		emitter.mesh = p_mesh
+		
+		emitter.direction = Vector3(0, 0, 1) # shoot straight back
+		emitter.spread = 8.0
+		emitter.gravity = Vector3.ZERO
+		emitter.initial_velocity_min = 4.0
+		emitter.initial_velocity_max = 7.0
+		
+		var scale_curve := Curve.new()
+		scale_curve.add_point(Vector2(0.0, 1.0))
+		scale_curve.add_point(Vector2(0.3, 1.2))
+		scale_curve.add_point(Vector2(1.0, 0.1))
+		emitter.scale_amount_curve = scale_curve
+		
+		# Classic rocket fuel fire gradient: blue core -> orange -> red -> grey smoke
+		var gradient := Gradient.new()
+		gradient.add_point(0.0, Color(0.2, 0.7, 1.0, 1.0))  # blue core
+		gradient.add_point(0.15, Color(1.0, 0.6, 0.15, 0.9)) # orange fire
+		gradient.add_point(0.4, Color(0.9, 0.25, 0.05, 0.6)) # red-orange
+		gradient.add_point(0.7, Color(0.25, 0.25, 0.25, 0.3)) # smoke
+		gradient.add_point(1.0, Color(0.1, 0.1, 0.1, 0.0))
+		emitter.color_ramp = gradient
+		emitter.material_override = part_mat
+		
+		body_root.add_child(emitter)
+		emitter.emitting = true
+		emitters.append(emitter)
+		
+	_afterburner_particles = emitters[0] # main
+	_thruster_particles_left = emitters[1]
+	_thruster_particles_right = emitters[2]
 	
 	# --- Cargo Bay (undercarriage that grows with gem capacity skills) ---
 	_cargo_bay = MeshInstance3D.new()
@@ -1519,23 +1681,140 @@ func _create_diagetic_visuals() -> void:
 	# --- Small Tractor Magnet on the ship's nose ---
 	# A small horseshoe magnet that appears when gem_magnet is unlocked.
 	# Grows slightly with each tier. Just a small mesh, no field sphere.
-	_magnet_ring = MeshInstance3D.new()
-	var ring_mesh := TorusMesh.new()
-	ring_mesh.inner_radius = 0.13
-	ring_mesh.outer_radius = 0.18
-	_magnet_ring.mesh = ring_mesh
-	var ring_mat := StandardMaterial3D.new()
-	ring_mat.albedo_color = Color(0.9, 0.3, 0.5, 1)
-	ring_mat.metallic = 0.6
-	ring_mat.roughness = 0.4
-	ring_mat.emission_enabled = true
-	ring_mat.emission = Color(0.7, 0.2, 0.4, 1)
-	ring_mat.emission_energy_multiplier = 0.6
-	_magnet_ring.material_override = ring_mat
+	_magnet_ring = Node3D.new()
 	# Position it on the front of the ship, above the laser
 	_magnet_ring.position = Vector3(0, 0.45, -1.2)
 	_magnet_ring.visible = false
 	body_root.add_child(_magnet_ring)
+
+	# 1) Base cylindrical mount (dark steel/carbon)
+	var base := MeshInstance3D.new()
+	var base_mesh := CylinderMesh.new()
+	base_mesh.top_radius = 0.1
+	base_mesh.bottom_radius = 0.12
+	base_mesh.height = 0.15
+	base.mesh = base_mesh
+	base.rotation = Vector3(PI * 0.5, 0, 0)
+	var base_mat := StandardMaterial3D.new()
+	base_mat.albedo_color = Color(0.12, 0.12, 0.15, 1)
+	base_mat.metallic = 0.9
+	base_mat.roughness = 0.3
+	base.material_override = base_mat
+	_magnet_ring.add_child(base)
+
+	# 2) Dual heavy electromagnetic prongs (curved/angled)
+	for i in [-1, 1]:
+		var prong := MeshInstance3D.new()
+		var prong_mesh := BoxMesh.new()
+		prong_mesh.size = Vector3(0.05, 0.05, 0.2)
+		prong.mesh = prong_mesh
+		var prong_mat := StandardMaterial3D.new()
+		prong_mat.albedo_color = Color(0.7, 0.7, 0.75, 1)
+		prong_mat.metallic = 0.9
+		prong_mat.roughness = 0.2
+		prong.material_override = prong_mat
+		prong.position = Vector3(0.12 * i, 0, -0.06)
+		# Angle them slightly inward
+		prong.rotation = Vector3(0, -0.2 * i, 0)
+		_magnet_ring.add_child(prong)
+		
+		# Copper wire coil details on each prong
+		var coil := MeshInstance3D.new()
+		var coil_mesh := CylinderMesh.new()
+		coil_mesh.top_radius = 0.06
+		coil_mesh.bottom_radius = 0.06
+		coil_mesh.height = 0.1
+		coil.mesh = coil_mesh
+		coil.rotation = Vector3(PI * 0.5, 0, 0)
+		coil.position = Vector3(0, 0, -0.02)
+		var coil_mat := StandardMaterial3D.new()
+		coil_mat.albedo_color = Color(0.9, 0.45, 0.15, 1) # bright copper coil
+		coil_mat.metallic = 0.9
+		coil_mat.roughness = 0.3
+		coil.material_override = coil_mat
+		prong.add_child(coil)
+
+		# Tip emitters (glowing blue balls)
+		var tip := MeshInstance3D.new()
+		var tip_mesh := SphereMesh.new()
+		tip_mesh.radius = 0.03
+		tip_mesh.height = 0.06
+		tip.mesh = tip_mesh
+		tip.position = Vector3(0, 0, -0.1)
+		var tip_mat := StandardMaterial3D.new()
+		tip_mat.albedo_color = Color(0.2, 0.8, 1.0, 1)
+		tip_mat.emission_enabled = true
+		tip_mat.emission = Color(0.1, 0.7, 1.0, 1)
+		tip_mat.emission_energy_multiplier = 4.0
+		tip.material_override = tip_mat
+		prong.add_child(tip)
+
+	# 3) Inner energy core (glowing floating sphere in the center)
+	var core := MeshInstance3D.new()
+	var core_mesh := SphereMesh.new()
+	core_mesh.radius = 0.06
+	core_mesh.height = 0.12
+	core.mesh = core_mesh
+	core.position = Vector3(0, 0, -0.08)
+	var core_mat := StandardMaterial3D.new()
+	core_mat.albedo_color = Color(0.2, 0.8, 1.0, 1)
+	core_mat.emission_enabled = true
+	core_mat.emission = Color(0.1, 0.7, 1.0, 1)
+	core_mat.emission_energy_multiplier = 5.0
+	core.material_override = core_mat
+	_magnet_ring.add_child(core)
+
+	# 4) Dynamic Tractor Beam Particle Intake
+	var part_emitter := CPUParticles3D.new()
+	part_emitter.name = "TractorParticles"
+	part_emitter.amount = 25
+	part_emitter.lifetime = 0.6
+	part_emitter.explosiveness = 0.0
+	part_emitter.randomness = 0.3
+	
+	# Spawn particles in front of the magnet
+	part_emitter.position = Vector3(0, 0, -2.5)
+	
+	# Emit towards the magnet (along +Z)
+	part_emitter.direction = Vector3(0, 0, 1)
+	part_emitter.spread = 15.0
+	part_emitter.gravity = Vector3.ZERO
+	part_emitter.initial_velocity_min = 3.5
+	part_emitter.initial_velocity_max = 5.5
+	
+	# Emit in a box volume in front of the ship
+	part_emitter.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	part_emitter.emission_box_extents = Vector3(0.5, 0.5, 1.0)
+	
+	var part_mesh := SphereMesh.new()
+	part_mesh.radius = 0.03
+	part_mesh.height = 0.06
+	part_emitter.mesh = part_mesh
+	
+	# Shrink as they get closer to the magnet core
+	var scale_curve := Curve.new()
+	scale_curve.add_point(Vector2(0.0, 0.2))
+	scale_curve.add_point(Vector2(0.3, 1.0))
+	scale_curve.add_point(Vector2(0.8, 0.8))
+	scale_curve.add_point(Vector2(1.0, 0.0))
+	part_emitter.scale_amount_curve = scale_curve
+	
+	# Soft blue/cyan energy glow fading out at the core
+	var gradient := Gradient.new()
+	gradient.add_point(0.0, Color(0.2, 0.5, 1.0, 0.0)) # fade in
+	gradient.add_point(0.2, Color(0.2, 0.8, 1.0, 0.8)) # bright cyan
+	gradient.add_point(0.8, Color(0.8, 0.2, 1.0, 0.8)) # purple shift near core
+	gradient.add_point(1.0, Color(1.0, 0.2, 1.0, 0.0)) # fade out at destination
+	part_emitter.color_ramp = gradient
+	
+	var part_mat2 := StandardMaterial3D.new()
+	part_mat2.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+	part_mat2.vertex_color_use_as_albedo = true
+	part_mat2.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+	part_emitter.material_override = part_mat2
+	
+	_magnet_ring.add_child(part_emitter)
+	part_emitter.emitting = true
 
 func _update_diagetic_visuals() -> void:
 	# --- Shield visual ---
@@ -1625,15 +1904,10 @@ func _update_diagetic_visuals() -> void:
 			_magnet_ring.scale = Vector3(magnet_scale, magnet_scale, magnet_scale)
 
 func _update_afterburner_visuals() -> void:
-	if not _afterburner_particles:
-		return
-	_afterburner_particles.emitting = _afterburner_active
-	# Change particle color based on whether afterburner is active
-	var pm: ParticleProcessMaterial = _afterburner_particles.process_material as ParticleProcessMaterial
-	if _afterburner_active:
-		pm.color = Color(0.5, 0.8, 1.0, 0.9)  # bright blue-white
-	else:
-		pm.color = Color(0.3, 0.4, 0.6, 0.5)  # dim blue
+	# The thruster plumes are now always emitting; the afterburner visual
+	# difference is handled in _set_engine_glow by scaling amount/velocity.
+	# Nothing extra to do here — just leave the emitters running.
+	pass
 
 # ── Skill integration ──────────────────────────────────────────────────────────
 
@@ -1642,14 +1916,130 @@ func _on_skill_unlocked(_skill_id: String) -> void:
 
 
 ## Show/hide missile pod and its tubes based on remaining ammo.
-func _show_missile_ammo(unlocked: bool, pod: MeshInstance3D, tubes: Array[MeshInstance3D], ammo: int) -> void:
+func _show_missile_ammo(unlocked: bool, pod: Node3D, tubes: Array[MeshInstance3D], ammo: int) -> void:
 	if pod == null:
 		return
+	
 	pod.visible = unlocked and _eff_missile_max_per_pod > 0
-	# Show one tube per remaining missile, hide the rest.
-	for i in tubes.size():
-		if is_instance_valid(tubes[i]):
-			tubes[i].visible = unlocked and i < ammo
+	if not pod.visible:
+		return
+
+	# Determine cache keys to see if we need to rebuild
+	var is_left = (pod == _missile_pod_left)
+	var last_capacity = _last_rendered_max_capacity_left if is_left else _last_rendered_max_capacity_right
+	var last_ammo = _last_rendered_ammo_left if is_left else _last_rendered_ammo_right
+	
+	var current_capacity = _eff_missile_max_per_pod
+	
+	if last_capacity == current_capacity and last_ammo == ammo:
+		return # No change, skip rebuild!
+		
+	# Update cache
+	if is_left:
+		_last_rendered_max_capacity_left = current_capacity
+		_last_rendered_ammo_left = ammo
+	else:
+		_last_rendered_max_capacity_right = current_capacity
+		_last_rendered_ammo_right = ammo
+		
+	# Clear previous children
+	for child in pod.get_children():
+		child.queue_free()
+		
+	# Common materials
+	var rail_mat := StandardMaterial3D.new()
+	rail_mat.albedo_color = Color(0.18, 0.18, 0.2, 1) # dark rails
+	rail_mat.metallic = 0.9
+	rail_mat.roughness = 0.35
+	
+	var missile_body_mat := StandardMaterial3D.new()
+	missile_body_mat.albedo_color = Color(0.85, 0.85, 0.9, 1) # sleek military white
+	missile_body_mat.metallic = 0.8
+	missile_body_mat.roughness = 0.2
+	
+	var missile_tip_mat := StandardMaterial3D.new()
+	missile_tip_mat.albedo_color = Color(1.0, 0.3, 0.15, 1) # target red orange glow
+	missile_tip_mat.emission_enabled = true
+	missile_tip_mat.emission = Color(1.0, 0.3, 0.15, 1)
+	missile_tip_mat.emission_energy_multiplier = 2.0
+	
+	var missile_fin_mat := StandardMaterial3D.new()
+	missile_fin_mat.albedo_color = Color(0.2, 0.2, 0.25, 1)
+	missile_fin_mat.metallic = 0.7
+	missile_fin_mat.roughness = 0.4
+
+	# Calculate slot positions based on capacity
+	var offsets: Array[Vector3] = []
+	if current_capacity <= 1:
+		offsets.append(Vector3(0, 0, 0))
+	elif current_capacity == 2:
+		offsets.append(Vector3(-0.08, 0, 0))
+		offsets.append(Vector3(0.08, 0, 0))
+	elif current_capacity == 4:
+		offsets.append(Vector3(-0.08, 0, 0.08))
+		offsets.append(Vector3(0.08, 0, 0.08))
+		offsets.append(Vector3(-0.08, -0.08, -0.08))
+		offsets.append(Vector3(0.08, -0.08, -0.08))
+	else: # 6 missiles
+		offsets.append(Vector3(-0.15, 0, 0.1))
+		offsets.append(Vector3(0, 0, 0.1))
+		offsets.append(Vector3(0.15, 0, 0.1))
+		offsets.append(Vector3(-0.15, -0.08, -0.1))
+		offsets.append(Vector3(0, -0.08, -0.1))
+		offsets.append(Vector3(0.15, -0.08, -0.1))
+		
+	# Draw pylons and missiles
+	for i in range(offsets.size()):
+		var slot_pos = offsets[i]
+		
+		# 1) Tiny launch rail bracket
+		var rail := MeshInstance3D.new()
+		var rail_mesh := BoxMesh.new()
+		rail_mesh.size = Vector3(0.02, 0.02, 0.35)
+		rail.mesh = rail_mesh
+		rail.material_override = rail_mat
+		rail.position = slot_pos
+		pod.add_child(rail)
+		
+		# 2) Loaded missile model (if index < ammo)
+		if i < ammo:
+			var m_model := Node3D.new()
+			# Move missile slightly forward and below the rail
+			m_model.position = slot_pos + Vector3(0, -0.04, -0.05)
+			pod.add_child(m_model)
+			
+			# Missile fuselage
+			var body := MeshInstance3D.new()
+			var body_mesh := CapsuleMesh.new()
+			body_mesh.radius = 0.032
+			body_mesh.height = 0.28
+			body.mesh = body_mesh
+			body.material_override = missile_body_mat
+			body.rotation = Vector3(PI * 0.5, 0, 0)
+			m_model.add_child(body)
+			
+			# Missile target tip
+			var tip := MeshInstance3D.new()
+			var tip_mesh := SphereMesh.new()
+			tip_mesh.radius = 0.033
+			tip_mesh.height = 0.065
+			tip.mesh = tip_mesh
+			tip.material_override = missile_tip_mat
+			tip.position = Vector3(0, 0, -0.13)
+			m_model.add_child(tip)
+			
+			# 4 fins at the back
+			for f in range(4):
+				var fin := MeshInstance3D.new()
+				var fin_mesh := BoxMesh.new()
+				fin_mesh.size = Vector3(0.08, 0.012, 0.08)
+				fin.mesh = fin_mesh
+				fin.material_override = missile_fin_mat
+				var angle = f * PI * 0.5
+				fin.position = Vector3(cos(angle) * 0.05, sin(angle) * 0.05, 0.1)
+				fin.rotation = Vector3(0, 0, angle)
+				fin.rotate_x(0.3) # sweep back
+				m_model.add_child(fin)
 
 
 func _on_skills_reset() -> void:

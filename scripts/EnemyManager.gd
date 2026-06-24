@@ -54,9 +54,12 @@ var _respawn_timers: Dictionary = {}
 func _ready() -> void:
 	_rng.seed = world_seed
 	add_to_group("enemy_managers")
-	_find_spawn_points()
-	_find_spawn_generator()
 	_find_ship()
+	
+	# Get spawn positions after a frame to ensure all nodes are ready
+	await get_tree().process_frame
+	_find_spawn_generator()
+	_find_spawn_points()
 	print("EnemyManager ready: ", spawn_points.size(), " spawn points found")
 
 func _find_spawn_points() -> void:
@@ -69,26 +72,28 @@ func _find_spawn_points() -> void:
 	spawn_points.sort_custom(_sort_by_distance)
 
 func _find_spawn_generator() -> void:
-	# Find SpawnPointGenerator and get its spawn positions
+	# First try to find by group
 	var generators = get_tree().get_nodes_in_group("spawn_generators")
-	print("Found ", generators.size(), " spawn generators")
+	print("Found ", generators.size(), " spawn generators in group")
 	
+	# If not found, get directly by path (sibling node)
 	if generators.size() == 0:
-		# Try to find by type
-		for node in get_tree().get_nodes_in_group(""):
-			if node is SpawnPointGenerator:
-				generators.append(node)
-				break
-		
-		# Also try to find by name
-		if generators.size() == 0:
-			var root = get_tree().root
-			_find_node_by_name(root, "SpawnPointGenerator", generators)
+		var gen = get_node_or_null("../SpawnPointGenerator")
+		if gen:
+			generators.append(gen)
+			print("Found SpawnPointGenerator by path")
+	
+	# If still not found, search by name in root
+	if generators.size() == 0:
+		_find_by_name(get_tree().root, "SpawnPointGenerator", generators)
 	
 	for gen in generators:
 		if gen.has_method("get_spawn_points_in_range"):
+			var all_points = gen.spawn_points
+			print("Generator has ", all_points.size(), " total spawn points")
 			_spawn_positions = gen.get_spawn_points_in_range(min_spawn_distance, max_spawn_distance)
-			print("Got ", _spawn_positions.size(), " spawn positions from generator")
+			print("Got ", _spawn_positions.size(), " spawn positions in range ", min_spawn_distance, "-", max_spawn_distance)
+			break
 
 func _find_ship() -> void:
 	if not ship_path.is_empty():
@@ -230,6 +235,16 @@ func _spawn_enemy_at_position(pos: Vector3, scene: PackedScene, point: Node3D = 
 	if enemy == null:
 		return
 	
+	# Connect signals before adding to scene
+	if enemy.has_signal("died"):
+		enemy.died.connect(_on_enemy_died.bind(enemy, point))
+	elif enemy.has_signal("enemy_died"):
+		enemy.enemy_died.connect(_on_enemy_died.bind(enemy, point))
+	
+	# Add to scene FIRST so global_position works
+	add_child(enemy)
+	active_enemies.append(enemy)
+	
 	# Position at spawn point with slight random offset
 	var offset = Vector3(
 		_rng.randf_range(-10.0, 10.0),
@@ -238,15 +253,6 @@ func _spawn_enemy_at_position(pos: Vector3, scene: PackedScene, point: Node3D = 
 	)
 	enemy.global_position = pos + offset
 	
-	# Connect signals
-	if enemy.has_signal("died"):
-		enemy.died.connect(_on_enemy_died.bind(enemy, point))
-	elif enemy.has_signal("enemy_died"):
-		enemy.enemy_died.connect(_on_enemy_died.bind(enemy, point))
-	
-	# Add to scene
-	add_child(enemy)
-	active_enemies.append(enemy)
 	if point:
 		point.set_meta("active_enemy", enemy)
 	
@@ -318,3 +324,12 @@ func _find_node_by_name(node: Node, name: String, result: Array) -> void:
 		result.append(node)
 	for child in node.get_children():
 		_find_node_by_name(child, name, result)
+
+func _find_by_name(root: Node, target_name: String, result: Array) -> void:
+	if root.name == target_name:
+		result.append(root)
+	for child in root.get_children():
+		if child.name == target_name:
+			result.append(child)
+		else:
+			_find_by_name(child, target_name, result)

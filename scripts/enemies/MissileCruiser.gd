@@ -53,8 +53,106 @@ func _ready() -> void:
 	# Collect missile pods
 	_missile_pods = [_missile_pod_left, _missile_pod_right]
 	
+	_upgrade_visuals()
 	_spawn_position = global_position
 	_pick_new_patrol_target()
+
+
+func _upgrade_visuals() -> void:
+	var body_root = get_node_or_null("Body")
+	if body_root == null:
+		return
+
+	# 1) Crimson-red military steel hull
+	var hull_mat := StandardMaterial3D.new()
+	hull_mat.albedo_color = Color(0.42, 0.16, 0.18, 1.0)
+	hull_mat.metallic = 0.9
+	hull_mat.roughness = 0.3
+	if _hull_mesh != null:
+		_hull_mesh.material_override = hull_mat
+
+	# 2) Dark graphite material for pods
+	var pod_mat := StandardMaterial3D.new()
+	pod_mat.albedo_color = Color(0.18, 0.18, 0.22, 1.0)
+	pod_mat.metallic = 0.95
+	pod_mat.roughness = 0.3
+	
+	for pod in _missile_pods:
+		if pod != null:
+			var pod_mesh = pod.get_node_or_null("Pod") as MeshInstance3D
+			if pod_mesh != null:
+				pod_mesh.material_override = pod_mat
+			
+			# Give missile tubes a glowing copper launch interior
+			var tube_mat := StandardMaterial3D.new()
+			tube_mat.albedo_color = Color(0.85, 0.45, 0.15, 1.0)
+			tube_mat.metallic = 1.0
+			tube_mat.roughness = 0.2
+			tube_mat.emission_enabled = true
+			tube_mat.emission = Color(0.7, 0.2, 0.05, 1.0) # ready to launch heat glow
+			tube_mat.emission_energy_multiplier = 0.8
+			
+			for tube_name in ["Tube1", "Tube2"]:
+				var tube = pod.get_node_or_null(tube_name) as MeshInstance3D
+				if tube != null:
+					tube.material_override = tube_mat
+
+	# 3) Radar dish - golden communications array
+	if _radar_dish != null:
+		var radar_mat := StandardMaterial3D.new()
+		radar_mat.albedo_color = Color(0.75, 0.6, 0.25, 1.0)
+		radar_mat.metallic = 1.0
+		radar_mat.roughness = 0.25
+		radar_mat.emission_enabled = true
+		radar_mat.emission = Color(0.35, 0.25, 0.05, 1.0)
+		radar_mat.emission_energy_multiplier = 0.5
+		_radar_dish.material_override = radar_mat
+		
+		# Add a glowing red radar beacon light on top
+		var beacon := MeshInstance3D.new()
+		var beacon_mesh := SphereMesh.new()
+		beacon_mesh.radius = 0.04
+		beacon_mesh.height = 0.08
+		beacon.mesh = beacon_mesh
+		var beacon_mat := StandardMaterial3D.new()
+		beacon_mat.albedo_color = Color(1.0, 0.2, 0.2, 1.0)
+		beacon_mat.emission_enabled = true
+		beacon_mat.emission = Color(1.0, 0.2, 0.2, 1.0)
+		beacon_mat.emission_energy_multiplier = 4.0
+		beacon.material_override = beacon_mat
+		beacon.position = Vector3(0, 0.15, 0)
+		_radar_dish.add_child(beacon)
+
+	# 4) Glowing engines - purple/pink rocket exhaust
+	var engine_mat := StandardMaterial3D.new()
+	engine_mat.albedo_color = Color(0.8, 0.15, 1.0, 1.0)
+	engine_mat.metallic = 0.5
+	engine_mat.roughness = 0.2
+	engine_mat.emission_enabled = true
+	engine_mat.emission = Color(0.6, 0.1, 1.0, 1.0)
+	engine_mat.emission_energy_multiplier = 3.5
+	if _engine_left != null:
+		_engine_left.material_override = engine_mat
+	if _engine_right != null:
+		_engine_right.material_override = engine_mat
+
+	# 5) Engine nozzles (rocket bells)
+	var nozzle_mat := StandardMaterial3D.new()
+	nozzle_mat.albedo_color = Color(0.12, 0.12, 0.15, 1.0)
+	nozzle_mat.metallic = 0.95
+	nozzle_mat.roughness = 0.45
+	
+	for offset_x in [-0.5, 0.5]:
+		var nozzle := MeshInstance3D.new()
+		var nozzle_mesh := CylinderMesh.new()
+		nozzle_mesh.top_radius = 0.18
+		nozzle_mesh.bottom_radius = 0.23
+		nozzle_mesh.height = 0.22
+		nozzle.mesh = nozzle_mesh
+		nozzle.material_override = nozzle_mat
+		nozzle.position = Vector3(offset_x, 0, 1.35)
+		nozzle.rotation = Vector3(PI * 0.5, 0, 0)
+		body_root.add_child(nozzle)
 
 func _update_enemy(delta: float) -> void:
 	_state_timer += delta
@@ -188,17 +286,58 @@ func _fire_homing_missile() -> void:
 	missile.rotation.x = PI / 2
 	
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.6, 0.2, 0.2)
-	mat.metallic = 0.5
+	mat.albedo_color = Color(0.65, 0.15, 0.15) # rich military crimson
+	mat.metallic = 0.8
+	mat.roughness = 0.25
 	missile.material_override = mat
 	
 	# Engine glow
 	var glow = OmniLight3D.new()
-	glow.light_color = Color(1.0, 0.5, 0.2)
-	glow.light_energy = 1.0
-	glow.omni_range = 2.0
+	glow.light_color = Color(1.0, 0.4, 0.2)
+	glow.light_energy = 2.0
+	glow.omni_range = 3.0
 	glow.position = Vector3(0, 0, 0.5)
 	missile.add_child(glow)
+
+	# Homing missile trail particles (fiery red/purple)
+	var trail := CPUParticles3D.new()
+	trail.amount = 30
+	trail.lifetime = 0.3
+	trail.explosiveness = 0.0
+	trail.randomness = 0.2
+	trail.position = Vector3(0, 0, 0.45)
+	
+	var part_mesh := SphereMesh.new()
+	part_mesh.radius = 0.04
+	part_mesh.height = 0.08
+	trail.draw_pass_1 = part_mesh
+	
+	trail.direction = Vector3(0, 0, 1) # shoot straight back
+	trail.spread = 10.0
+	trail.gravity = Vector3.ZERO
+	trail.initial_velocity_min = 4.0
+	trail.initial_velocity_max = 6.0
+	
+	var scale_curve := Curve.new()
+	scale_curve.add_point(Vector2(0.0, 1.0))
+	scale_curve.add_point(Vector2(1.0, 0.1))
+	trail.scale_amount_curve = scale_curve
+	
+	var gradient := Gradient.new()
+	gradient.add_point(0.0, Color(1.0, 0.3, 0.1, 1.0))  # red-hot core
+	gradient.add_point(0.2, Color(0.6, 0.1, 0.8, 0.8))  # purple flame
+	gradient.add_point(0.6, Color(0.25, 0.15, 0.3, 0.3)) # dark smoke
+	gradient.add_point(1.0, Color(0.1, 0.1, 0.1, 0.0))  # fade
+	trail.color_ramp = gradient
+	
+	var part_mat := StandardMaterial3D.new()
+	part_mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+	part_mat.vertex_color_use_as_albedo = true
+	part_mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+	trail.material_override = part_mat
+	
+	missile.add_child(trail)
+	trail.emitting = true
 	
 	# Find a missile pod to fire from
 	var pod_pos = global_position

@@ -29,6 +29,8 @@ func generate_spawn_points() -> void:
 			marker.queue_free()
 	_markers.clear()
 	
+	print("SpawnPointGenerator: Generating spawn points with seed ", world_seed)
+	
 	# Generate spawn points in rings around the station
 	for ring in range(ring_count):
 		var ring_distance = lerp(min_distance, max_distance, float(ring) / float(ring_count - 1))
@@ -48,6 +50,8 @@ func generate_spawn_points() -> void:
 			
 			if show_markers:
 				_create_marker(pos, ring)
+	
+	print("SpawnPointGenerator: Generated ", spawn_points.size(), " spawn points")
 
 func _create_marker(pos: Vector3, ring: int) -> void:
 	var marker = MeshInstance3D.new()

@@ -44,8 +44,100 @@ func _ready() -> void:
 	
 	super._ready()
 	
+	_upgrade_visuals()
 	_spawn_position = global_position
 	_pick_new_patrol_target()
+
+
+func _upgrade_visuals() -> void:
+	var body_root = get_node_or_null("Body")
+	if body_root == null:
+		return
+
+	# 1) Sleek alien purple-metallic drone body
+	var body_mat := StandardMaterial3D.new()
+	body_mat.albedo_color = Color(0.2, 0.18, 0.28, 1.0)
+	body_mat.metallic = 0.95
+	body_mat.roughness = 0.18
+	if _body_mesh != null:
+		_body_mesh.material_override = body_mat
+
+	# 2) Wing material
+	var wing_mat := StandardMaterial3D.new()
+	wing_mat.albedo_color = Color(0.25, 0.25, 0.32, 1.0)
+	wing_mat.metallic = 0.9
+	wing_mat.roughness = 0.25
+	if _wing_left != null:
+		_wing_left.material_override = wing_mat
+	if _wing_right != null:
+		_wing_right.material_override = wing_mat
+
+	# 3) Glowing engine thrusters
+	var engine_mat := StandardMaterial3D.new()
+	engine_mat.albedo_color = Color(0.1, 0.7, 1.0, 1.0)
+	engine_mat.metallic = 0.5
+	engine_mat.roughness = 0.2
+	engine_mat.emission_enabled = true
+	engine_mat.emission = Color(0.0, 0.8, 1.0, 1.0) # bright blue-cyan emission
+	engine_mat.emission_energy_multiplier = 3.0
+	
+	var engine_l := body_root.get_node_or_null("EngineLeft") as MeshInstance3D
+	var engine_r := body_root.get_node_or_null("EngineRight") as MeshInstance3D
+	if engine_l != null:
+		engine_l.material_override = engine_mat
+	if engine_r != null:
+		engine_r.material_override = engine_mat
+
+	# 4) Add engine nozzles (rocket thruster housings)
+	var nozzle_mat := StandardMaterial3D.new()
+	nozzle_mat.albedo_color = Color(0.12, 0.12, 0.15, 1.0)
+	nozzle_mat.metallic = 0.95
+	nozzle_mat.roughness = 0.3
+	
+	for offset_x in [-0.3, 0.3]:
+		var nozzle := MeshInstance3D.new()
+		var nozzle_mesh := CylinderMesh.new()
+		nozzle_mesh.top_radius = 0.16
+		nozzle_mesh.bottom_radius = 0.18
+		nozzle_mesh.height = 0.18
+		nozzle.mesh = nozzle_mesh
+		nozzle.material_override = nozzle_mat
+		nozzle.position = Vector3(offset_x, 0, 0.55)
+		nozzle.rotation = Vector3(PI * 0.5, 0, 0)
+		body_root.add_child(nozzle)
+
+	# 5) Front glowing sensor lens (red camera eye)
+	var eye := MeshInstance3D.new()
+	var eye_mesh := SphereMesh.new()
+	eye_mesh.radius = 0.06
+	eye_mesh.height = 0.12
+	eye.mesh = eye_mesh
+	var eye_mat := StandardMaterial3D.new()
+	eye_mat.albedo_color = Color(1.0, 0.1, 0.1, 1.0)
+	eye_mat.emission_enabled = true
+	eye_mat.emission = Color(1.0, 0.2, 0.2, 1.0) # glowing red sensor eye
+	eye_mat.emission_energy_multiplier = 4.0
+	eye.material_override = eye_mat
+	eye.position = Vector3(0, 0, -0.62)
+	body_root.add_child(eye)
+
+	# 6) Dual rear-pointing antennas on the wing tips
+	for i in [-1, 1]:
+		var ant := MeshInstance3D.new()
+		var ant_mesh := CylinderMesh.new()
+		ant_mesh.top_radius = 0.005
+		ant_mesh.bottom_radius = 0.015
+		ant_mesh.height = 0.35
+		ant.mesh = ant_mesh
+		var ant_mat := StandardMaterial3D.new()
+		ant_mat.albedo_color = Color(0.85, 0.45, 0.15, 1.0) # copper-plated antenna
+		ant_mat.metallic = 1.0
+		ant_mat.roughness = 0.3
+		ant.material_override = ant_mat
+		ant.position = Vector3(1.0 * i, 0, 0.1)
+		# Point backwards and slightly angled outwards
+		ant.rotation = Vector3(PI * 0.4, 0.15 * i, 0)
+		body_root.add_child(ant)
 
 func _update_enemy(delta: float) -> void:
 	_state_timer += delta

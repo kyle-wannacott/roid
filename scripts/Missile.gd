@@ -12,14 +12,13 @@ class_name Missile
 
 var _age: float = 0.0
 var _velocity: Vector3 = Vector3.ZERO
-var _trail_emitter: GPUParticles3D = null
+var _trail_emitter: CPUParticles3D = null
 
 
 func _ready() -> void:
 	# Build a small rocket mesh in code: tip + body + fins.
 	_build_visual()
-	# Set initial velocity now; if the caller calls set_flight_params
-	# before _ready runs, the value is updated by the call below.
+	# Set initial velocity now
 	if shooter != null:
 		_velocity = -shooter.global_transform.basis.z * speed
 	else:
@@ -38,63 +37,153 @@ func set_flight_params(p_speed: float, p_lifetime: float) -> void:
 
 
 func _build_visual() -> void:
-	# Body (a small cylinder).
+	# Missile Root Node for clean rotation
+	var model := Node3D.new()
+	add_child(model)
+
+	# 1) Rocket Nozzle (at the rear)
+	var nozzle := MeshInstance3D.new()
+	var nozzle_mesh := CylinderMesh.new()
+	nozzle_mesh.top_radius = 0.05
+	nozzle_mesh.bottom_radius = 0.07
+	nozzle_mesh.height = 0.1
+	nozzle.mesh = nozzle_mesh
+	nozzle.rotation = Vector3(PI * 0.5, 0, 0)
+	nozzle.position = Vector3(0, 0, 0.22)
+	var nozzle_mat := StandardMaterial3D.new()
+	nozzle_mat.albedo_color = Color(0.15, 0.15, 0.18, 1)
+	nozzle_mat.metallic = 0.8
+	nozzle_mat.roughness = 0.5
+	nozzle.material_override = nozzle_mat
+	model.add_child(nozzle)
+
+	# 2) Body (sleek cylindrical fuselage with carbon/white plating)
 	var body := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.06
-	cyl.bottom_radius = 0.06
-	cyl.height = 0.5
+	cyl.top_radius = 0.05
+	cyl.bottom_radius = 0.05
+	cyl.height = 0.45
 	body.mesh = cyl
 	body.rotation = Vector3(PI * 0.5, 0, 0)
+	body.position = Vector3(0, 0, -0.05)
 	var body_mat := StandardMaterial3D.new()
-	body_mat.albedo_color = Color(0.85, 0.85, 0.9, 1)
-	body_mat.metallic = 0.7
-	body_mat.roughness = 0.3
-	body_mat.emission_enabled = true
-	body_mat.emission = Color(0.9, 0.4, 0.1, 1)
-	body_mat.emission_energy_multiplier = 1.2
+	body_mat.albedo_color = Color(0.85, 0.85, 0.9, 1) # sleek military white
+	body_mat.metallic = 0.8
+	body_mat.roughness = 0.2
 	body.material_override = body_mat
-	add_child(body)
+	model.add_child(body)
 
-	# Nose (small cone at the front).
+	# 3) Carbon Accent Ring
+	var accent := MeshInstance3D.new()
+	var accent_mesh := CylinderMesh.new()
+	accent_mesh.top_radius = 0.052
+	accent_mesh.bottom_radius = 0.052
+	accent_mesh.height = 0.08
+	accent.mesh = accent_mesh
+	accent.rotation = Vector3(PI * 0.5, 0, 0)
+	accent.position = Vector3(0, 0, -0.1)
+	var accent_mat := StandardMaterial3D.new()
+	accent_mat.albedo_color = Color(0.1, 0.1, 0.12, 1) # dark carbon fibre accent
+	accent_mat.metallic = 0.9
+	accent_mat.roughness = 0.4
+	accent.material_override = accent_mat
+	model.add_child(accent)
+
+	# 4) Target sensor dome (glowing red tip at the front)
 	var nose := MeshInstance3D.new()
 	var cone := CylinderMesh.new()
 	cone.top_radius = 0.0
-	cone.bottom_radius = 0.06
-	cone.height = 0.15
+	cone.bottom_radius = 0.05
+	cone.height = 0.12
 	nose.mesh = cone
 	nose.rotation = Vector3(PI * 0.5, 0, 0)
 	nose.position = Vector3(0, 0, -0.32)
-	nose.material_override = body_mat
-	add_child(nose)
+	var nose_mat := StandardMaterial3D.new()
+	nose_mat.albedo_color = Color(1.0, 0.1, 0.2, 1) # danger red sensor tip
+	nose_mat.metallic = 0.5
+	nose_mat.roughness = 0.1
+	nose_mat.emission_enabled = true
+	nose_mat.emission = Color(1.0, 0.2, 0.2, 1)
+	nose_mat.emission_energy_multiplier = 3.0
+	nose.material_override = nose_mat
+	model.add_child(nose)
 
-	# 4 fins.
+	# 5) Swept-back fins (4 wings)
 	for i in 4:
 		var fin := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(0.12, 0.02, 0.1)
+		box.size = Vector3(0.12, 0.015, 0.12)
 		fin.mesh = box
 		var fin_mat := StandardMaterial3D.new()
-		fin_mat.albedo_color = Color(0.5, 0.5, 0.55, 1)
+		fin_mat.albedo_color = Color(0.2, 0.2, 0.25, 1)
+		fin_mat.metallic = 0.7
+		fin_mat.roughness = 0.4
 		fin.material_override = fin_mat
-		fin.position = Vector3(cos(i * PI * 0.5) * 0.07, sin(i * PI * 0.5) * 0.07, 0.15)
-		fin.rotation = Vector3(0, 0, i * PI * 0.5)
-		add_child(fin)
+		# Shift fins slightly backward and tilt them for aerodynamic swept-back look
+		var angle: float = i * PI * 0.5
+		fin.position = Vector3(cos(angle) * 0.08, sin(angle) * 0.08, 0.12)
+		fin.rotation = Vector3(0, 0, angle)
+		fin.rotate_x(0.3) # sweep back
+		model.add_child(fin)
 
-	# Engine glow (bright sphere behind the body).
+	# 6) Engine core flare (constant small intense glow sphere at nozzle exit)
 	var glow := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
-	sphere.radius = 0.07
-	sphere.height = 0.14
+	sphere.radius = 0.05
+	sphere.height = 0.1
 	glow.mesh = sphere
-	glow.position = Vector3(0, 0, 0.28)
+	glow.position = Vector3(0, 0, 0.27)
 	var glow_mat := StandardMaterial3D.new()
-	glow_mat.albedo_color = Color(1, 0.6, 0.2, 1)
+	glow_mat.albedo_color = Color(1, 0.7, 0.3, 1)
 	glow_mat.emission_enabled = true
-	glow_mat.emission = Color(1, 0.7, 0.2, 1)
-	glow_mat.emission_energy_multiplier = 4.0
+	glow_mat.emission = Color(1, 0.5, 0.1, 1)
+	glow_mat.emission_energy_multiplier = 6.0
 	glow.material_override = glow_mat
-	add_child(glow)
+	model.add_child(glow)
+
+	# 7) Dynamic fire & smoke exhaust trail
+	_trail_emitter = CPUParticles3D.new()
+	_trail_emitter.amount = 45
+	_trail_emitter.lifetime = 0.35
+	_trail_emitter.explosiveness = 0.0
+	_trail_emitter.randomness = 0.2
+	_trail_emitter.position = Vector3(0, 0, 0.28)
+	
+	var part_mesh := SphereMesh.new()
+	part_mesh.radius = 0.05
+	part_mesh.height = 0.1
+	_trail_emitter.mesh = part_mesh
+	
+	_trail_emitter.direction = Vector3(0, 0, 1) # shoot straight back
+	_trail_emitter.spread = 8.0
+	_trail_emitter.gravity = Vector3.ZERO
+	_trail_emitter.initial_velocity_min = 6.0
+	_trail_emitter.initial_velocity_max = 10.0
+	
+	# Fades size as it moves away
+	var scale_curve := Curve.new()
+	scale_curve.add_point(Vector2(0.0, 1.0))
+	scale_curve.add_point(Vector2(0.2, 1.4))
+	scale_curve.add_point(Vector2(1.0, 0.1))
+	_trail_emitter.scale_amount_curve = scale_curve
+	
+	# Color gradient: blue core -> bright orange -> dark gray smoke -> transparent
+	var gradient := Gradient.new()
+	gradient.add_point(0.0, Color(0.4, 0.8, 1.0, 1.0))  # super hot blue plume at nozzle
+	gradient.add_point(0.15, Color(1.0, 0.7, 0.2, 0.9)) # fiery orange-yellow
+	gradient.add_point(0.4, Color(0.9, 0.3, 0.1, 0.6))  # cooling red-orange
+	gradient.add_point(0.7, Color(0.25, 0.25, 0.25, 0.3)) # grey smoke trail
+	gradient.add_point(1.0, Color(0.1, 0.1, 0.1, 0.0))  # complete fadeout
+	_trail_emitter.color_ramp = gradient
+	
+	var part_mat := StandardMaterial3D.new()
+	part_mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+	part_mat.vertex_color_use_as_albedo = true
+	part_mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+	_trail_emitter.material_override = part_mat
+	
+	add_child(_trail_emitter)
+	_trail_emitter.emitting = true
 
 
 func _physics_process(delta: float) -> void:
