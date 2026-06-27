@@ -1,144 +1,186 @@
-[gd_scene load_steps=3 format=3 uid="uid://b4hudspace01"]
+[gd_scene load_steps=15 format=3 uid="uid://b4hudspace01"]
 
-[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
+[ext_resource type="Script" uid="uid://0fr5u3ukqlm2" path="res://scripts/HUD.gd" id="1_hud"]
+[ext_resource type="PackedScene" uid="uid://b6f6wb1ntty2t" path="res://scenes/PilotCharacter.tscn" id="1_pilot"]
+[ext_resource type="Texture2D" uid="uid://bmxtomw7ykqf0" path="res://user_interface/speedo.png" id="2_speedo"]
+[ext_resource type="Texture2D" path="res://user_interface/speedodial.png" id="3_dial"]
+[ext_resource type="FontFile" uid="uid://b4xuaxlwnadnv" path="res://assets/fonts/IBMPlexMono-SemiBold.ttf" id="4_font_semi"]
+[ext_resource type="FontFile" path="res://assets/fonts/IBMPlexMono-Regular.ttf" id="5_font_reg"]
 
-[sub_resource type="LabelSettings" id="LabelSettings_title"]
-font_size = 14
-font_color = Color(0.8, 0.9, 1, 0.9)
+[sub_resource type="ViewportTexture" id="ViewportTexture_rqf5b"]
+viewport_path = NodePath("PilotViewport")
 
-[node name="HUD" type="CanvasLayer"]
+; ──── Panel chrome ──────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="sb_panel"]
+bg_color = Color(0.045, 0.06, 0.09, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.55, 0.75, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_size = 6
+shadow_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="sb_header"]
+bg_color = Color(0.07, 0.11, 0.16, 1)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 1
+border_color = Color(0.2, 0.45, 0.65, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+content_margin_left = 8.0
+content_margin_right = 8.0
+
+; LCD — phosphor-green
+[sub_resource type="StyleBoxFlat" id="sb_lcd"]
+bg_color = Color(0.01, 0.045, 0.03, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.4, 0.32, 0.9)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 6.0
+content_margin_right = 6.0
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+
+; Round metallic bolt
+[sub_resource type="StyleBoxFlat" id="sb_bolt"]
+bg_color = Color(0.18, 0.22, 0.27, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.05, 0.06, 0.08, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+; Recessed dial bezel
+[sub_resource type="StyleBoxFlat" id="sb_dial_recess"]
+bg_color = Color(0.025, 0.035, 0.05, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.3, 0.4, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+; Hull bar
+[sub_resource type="StyleBoxFlat" id="sb_hull_bg"]
+bg_color = Color(0.02, 0.03, 0.04, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.3, 0.4, 0.6)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="sb_hull_fg"]
+bg_color = Color(0.35, 0.95, 0.5, 0.9)
+border_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+; Radar background — dark green phosphor
+[sub_resource type="StyleBoxFlat" id="sb_radar"]
+bg_color = Color(0.01, 0.05, 0.03, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.55, 0.4, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+; ──── Label / font settings ────────────────────────────────
+[sub_resource type="LabelSettings" id="ls_header"]
+font = ExtResource("4_font_semi")
+font_size = 11
+font_color = Color(0.55, 0.85, 1, 0.9)
+letter_spacing = 3.0
+
+[sub_resource type="LabelSettings" id="ls_dial_label"]
+font = ExtResource("5_font_reg")
+font_size = 9
+font_color = Color(0.6, 0.85, 1, 0.85)
+letter_spacing = 1.5
+
+[sub_resource type="LabelSettings" id="ls_dial_value"]
+font = ExtResource("4_font_semi")
+font_size = 11
+font_color = Color(0.85, 1, 0.95, 1)
+
+[sub_resource type="LabelSettings" id="ls_dial_value_lg"]
+font = ExtResource("4_font_semi")
+font_size = 16
+font_color = Color(0.6, 1, 0.85, 1)
+
+[sub_resource type="LabelSettings" id="ls_led_label"]
+font = ExtResource("5_font_reg")
+font_size = 7
+font_color = Color(0.55, 0.75, 0.7, 0.85)
+letter_spacing = 0.8
+
+[sub_resource type="LabelSettings" id="ls_lcd"]
+font = ExtResource("4_font_semi")
+font_size = 10
+font_color = Color(0.35, 1, 0.55, 1)
+letter_spacing = 1.0
+
+[sub_resource type="LabelSettings" id="ls_radar_title"]
+font = ExtResource("4_font_semi")
+font_size = 9
+font_color = Color(0.4, 1, 0.55, 0.9)
+letter_spacing = 2.0
+
+[sub_resource type="LabelSettings" id="ls_radar_status"]
+font = ExtResource("4_font_semi")
+font_size = 10
+font_color = Color(0.3, 1, 0.5, 1)
+letter_spacing = 1.5
+
+[node name="HUD" type="CanvasLayer" unique_id=1087475049]
 script = ExtResource("1_hud")
 
-[node name="Root" type="Control" parent="."]
+; ═══════════════════════════════════════════════════════════
+;  ROOT — full-screen Control for layout
+; ═══════════════════════════════════════════════════════════
+[node name="Root" type="Control" parent="." unique_id=2072138276]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
-[node name="TopLeft" type="MarginContainer" parent="Root"]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 320.0
-offset_bottom = 280.0
-mouse_filter = 2
-
-[node name="Panel" type="PanelContainer" parent="Root/TopLeft"]
-mouse_filter = 2
-
-[node name="Margin" type="MarginContainer" parent="Root/TopLeft/Panel"]
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Root/TopLeft/Panel/Margin"]
-theme_override_constants/separation = 4
-
-[node name="Title" type="Label" parent="Root/TopLeft/Panel/Margin/VBox"]
-text = "SHIP STATUS"
-label_settings = SubResource("LabelSettings_title")
-
-[node name="HealthRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="HealthLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/HealthRow"]
-text = "HULL  "
-custom_minimum_size = Vector2(80, 0)
-
-[node name="HealthValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/HealthRow"]
-text = "100 / 100"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="HealthBar" type="ProgressBar" parent="Root/TopLeft/Panel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 10)
-max_value = 100.0
-value = 100.0
-show_percentage = false
-
-[node name="FuelRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="FuelLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/FuelRow"]
-text = "FUEL  "
-custom_minimum_size = Vector2(80, 0)
-
-[node name="FuelValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/FuelRow"]
-text = "100 / 100"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="FuelBar" type="ProgressBar" parent="Root/TopLeft/Panel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 12)
-max_value = 100.0
-value = 100.0
-show_percentage = false
-
-[node name="GemRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="GemLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/GemRow"]
-text = "GEMS  "
-custom_minimum_size = Vector2(80, 0)
-
-[node name="GemValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/GemRow"]
-text = "0"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="SpeedRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="SpeedLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/SpeedRow"]
-text = "SPEED "
-custom_minimum_size = Vector2(80, 0)
-
-[node name="SpeedValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/SpeedRow"]
-text = "0.0"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="StationRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="StationLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StationRow"]
-text = "STATION"
-custom_minimum_size = Vector2(80, 0)
-
-[node name="StationValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StationRow"]
-text = "0.0"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="MineRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="MineLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/MineRow"]
-text = "MINING"
-custom_minimum_size = Vector2(80, 0)
-
-[node name="MineValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/MineRow"]
-text = "OUT OF RANGE"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="StateRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="StateLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StateRow"]
-text = "STATE "
-custom_minimum_size = Vector2(80, 0)
-
-[node name="StateValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/StateRow"]
-text = "FLYING"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="ShieldRow" type="HBoxContainer" parent="Root/TopLeft/Panel/Margin/VBox"]
-
-[node name="ShieldLabel" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/ShieldRow"]
-text = "SHIELD"
-custom_minimum_size = Vector2(80, 0)
-
-[node name="ShieldValue" type="Label" parent="Root/TopLeft/Panel/Margin/VBox/ShieldRow"]
-unique_name_in_owner = true
-text = "INACTIVE"
-horizontal_alignment = 2
-size_flags_horizontal = 3
-
-[node name="Reticle" type="Control" parent="Root"]
+; ─── Dynamic reticle (center) ──────────────────────────────
+[node name="Reticle" type="Control" parent="Root" unique_id=852308241]
+modulate = Color(0.8, 0.85, 1, 0.6)
+anchors_preset = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -147,17 +189,18 @@ offset_left = -12.0
 offset_top = -12.0
 offset_right = 12.0
 offset_bottom = 12.0
-modulate = Color(0.8, 0.85, 1, 0.6)
 mouse_filter = 2
 
-[node name="HLine" type="ColorRect" parent="Root/Reticle"]
+[node name="HLine" type="ColorRect" parent="Root/Reticle" unique_id=265068705]
+layout_mode = 0
 offset_left = 2.0
 offset_top = 11.5
 offset_right = 22.0
 offset_bottom = 12.5
 color = Color(1, 1, 1, 0.9)
 
-[node name="HLine2" type="ColorRect" parent="Root/Reticle"]
+[node name="HLine2" type="ColorRect" parent="Root/Reticle" unique_id=1007553089]
+layout_mode = 0
 offset_left = 2.0
 offset_top = 11.5
 offset_right = 22.0
@@ -165,14 +208,16 @@ offset_bottom = 12.5
 rotation = 3.14159
 color = Color(1, 1, 1, 0.9)
 
-[node name="VLine" type="ColorRect" parent="Root/Reticle"]
+[node name="VLine" type="ColorRect" parent="Root/Reticle" unique_id=467885046]
+layout_mode = 0
 offset_left = 11.5
 offset_top = 2.0
 offset_right = 12.5
 offset_bottom = 22.0
 color = Color(1, 1, 1, 0.9)
 
-[node name="VLine2" type="ColorRect" parent="Root/Reticle"]
+[node name="VLine2" type="ColorRect" parent="Root/Reticle" unique_id=1150342682]
+layout_mode = 0
 offset_left = 11.5
 offset_top = 2.0
 offset_right = 12.5
@@ -180,38 +225,592 @@ offset_bottom = 22.0
 rotation = 3.14159
 color = Color(1, 1, 1, 0.9)
 
-[node name="Dot" type="ColorRect" parent="Root/Reticle"]
+[node name="Dot" type="ColorRect" parent="Root/Reticle" unique_id=1638834376]
+layout_mode = 0
 offset_left = 11.0
 offset_top = 11.0
 offset_right = 13.0
 offset_bottom = 13.0
 color = Color(1, 1, 1, 0.9)
 
-[node name="Bottom" type="MarginContainer" parent="Root"]
+; ─── Centered message label ───────────────────────────────
+[node name="Message" type="Label" parent="Root" unique_id=252328715]
+visible = false
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+
+; ─── Controls hint (bottom center) ───────────────────────
+[node name="Bottom" type="MarginContainer" parent="Root" unique_id=827591664]
+layout_mode = 0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -64.0
 mouse_filter = 2
 
-[node name="Center" type="CenterContainer" parent="Root/Bottom"]
+[node name="Center" type="CenterContainer" parent="Root/Bottom" unique_id=1984654386]
+layout_mode = 2
 mouse_filter = 2
 
-[node name="Controls" type="Label" parent="Root/Bottom/Center"]
-text = "W/S thrust   A/D turn   Q/E barrel roll   RMB gatling   G missiles   F/Click mine   Tab camera   R reset   F1 skill tree   F2 spreadsheet"
+[node name="Controls" type="Label" parent="Root/Bottom/Center" unique_id=425189834]
 modulate = Color(0.8, 0.85, 1, 0.7)
+layout_mode = 2
+text = "W/S thrust   A/D turn   Q/E barrel roll   RMB gatling   G missiles   F/Click mine   Tab camera   R reset   F1 skill tree   F2 spreadsheet"
 
-[node name="Message" type="Label" parent="Root"]
-visible = false
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -100.0
-offset_right = 150.0
-offset_bottom = -60.0
-text = ""
+; ─── Pilot portrait (bottom-left) ─────────────────────────
+[node name="PilotPortrait" type="TextureRect" parent="Root" unique_id=207098661]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = -313.0
+offset_right = 290.0
+offset_bottom = 9.0
+grow_vertical = 0
+mouse_filter = 2
+texture = SubResource("ViewportTexture_rqf5b")
+
+; ═══════════════════════════════════════════════════════════
+;  SHIP RADAR — left side, above the pilot portrait
+; ═══════════════════════════════════════════════════════════
+[node name="Radar" type="PanelContainer" parent="Root" unique_id=1200000001]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -540.0
+offset_right = 194.0
+offset_bottom = -360.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_radar")
+
+[node name="RadarVBox" type="VBoxContainer" parent="Root/Radar" unique_id=1200000002]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="RadarTitle" type="Label" parent="Root/Radar/RadarVBox" unique_id=1200000003]
+unique_name_in_owner = true
+layout_mode = 2
 horizontal_alignment = 1
-vertical_alignment = 1
-modulate = Color(1, 1, 1, 0)
+text = "◢ TACTICAL ◣"
+label_settings = SubResource("ls_radar_title")
+
+[node name="RadarCanvas" type="Control" parent="Root/Radar/RadarVBox" unique_id=1200000004]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(170, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DangerLine" type="HBoxContainer" parent="Root/Radar/RadarVBox" unique_id=1200000005]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="DangerLbl" type="Label" parent="Root/Radar/RadarVBox/DangerLine" unique_id=1200000006]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "STATUS"
+label_settings = SubResource("ls_led_label")
+horizontal_alignment = 2
+
+[node name="DangerValue" type="Label" parent="Root/Radar/RadarVBox/DangerLine" unique_id=1200000007]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SAFE"
+label_settings = SubResource("ls_radar_status")
+
+[node name="EnemyCountLine" type="HBoxContainer" parent="Root/Radar/RadarVBox" unique_id=1200000008]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="EnemyLbl" type="Label" parent="Root/Radar/RadarVBox/EnemyCountLine" unique_id=1200000009]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CONTACTS"
+label_settings = SubResource("ls_led_label")
+horizontal_alignment = 2
+
+[node name="EnemyCount" type="Label" parent="Root/Radar/RadarVBox/EnemyCountLine" unique_id=1200000010]
+unique_name_in_owner = true
+layout_mode = 2
+text = "00"
+label_settings = SubResource("ls_radar_status")
+
+; ═══════════════════════════════════════════════════════════
+;  BOTTOM-RIGHT — Diagetic cockpit instrument panel (vertical)
+; ═══════════════════════════════════════════════════════════
+[node name="BottomRight" type="PanelContainer" parent="Root" unique_id=1100000001]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -242.0
+offset_top = -424.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomRight" unique_id=1100000002]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+; ── HEADER ────────────────────────────────────────────────
+[node name="Header" type="PanelContainer" parent="Root/BottomRight/VBox" unique_id=1100000003]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_header")
+
+[node name="HeaderHBox" type="HBoxContainer" parent="Root/BottomRight/VBox/Header" unique_id=1100000004]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="BoltL" type="Panel" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000005]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_bolt")
+
+[node name="HeaderSpacerL" type="Control" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000006]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000007]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+text = "◢ NAV-CON ◣"
+label_settings = SubResource("ls_header")
+
+[node name="HeaderSpacerR" type="Control" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000008]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="PwrLED" type="ColorRect" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000009]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(7, 7)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 1, 0.4, 0.95)
+
+[node name="HeaderEnd" type="Control" parent="Root/BottomRight/VBox/Header/HeaderHBox" unique_id=1100000010]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+mouse_filter = 2
+
+; ── BODY MARGIN ───────────────────────────────────────────
+[node name="BodyMargin" type="MarginContainer" parent="Root/BottomRight/VBox" unique_id=1100000011]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 2
+
+[node name="Body" type="VBoxContainer" parent="Root/BottomRight/VBox/BodyMargin" unique_id=1100000012]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+; ── TOP ROW — FUEL + CARGO side by side ──────────────────
+[node name="TopRow" type="HBoxContainer" parent="Root/BottomRight/VBox/BodyMargin/Body" unique_id=1100000013]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+; ── FUEL small speedo ───────────────────────────────
+[node name="FuelCell" type="VBoxContainer" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow" unique_id=1100000020]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="FuelSpeedoFrame" type="PanelContainer" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell" unique_id=1100000021]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_dial_recess")
+
+[node name="FuelSpeedoPos" type="Control" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell/FuelSpeedoFrame" unique_id=1100000022]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FuelFace" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell/FuelSpeedoFrame/FuelSpeedoPos" unique_id=1100000023]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+texture = ExtResource("2_speedo")
+
+[node name="FuelNeedle" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell/FuelSpeedoFrame/FuelSpeedoPos" unique_id=1100000024]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 28.0
+offset_top = 35.0
+offset_right = 42.0
+offset_bottom = 67.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+pivot_offset = Vector2(7, 0)
+rotation = 0.0
+texture = ExtResource("3_dial")
+
+[node name="FuelLabel" type="Label" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell" unique_id=1100000025]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "FUEL"
+label_settings = SubResource("ls_dial_label")
+
+[node name="FuelValue" type="Label" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/FuelCell" unique_id=1100000026]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "100 / 100"
+label_settings = SubResource("ls_dial_value")
+
+; ── CARGO small speedo (in TopRow next to FUEL) ───────────
+[node name="GemsCell" type="VBoxContainer" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow" unique_id=1100000030]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="GemsSpeedoFrame" type="PanelContainer" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell" unique_id=1100000031]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_dial_recess")
+
+[node name="GemsSpeedoPos" type="Control" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell/GemsSpeedoFrame" unique_id=1100000032]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="GemsFace" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell/GemsSpeedoFrame/GemsSpeedoPos" unique_id=1100000033]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+texture = ExtResource("2_speedo")
+
+[node name="GemsNeedle" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell/GemsSpeedoFrame/GemsSpeedoPos" unique_id=1100000034]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 28.0
+offset_top = 35.0
+offset_right = 42.0
+offset_bottom = 67.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+pivot_offset = Vector2(7, 0)
+rotation = 0.0
+texture = ExtResource("3_dial")
+
+[node name="GemsLabel" type="Label" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell" unique_id=1100000035]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "CARGO"
+label_settings = SubResource("ls_dial_label")
+
+[node name="GemsValue" type="RichTextLabel" parent="Root/BottomRight/VBox/BodyMargin/Body/TopRow/GemsCell" unique_id=1100000036]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "0 / 50"
+
+; ── MAIN SPEEDO (large, centered below) ─────────────────
+[node name="SpeedCell" type="VBoxContainer" parent="Root/BottomRight/VBox/BodyMargin/Body" unique_id=1100000050]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="MainSpeedoFrame" type="PanelContainer" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell" unique_id=1100000051]
+custom_minimum_size = Vector2(130, 130)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_dial_recess")
+
+[node name="MainSpeedoPos" type="Control" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell/MainSpeedoFrame" unique_id=1100000052]
+custom_minimum_size = Vector2(130, 130)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SpeedoFace" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell/MainSpeedoFrame/MainSpeedoPos" unique_id=1100000053]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+texture = ExtResource("2_speedo")
+
+[node name="SpeedoNeedle" type="TextureRect" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell/MainSpeedoFrame/MainSpeedoPos" unique_id=1100000054]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 56.0
+offset_top = 65.0
+offset_right = 74.0
+offset_bottom = 121.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+pivot_offset = Vector2(9, 0)
+rotation = 0.0
+texture = ExtResource("3_dial")
+
+[node name="SpeedoLabel" type="Label" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell" unique_id=1100000055]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "VEL  m/s"
+label_settings = SubResource("ls_dial_label")
+
+[node name="SpeedoValue" type="Label" parent="Root/BottomRight/VBox/BodyMargin/Body/SpeedCell" unique_id=1100000056]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "0.0"
+label_settings = SubResource("ls_dial_value_lg")
+
+; ── LCD (contains STN, STATE, LEDs, HULL) ─────────────────
+[node name="LCDMargin" type="MarginContainer" parent="Root/BottomRight/VBox" unique_id=1100000080]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="LCD" type="PanelContainer" parent="Root/BottomRight/VBox/LCDMargin" unique_id=1100000081]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("sb_lcd")
+
+[node name="LCDVBox" type="VBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD" unique_id=1100000082]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+; STN row
+[node name="StationLine" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox" unique_id=1100000083]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="StationPrefix" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/StationLine" unique_id=1100000084]
+layout_mode = 2
+text = "STN ▶"
+label_settings = SubResource("ls_lcd")
+
+[node name="StationValue" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/StationLine" unique_id=1100000085]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0.0 m"
+label_settings = SubResource("ls_lcd")
+horizontal_alignment = 2
+
+; STATE row
+[node name="StateLine" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox" unique_id=1100000086]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="StatePrefix" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/StateLine" unique_id=1100000087]
+layout_mode = 2
+text = "STS ▶"
+label_settings = SubResource("ls_lcd")
+
+[node name="StateValue" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/StateLine" unique_id=1100000088]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "FLYING"
+label_settings = SubResource("ls_lcd")
+horizontal_alignment = 2
+
+; LED row (ARM, SHD, DOCK, HARP, WARN) inside the LCD
+[node name="LEDRow" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox" unique_id=1100000090]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="ArmedLED" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow" unique_id=1100000091]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="ArmedDot" type="ColorRect" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/ArmedLED" unique_id=1100000092]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 0.3, 0.3, 0.6)
+
+[node name="ArmedText" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/ArmedLED" unique_id=1100000093]
+layout_mode = 2
+text = "ARM"
+label_settings = SubResource("ls_led_label")
+
+[node name="ShieldLED" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow" unique_id=1100000094]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="ShieldDot" type="ColorRect" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/ShieldLED" unique_id=1100000095]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 0.3, 0.3, 0.6)
+
+[node name="ShieldText" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/ShieldLED" unique_id=1100000096]
+layout_mode = 2
+text = "SHD"
+label_settings = SubResource("ls_led_label")
+
+[node name="DockLED" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow" unique_id=1100000097]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="DockDot" type="ColorRect" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/DockLED" unique_id=1100000098]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 0.3, 0.3, 0.6)
+
+[node name="DockText" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/DockLED" unique_id=1100000099]
+layout_mode = 2
+text = "DOCK"
+label_settings = SubResource("ls_led_label")
+
+[node name="HarpLED" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow" unique_id=1100000100]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="HarpDot" type="ColorRect" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/HarpLED" unique_id=1100000101]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 0.3, 0.3, 0.6)
+
+[node name="HarpText" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/HarpLED" unique_id=1100000102]
+layout_mode = 2
+text = "HARP"
+label_settings = SubResource("ls_led_label")
+
+[node name="WarnLED" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow" unique_id=1100000103]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="WarnDot" type="ColorRect" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/WarnLED" unique_id=1100000104]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.3, 0.3, 0.3, 0.6)
+
+[node name="WarnText" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/LEDRow/WarnLED" unique_id=1100000105]
+layout_mode = 2
+text = "WARN"
+label_settings = SubResource("ls_led_label")
+
+; HULL row
+[node name="HullRow" type="HBoxContainer" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox" unique_id=1100000040]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="HullLabel" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/HullRow" unique_id=1100000042]
+layout_mode = 2
+text = "HULL"
+label_settings = SubResource("ls_led_label")
+
+[node name="HullBar" type="ProgressBar" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/HullRow" unique_id=1100000044]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+value = 100.0
+show_percentage = false
+theme_override_styles/background = SubResource("sb_hull_bg")
+theme_override_styles/fill = SubResource("sb_hull_fg")
+
+[node name="HullValue" type="Label" parent="Root/BottomRight/VBox/LCDMargin/LCD/LCDVBox/HullRow" unique_id=1100000043]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100/100"
+label_settings = SubResource("ls_led_label")
+
+; ═══════════════════════════════════════════════════════════
+;  PILOT VIEWPORT (for portrait)
+; ═══════════════════════════════════════════════════════════
+[node name="PilotViewport" type="SubViewport" parent="." unique_id=535737864]
+transparent_bg = true
+size = Vector2i(256, 256)
+render_target_update_mode = 1
+
+[node name="Camera3D" type="Camera3D" parent="PilotViewport" unique_id=1769791734]
+transform = Transform3D(-1, 0, 0, 0, 0.9985, 0.0555, 0, 0.0555, -0.9985, 0, 0.3, -1.8)
+current = true
+
+[node name="PilotCharacter" parent="PilotViewport" unique_id=260606214 instance=ExtResource("1_pilot")]
