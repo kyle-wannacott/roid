@@ -85,17 +85,24 @@ func _destroy() -> void:
 	if _is_destroyed:
 		return
 	_is_destroyed = true
-
-	# Apply bonus gems from skill tree
-	var total_gems: int = gem_count
-	if PlayerSkills:
-		if PlayerSkills.is_unlocked("mining_yield"): total_gems += 1
-		if PlayerSkills.is_unlocked("mining_yield_2"): total_gems += 2
-
-	destroyed.emit(global_position, total_gems)
-	if gem_scene != null:
+	
+	# Chance-based gem drops
+	var actual_gems: int = 0
+	if gem_count > 0 and PlayerSkills:
+		var drop_chance: float = 0.5  # Base 50% chance
+		if PlayerSkills.is_unlocked("mining_yield"): drop_chance += 0.15  # +15%
+		if PlayerSkills.is_unlocked("mining_yield_2"): drop_chance += 0.25  # +25%
+		drop_chance = min(drop_chance, 0.95)  # Cap at 95%
+		
+		# Roll for each gem chance
+		for _i in gem_count:
+			if randf() < drop_chance:
+				actual_gems += 1
+	
+	destroyed.emit(global_position, actual_gems)
+	if gem_scene != null and actual_gems > 0:
 		var parent: Node = get_parent()
-		for i in total_gems:
+		for i in actual_gems:
 			var gem: Node3D = gem_scene.instantiate() as Node3D
 			var spawn_pos: Vector3 = global_position + Vector3(
 				randf_range(-0.5, 0.5),

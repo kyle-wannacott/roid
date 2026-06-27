@@ -13,11 +13,19 @@ signal asteroid_destroyed( world_pos: Vector3, gem_count: int )
 @export var gem_manager_path: NodePath
 
 enum Size { LARGE, MEDIUM, SMALL }
+## [size_enum, min_scale, max_scale, health, children, gem_rolls]
+## gem_rolls = number of 50% chances to get a gem (e.g., 3 rolls = 0-3 gems)
 static var SIZE_DEFS := [
-	[ Size.LARGE,  2.0,  3.5, 100.0, 3, 3 ],
-	[ Size.MEDIUM, 1.2,  2.0,  40.0, 3, 2 ],
-	[ Size.SMALL,  0.5,  1.2,  15.0, 0, 1 ],
+	[ Size.LARGE,  2.0,  3.5, 100.0, 3, 3 ],  # 3 rolls = 0-3 gems
+	[ Size.MEDIUM, 1.2,  2.0,  40.0, 3, 2 ],  # 2 rolls = 0-2 gems
+	[ Size.SMALL,  0.5,  1.2,  15.0, 0, 1 ],  # 1 roll = 0-1 gems
 ]
+
+## Base chance for gem drop (0.0 - 1.0)
+@export var gem_drop_chance: float = 0.5
+
+## Bonus gem chance from skills (added to base chance)
+var _skill_gem_chance_bonus: float = 0.0
 
 var positions: PackedVector3Array
 var base_scale: PackedFloat32Array
@@ -30,9 +38,17 @@ var _count: int = 0
 var _live: int = 0
 var _pool: Array[int] = []
 
+# PhysicsServer collision bodies for asteroid-ship collisions
+var _phys_bodies: Array[RID] = []
+var _phys_shapes: Array[SphereShape3D] = []  # keep resources alive so their RIDs stay valid
+var _physics_ready: bool = false  # becomes true after _create_physics_collision()
+
 @onready var mmi: MultiMeshInstance3D = $MultiMeshInstance
 @onready var rng := RandomNumberGenerator.new()
 var _gem_manager: Node = null
+
+# Collision layer 2 = asteroids (ship's collision_mask includes layer 2)
+const ASTEROID_COL_LAYER: int = 2
 
 
 func _get_gem_manager() -> Node:
@@ -44,14 +60,76 @@ func _get_gem_manager() -> Node:
 	return _gem_manager
 
 
+func _exit_tree() -> void:
+	_clear_all_physics()
+
+
+func _clear_all_physics() -> void:
+	for i in _count:
+		if _phys_bodies[i] != RID():
+			PhysicsServer3D.free_rid(_phys_bodies[i])
+	_phys_bodies.clear()
+	_phys_shapes.clear()
+
+
 func _ready() -> void:
 	rng.randomize()
+	add_to_group("asteroid_managers")
 	positions.resize(max_asteroids); base_scale.resize(max_asteroids)
 	yaw_angle.resize(max_asteroids); health.resize(max_asteroids)
 	alive.resize(max_asteroids); size_idx.resize(max_asteroids)
+	_phys_bodies.resize(max_asteroids)
+	_phys_shapes.resize(max_asteroids)
 	_setup_multimesh()
 	_spawn_initial()
+	_create_physics_collision()
 	_refresh_all()
+
+
+## Create PhysicsServer3D static bodies for all alive asteroids.
+func _create_physics_collision() -> void:
+	_physics_ready = false
+	var space := get_world_3d().space if get_world_3d() else RID()
+	if space == RID():
+		push_warning("AsteroidManager: no physics space yet, skipping collision")
+		_physics_ready = true
+		return
+	for i in _count:
+		if not alive[i]:
+			continue
+		_create_asteroid_physics(i, positions[i], base_scale[i], space)
+	_physics_ready = true
+
+
+func _create_asteroid_physics(idx: int, pos: Vector3, scale_val: float, space: RID) -> void:
+	# Reuse existing body+shape if both are valid — just update position and radius
+	if _phys_bodies[idx] != RID() and idx < _phys_shapes.size() and _phys_shapes[idx] != null:
+		var sphere := _phys_shapes[idx] as SphereShape3D
+		if sphere != null:
+			sphere.radius = 0.8 * scale_val
+			PhysicsServer3D.body_set_state(_phys_bodies[idx], PhysicsServer3D.BODY_STATE_TRANSFORM, Transform3D.IDENTITY.translated(pos))
+			return
+	
+	# Clean up partial leftovers
+	if _phys_bodies[idx] != RID():
+		PhysicsServer3D.free_rid(_phys_bodies[idx])
+	
+	var body := PhysicsServer3D.body_create()
+	PhysicsServer3D.body_set_space(body, space)
+	PhysicsServer3D.body_set_mode(body, PhysicsServer3D.BODY_MODE_STATIC)
+	PhysicsServer3D.body_set_collision_layer(body, ASTEROID_COL_LAYER)
+	PhysicsServer3D.body_set_collision_mask(body, 0)
+	PhysicsServer3D.body_set_state(body, PhysicsServer3D.BODY_STATE_TRANSFORM, Transform3D.IDENTITY.translated(pos))
+	
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.8 * scale_val
+	PhysicsServer3D.body_add_shape(body, sphere.get_rid())
+	
+	_phys_bodies[idx] = body
+	# Ensure array is large enough
+	while _phys_shapes.size() <= idx:
+		_phys_shapes.append(null)
+	_phys_shapes[idx] = sphere
 
 
 func _setup_multimesh() -> void:
@@ -107,6 +185,11 @@ func _add_asteroid(pos: Vector3, sz: int) -> int:
 	size_idx[idx] = sz
 	yaw_angle[idx] = rng.randf_range(0.0, TAU)
 	_live += 1
+	# Create physics collision (skipped during initial spawn, done by _create_physics_collision)
+	if _physics_ready:
+		var space := get_world_3d().space if get_world_3d() else RID()
+		if space != RID():
+			_create_asteroid_physics(idx, pos, base_scale[idx], space)
 	return idx
 
 
@@ -196,10 +279,17 @@ static func _ray_sphere_hit(o: Vector3, d: Vector3, md: float, c: Vector3, r: fl
 func _break_asteroid(idx: int) -> void:
 	var sz: int = size_idx[idx]; var def: Array = SIZE_DEFS[sz]
 	var pos: Vector3 = positions[idx]
-	var children: int = def[4]; var gems: int = def[5]
+	var children: int = def[4]; var gem_rolls: int = def[5]
 	alive[idx] = 0; _live -= 1
 	mmi.multimesh.set_instance_transform(idx, Transform3D.IDENTITY)
 	_pool.append(idx)
+	# Remove physics collision body
+	if _phys_bodies[idx] != RID():
+		PhysicsServer3D.free_rid(_phys_bodies[idx])
+		_phys_bodies[idx] = RID()
+	# Drop the SphereShape3D reference — it will be GC'd and its RID cleaned up
+	if idx < _phys_shapes.size():
+		_phys_shapes[idx] = null
 	if children > 0 and _live + children < max_asteroids:
 		var child_sz: int = mini(sz + 1, Size.SMALL)
 		for _c in children:
@@ -207,17 +297,72 @@ func _break_asteroid(idx: int) -> void:
 			cp.y = 0.8
 			var ci: int = _add_asteroid(cp, child_sz)
 			_bake(ci)
-	if gems > 0 and gem_scene:
+	
+	# Roll for gems with chance-based drops
+	var actual_gems: int = 0
+	if gem_scene and gem_rolls > 0:
+		var drop_chance: float = gem_drop_chance + _skill_gem_chance_bonus
+		drop_chance = min(drop_chance, 0.95)  # Cap at 95%
+		for _g in gem_rolls:
+			if rng.randf() < drop_chance:
+				actual_gems += 1
+	
+	if actual_gems > 0 and gem_scene:
 		# Prefer the central GemManager (MultiMesh rendering).
 		var gm: Node = _get_gem_manager()
 		var parent: Node = get_parent() if gm == null else gm
-		for _g in gems:
+		# Compute the distance from station once for type rolling.
+		var distance: float = pos.length()
+		# Larger asteroids roll from a slightly higher tier table.
+		var size_bonus: float = 0.0
+		match sz:
+			Size.LARGE: size_bonus = 100.0
+			Size.MEDIUM: size_bonus = 50.0
+			Size.SMALL: size_bonus = 0.0
+		for _g in actual_gems:
 			var gem: Node3D = gem_scene.instantiate() as Node3D
 			if gem == null: continue
+			# Set the gem type based on effective distance (distance + size bonus).
+			# This must happen BEFORE adding to the tree, because Gem.gd's _ready()
+			# reads gem_type and passes it to the GemManager.
+			var gem_type: String = _roll_gem_type(distance + size_bonus)
+			gem.gem_type = gem_type
 			var sp: Vector3 = pos + Vector3(rng.randf_range(-0.4, 0.4), 0.0, rng.randf_range(-0.4, 0.4))
 			sp.y = 0.3
 			parent.add_child(gem); gem.global_position = sp
-	asteroid_destroyed.emit(pos, gems)
+	asteroid_destroyed.emit(pos, actual_gems)
+
+
+## Roll a gem type based on distance from the station (origin).
+## Closer asteroids tend to drop Green/Blue; farther out yields rarer types.
+## Each tier specifies (max_distance, weights_for_each_type).
+## Tiers are evaluated in order; first match wins.
+func _roll_gem_type(distance: float) -> String:
+	# Tiers, in order from inner to outer. Each tier's weights sum to 1.0.
+	# (max_distance, green, blue, yellow, purple, red)
+	var tiers: Array = [
+		[  80.0, 1.00, 0.00, 0.00, 0.00, 0.00 ],  # 0-80m   : all Green
+		[ 150.0, 0.70, 0.30, 0.00, 0.00, 0.00 ],  # 80-150m : mostly Green
+		[ 220.0, 0.35, 0.50, 0.15, 0.00, 0.00 ],  # 150-220m
+		[ 300.0, 0.10, 0.40, 0.40, 0.10, 0.00 ],  # 220-300m
+		[ 360.0, 0.05, 0.25, 0.40, 0.25, 0.05 ],  # 300-360m
+		[   INF, 0.00, 0.10, 0.30, 0.40, 0.20 ],  # 360m+   : full mix incl. Red
+	]
+	# Find the matching tier
+	var weights: Array = [0.0, 0.0, 0.0, 0.0, 0.0]
+	for tier in tiers:
+		if distance <= tier[0]:
+			weights = [tier[1], tier[2], tier[3], tier[4], tier[5]]
+			break
+	# Roll against the weights
+	var roll: float = rng.randf()
+	var acc: float = 0.0
+	var types: Array[String] = ["green", "blue", "yellow", "purple", "red"]
+	for i in 5:
+		acc += weights[i]
+		if roll <= acc:
+			return types[i]
+	return "green"
 
 
 func check_ship_collision(sp: Vector3, sr: float, dmg: float) -> float:
@@ -349,3 +494,14 @@ static func _mid(a: int, b: int, verts: Array[Vector3], cache: Dictionary) -> in
 	var m: Vector3 = ((verts[a] + verts[b]) * 0.5).normalized()
 	var ni: int = verts.size(); verts.append(m)
 	cache[key] = ni; return ni
+
+
+## Update the gem drop chance bonus from skill tree.
+## Call this when skills change.
+func update_gem_chance_bonus(bonus: float) -> void:
+	_skill_gem_chance_bonus = bonus
+	print("AsteroidManager: Gem chance bonus set to ", bonus * 100, "%")
+
+## Get current gem drop chance (base + skill bonus)
+func get_gem_drop_chance() -> float:
+	return min(gem_drop_chance + _skill_gem_chance_bonus, 0.95)

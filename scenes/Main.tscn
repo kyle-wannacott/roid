@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://b4mainspc01"]
+[gd_scene format=4 uid="uid://b4mainspc01"]
 
 [ext_resource type="Script" uid="uid://crbg7yt7sq0xc" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://chg2lmt61rg53" path="res://scenes/spreadsheet.tscn" id="1_ss"]
@@ -13,7 +13,11 @@
 [ext_resource type="Script" uid="uid://bbnwp8sc4sqi4" path="res://scripts/SunManager.gd" id="11_sunmgr"]
 [ext_resource type="PackedScene" path="res://scenes/EnemyManager.tscn" id="12_enemy_mgr"]
 [ext_resource type="PackedScene" path="res://scenes/SpawnPointGenerator.tscn" id="13_spawn_gen"]
-[ext_resource type="PackedScene" path="res://scenes/DangerHUD.tscn" id="14_danger_hud"]
+[ext_resource type="PackedScene" path="res://scenes/DamageNumberManager.tscn" id="14_dmg_nums"]
+[ext_resource type="PackedScene" uid="uid://birivrxrndevs" path="res://scenes/debug_console.tscn" id="15_debug_console"]
+[ext_resource type="PackedScene" uid="uid://c8x8gun2v2ak3" path="res://scenes/Settings.tscn" id="16_settings"]
+[ext_resource type="Shader" uid="uid://bs72ka2q2tjxx" path="res://shaders/pixelation.gdshader" id="17_pixel_shader"]
+[ext_resource type="Shader" uid="uid://dlufqwyeur6gt" path="res://shaders/crt.gdshader" id="18_crt_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("8_sky_shader")
@@ -33,6 +37,39 @@ glow_intensity = 0.4
 glow_strength = 0.9
 glow_bloom = 0.15
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pixel"]
+shader = ExtResource("17_pixel_shader")
+shader_parameter/overlay = true
+shader_parameter/pixelate = true
+shader_parameter/resolution = Vector2(1152, 648)
+shader_parameter/brightness = 1.4
+shader_parameter/vignette_intensity = 0.4
+shader_parameter/vignette_opacity = 0.5
+shader_parameter/quantize_enabled = false
+shader_parameter/palette_size = 32
+shader_parameter/palette = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/dither_enabled = false
+shader_parameter/dither_strength = 0.25
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("18_crt_shader")
+shader_parameter/resolution = Vector2(1152, 648)
+shader_parameter/scanlines_opacity = 0.3
+shader_parameter/scanlines_width = 0.25
+shader_parameter/grille_opacity = 0.2
+shader_parameter/roll = true
+shader_parameter/roll_speed = 8.0
+shader_parameter/roll_size = 15.0
+shader_parameter/roll_variation = 1.8
+shader_parameter/distort_intensity = 0.05
+shader_parameter/aberration = 0.03
+shader_parameter/noise_opacity = 0.3
+shader_parameter/noise_speed = 5.0
+shader_parameter/static_noise_intensity = 0.06
+shader_parameter/warp_amount = 1.0
+shader_parameter/clip_warp = false
+shader_parameter/discolor = true
+
 [node name="Main" type="Node3D" unique_id=1659169928]
 script = ExtResource("1_main")
 station_path = NodePath("SpaceStation")
@@ -47,21 +84,20 @@ transform = Transform3D(0.707107, 0, -0.707107, 0, 0.707107, 0.707107, 0.707107,
 light_color = Color(0.9, 0.92, 1, 1)
 light_energy = 0.45
 shadow_enabled = true
-groups = ["sun"]
 
 [node name="Sun2" type="DirectionalLight3D" parent="." unique_id=270824989]
 transform = Transform3D(-0.707107, 0, -0.707107, 0, 0.707107, 0.707107, 0.707107, 0.707107, 0, 0, 100, 300)
 light_color = Color(1, 0.8, 0.6, 1)
 light_energy = 0.35
-groups = ["sun"]
 
 [node name="SunManager" type="Node" parent="." unique_id=888999999]
 script = ExtResource("11_sunmgr")
 
 [node name="SpaceStation" parent="." unique_id=669203851 instance=ExtResource("3_station")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
 [node name="Ship" parent="." unique_id=439693177 instance=ExtResource("2_ship")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 50)
 asteroid_manager_path = NodePath("../AsteroidManager")
 
 [node name="AsteroidManager" parent="." unique_id=888888888 instance=ExtResource("9_astmgr")]
@@ -80,7 +116,7 @@ top_offset = Vector3(0, 20, 0)
 [node name="HUD" parent="." unique_id=1017201695 instance=ExtResource("6_hud")]
 
 [node name="ToolsLayer" type="CanvasLayer" parent="." unique_id=2000100]
-layer = 128
+layer = 250
 
 [node name="SkillTree" parent="ToolsLayer" unique_id=2000101 instance=ExtResource("1_st")]
 visible = false
@@ -90,11 +126,40 @@ visible = false
 offset_top = 0.0
 offset_bottom = 0.0
 
-[node name="EnemyManager" parent="." instance=ExtResource("12_enemy_mgr")]
+[node name="SettingsLayer" type="CanvasLayer" parent="." unique_id=894398839]
+layer = 251
+
+[node name="Settings" parent="SettingsLayer" unique_id=2000104 instance=ExtResource("16_settings")]
+visible = false
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EnemyManager" parent="." unique_id=2004099572 instance=ExtResource("12_enemy_mgr")]
 ship_path = NodePath("Ship")
-world_seed = 42
 
-[node name="SpawnPointGenerator" parent="." instance=ExtResource("13_spawn_gen")]
-world_seed = 42
+[node name="SpawnPointGenerator" parent="." unique_id=618494226 instance=ExtResource("13_spawn_gen")]
 
-[node name="DangerHUD" parent="." instance=ExtResource("14_danger_hud")]
+[node name="DamageNumberManager" parent="." unique_id=840115378 instance=ExtResource("14_dmg_nums")]
+
+[node name="DebugConsole" parent="." unique_id=1408264025 instance=ExtResource("15_debug_console")]
+
+[node name="PostProcessLayer" type="CanvasLayer" parent="." unique_id=1433081349]
+layer = 200
+
+[node name="PixelationRect" type="ColorRect" parent="PostProcessLayer" unique_id=658270050]
+material = SubResource("ShaderMaterial_pixel")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CRTRect" type="ColorRect" parent="PostProcessLayer" unique_id=1280521787]
+material = SubResource("ShaderMaterial_crt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

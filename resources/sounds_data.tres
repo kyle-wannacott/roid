@@ -14,6 +14,8 @@
 [ext_resource type="AudioStream" path="res://sounds/lasso_launch.ogg" id="3_snd9"]
 [ext_resource type="AudioStream" path="res://sounds/turret_fire.ogg" id="3_snd10"]
 [ext_resource type="AudioStream" path="res://sounds/afterburner.ogg" id="3_snd11"]
+[ext_resource type="AudioStream" path="res://sounds/out_of_fuel.ogg" id="3_snd12"]
+[ext_resource type="AudioStream" path="res://sounds/missile_explode.ogg" id="3_snd13"]
 [sub_resource type="Resource" id="SoundEntry_sfx_laser_beam"]
 script = ExtResource("2_entry")
 id = "sfx_laser_beam"
@@ -110,6 +112,22 @@ stream = ExtResource("3_snd11")
 category = "ship"
 
 
+[sub_resource type="Resource" id="SoundEntry_sfx_out_of_fuel"]
+script = ExtResource("2_entry")
+id = "sfx_out_of_fuel"
+display_name = "Out of Fuel"
+stream = ExtResource("3_snd12")
+category = "ship"
+
+
+[sub_resource type="Resource" id="SoundEntry_sfx_enemy_explode"]
+script = ExtResource("2_entry")
+id = "sfx_enemy_explode"
+display_name = "Enemy Explode"
+stream = ExtResource("3_snd13")
+category = "enemies"
+
+
 [resource]
 script = ExtResource("1_data")
-entries = [SubResource("SoundEntry_sfx_laser_beam"), SubResource("SoundEntry_sfx_laser_hit_rock"), SubResource("SoundEntry_sfx_afterburner"), SubResource("SoundEntry_sfx_unlock_skill"), SubResource("SoundEntry_sfx_dock"), SubResource("SoundEntry_sfx_gem_collect"), SubResource("SoundEntry_sfx_shield_recharge"), SubResource("SoundEntry_sfx_ship_hit"), SubResource("SoundEntry_sfx_ship_destroyed"), SubResource("SoundEntry_sfx_harpoon_fire"), SubResource("SoundEntry_sfx_turret_fire"), SubResource("SoundEntry_sfx_barrel_roll")]
+entries = [SubResource("SoundEntry_sfx_laser_beam"), SubResource("SoundEntry_sfx_laser_hit_rock"), SubResource("SoundEntry_sfx_afterburner"), SubResource("SoundEntry_sfx_unlock_skill"), SubResource("SoundEntry_sfx_dock"), SubResource("SoundEntry_sfx_gem_collect"), SubResource("SoundEntry_sfx_shield_recharge"), SubResource("SoundEntry_sfx_ship_hit"), SubResource("SoundEntry_sfx_ship_destroyed"), SubResource("SoundEntry_sfx_harpoon_fire"), SubResource("SoundEntry_sfx_turret_fire"), SubResource("SoundEntry_sfx_barrel_roll"), SubResource("SoundEntry_sfx_out_of_fuel"), SubResource("SoundEntry_sfx_enemy_explode")]
