@@ -3,16 +3,17 @@ class_name Missile
 ## A simple homing missile fired from the ship's wing pods.
 ## Flies forward in a straight line (or slowly steers toward the
 ## ship's facing direction), expires after `lifetime` seconds, or
-## when it hits something.  No collision — this is a visual effect
-## only; damage is up to the gameplay layer.
+## when it hits something. Deals damage to enemies on contact.
 
 @export var lifetime: float = 3.0
 @export var speed: float = 80.0
+@export var damage: float = 25.0
 @export var shooter: Node3D = null  # who fired it (for direction reference)
 
 var _age: float = 0.0
 var _velocity: Vector3 = Vector3.ZERO
 var _trail_emitter: CPUParticles3D = null
+var _hit_enemies: Array = []  # Track enemies already hit to prevent multi-hit
 
 
 func _ready() -> void:
@@ -184,6 +185,18 @@ func _build_visual() -> void:
 	
 	add_child(_trail_emitter)
 	_trail_emitter.emitting = true
+	
+	# Create collision area for detecting enemy hits
+	var hitbox := Area3D.new()
+	hitbox.collision_layer = 0
+	hitbox.collision_mask = 8  # Layer 4 (enemy hurtbox layer)
+	var hitbox_shape := CollisionShape3D.new()
+	var hitbox_sphere := SphereShape3D.new()
+	hitbox_sphere.radius = 1.0  # Larger hitbox for missiles
+	hitbox_shape.shape = hitbox_sphere
+	hitbox.add_child(hitbox_shape)
+	hitbox.body_entered.connect(_on_hitbox_body_entered)
+	add_child(hitbox)
 
 
 func _physics_process(delta: float) -> void:
@@ -193,3 +206,59 @@ func _physics_process(delta: float) -> void:
 		return
 	# Simple straight-line flight.
 	global_position += _velocity * delta
+	
+	# Check for enemy hits
+	_check_enemy_hits()
+
+
+func _check_enemy_hits() -> void:
+	# Manual distance check against all enemies for more reliable hit detection
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if enemy in _hit_enemies:
+			continue
+		if enemy.has_method("take_damage") and enemy.get("is_alive") == true:
+			var dist = global_position.distance_to(enemy.global_position)
+			if dist < 4.0:  # Close enough to hit (larger radius for missiles)
+				# Store position BEFORE damage (enemy might die and free itself)
+				var hit_pos = global_position
+				# Use position-based damage if available (for multi-segment enemies like SerpentBoss)
+				if enemy.has_method("damage_nearest_segment"):
+					enemy.damage_nearest_segment(hit_pos, damage)
+				else:
+					enemy.take_damage(damage)
+				_hit_enemies.append(enemy)
+				# Spawn explosion effect at the stored position
+				_spawn_explosion(hit_pos)
+				queue_free()
+				return
+
+
+func _on_hitbox_body_entered(body: Node3D) -> void:
+	# Area3D collision fallback
+	if body.is_in_group("enemies") and body.has_method("take_damage"):
+		if body not in _hit_enemies and body.get("is_alive") == true:
+			var hit_pos = body.global_position
+			body.take_damage(damage)
+			_hit_enemies.append(body)
+			_spawn_explosion(hit_pos)
+			queue_free()
+
+
+func _spawn_explosion(pos: Vector3) -> void:
+	# Medium explosion effect for missile impact
+	var explosion := OmniLight3D.new()
+	explosion.light_color = Color(1.0, 0.5, 0.1)
+	explosion.light_energy = 8.0
+	explosion.omni_range = 8.0
+	# Add to scene FIRST, then set global_position (node must be in tree)
+	get_tree().current_scene.add_child(explosion)
+	explosion.global_position = pos
+	var tween := create_tween()
+	tween.tween_property(explosion, "light_energy", 0.0, 0.3)
+	tween.tween_callback(explosion.queue_free)
+	
+	# Play explosion sound
+	if has_node("/root/SoundManager"):
+		SoundManager.play_by_id("sfx_explosion")

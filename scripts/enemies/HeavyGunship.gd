@@ -4,13 +4,18 @@ class_name HeavyGunship
 ## Slow, tanky gunship with multiple turrets. Fires sustained volleys.
 
 @export_group("Gunship Behavior")
-@export var patrol_speed: float = 40.0
-@export var chase_speed: float = 60.0
+@export var patrol_speed: float = 15.0  # Slow tanky ship
+@export var chase_speed: float = 30.0   # Slow pursuit
 @export var optimal_distance: float = 120.0
 @export var turret_count: int = 2
 @export var burst_count: int = 5
 @export var burst_delay: float = 0.15
 @export var volley_cooldown: float = 2.0
+
+## Patrol radius (and leash): the enemy guards a 100m bubble around its
+## spawn. If the player strays beyond `leash_distance` from `_spawn_position`
+## the enemy breaks off chase and returns to its spawn to resume patrolling.
+const LEASH_DISTANCE: float = 110.0
 
 ## Movement states
 enum State {
@@ -22,7 +27,6 @@ enum State {
 
 var state: State = State.PATROL
 var _patrol_target: Vector3 = Vector3.ZERO
-var _spawn_position: Vector3 = Vector3.ZERO
 var _state_timer: float = 0.0
 var _burst_counter: int = 0
 var _burst_timer: float = 0.0
@@ -43,20 +47,22 @@ func _ready() -> void:
 	# Gunship stats
 	max_health = 80.0
 	move_speed = patrol_speed
-	reward_gems = 8
+	reward_gem_table = {"green": 2, "blue": 1}
 	projectile_damage = 8.0
 	fire_rate = 2.0  # Shots per second
-	detection_range = 180.0
-	attack_range = 150.0
+	detection_range = LEASH_DISTANCE  # See the player at the leash boundary
+	attack_range = 50.0
 	
 	super._ready()
 	
 	# Collect turret nodes
 	_turret_nodes = [_turret_left, _turret_right]
-	
+
 	_upgrade_visuals()
-	_spawn_position = global_position
-	_pick_new_patrol_target()
+	# NOTE: `_spawn_position` is set by the EnemyManager AFTER positioning
+	# the enemy, via `set_spawn_position()`. It cannot be captured here in
+	# `_ready()` because `global_position` is still the manager's position
+	# (origin) at this point — the manager hasn't set the real position yet.
 
 
 func _upgrade_visuals() -> void:
@@ -178,37 +184,56 @@ func _update_enemy(delta: float) -> void:
 			_update_fire(delta)
 		State.REPOSITION:
 			_update_reposition(delta)
+	
+	# Maintain correct height (same as player ship)
+	global_position.y = 1.5
 
 func _update_state() -> void:
 	if not is_alive:
 		return
-	
+
 	var dist_to_player = get_distance_to_player()
-	
+	# Leash check: how far is the player from our spawn point? If the
+	# player strays beyond LEASH_DISTANCE the enemy gives up entirely
+	# and returns to patrol, no matter what state it was in.
+	var dist_player_to_spawn: float = _distance_player_to_spawn()
+	var out_of_leash: bool = dist_player_to_spawn > LEASH_DISTANCE
+
 	match state:
 		State.PATROL:
-			if dist_to_player <= detection_range:
+			# Only engage if the player is both visible AND inside our
+			# patrol bubble. Otherwise stay on patrol.
+			if dist_to_player <= detection_range and not out_of_leash:
 				state = State.APPROACH
 				_state_timer = 0.0
-		
+
 		State.APPROACH:
-			if dist_to_player <= optimal_distance:
+			if out_of_leash:
+				state = State.PATROL
+				_state_timer = 0.0
+				_pick_new_patrol_target()
+			elif dist_to_player <= optimal_distance:
 				state = State.FIRE
 				_state_timer = 0.0
 			elif dist_to_player > detection_range * 1.5:
 				state = State.PATROL
 				_state_timer = 0.0
-		
+
 		State.FIRE:
-			if dist_to_player > optimal_distance * 1.5:
-				state = State.REPOSITION
+			if out_of_leash or dist_to_player > optimal_distance * 1.5:
+				state = State.PATROL
 				_state_timer = 0.0
+				_pick_new_patrol_target()
 			elif _state_timer > 4.0:
 				state = State.REPOSITION
 				_state_timer = 0.0
-		
+
 		State.REPOSITION:
-			if _state_timer > 2.0:
+			if out_of_leash:
+				state = State.PATROL
+				_state_timer = 0.0
+				_pick_new_patrol_target()
+			elif _state_timer > 2.0:
 				if dist_to_player <= attack_range:
 					state = State.FIRE
 				else:
@@ -224,6 +249,17 @@ func _update_patrol(delta: float) -> void:
 
 func _update_approach(delta: float) -> void:
 	if target == null or not is_instance_valid(target):
+		return
+	
+	# Only break off if WE have entered the station zone — not just
+	# because the player happens to be near the station. The player
+	# should be able to engage enemies even while flying near the hub.
+	# EnemyManager._check_enemies_near_station handles the case where
+	# we follow the player all the way in.
+	if is_near_station():
+		state = State.PATROL
+		_state_timer = 0.0
+		_pick_new_patrol_target()
 		return
 	
 	face_target(delta)
@@ -251,8 +287,24 @@ func _update_reposition(delta: float) -> void:
 	if target == null or not is_instance_valid(target):
 		return
 	
-	# Circle around player while repositioning
-	orbit_around(target.global_position, optimal_distance, 0.5, delta)
+	# Move to a new position at optimal distance (not continuous orbiting)
+	var to_player = (target.global_position - global_position)
+	to_player.y = 0.0
+	var dist = to_player.length()
+	
+	# If too far, approach; if too close, retreat
+	if dist > optimal_distance * 1.2:
+		move_to_position(target.global_position, chase_speed, delta)
+	elif dist < optimal_distance * 0.8:
+		move_from_position(target.global_position, chase_speed, delta)
+	else:
+		# Strafe sideways
+		var perpendicular = Vector3(-to_player.z, 0, to_player.x).normalized()
+		velocity = perpendicular * chase_speed * 0.5
+		move_and_slide()
+	
+	# Maintain correct height
+	global_position.y = 1.5
 
 func _fire_from_turret(turret_idx: int) -> void:
 	if turret_idx >= _turret_nodes.size():
@@ -279,11 +331,11 @@ func _fire_from_turret(turret_idx: int) -> void:
 	direction.z += randf_range(-0.05, 0.05)
 	direction = direction.normalized()
 	
+	# Add to scene FIRST, then set global_position
+	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = turret_pos
 	bullet.velocity = direction * projectile_speed
 	bullet.damage = projectile_damage
-	
-	get_tree().current_scene.add_child(bullet)
 
 func _create_projectile() -> Node3D:
 	var bullet = EnemyBullet.new()
@@ -296,9 +348,9 @@ func _create_projectile() -> Node3D:
 	bullet.mesh = mesh
 	
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.8, 0.2)
+	mat.albedo_color = Color(1.0, 0.2, 0.2)
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.8, 0.2)
+	mat.emission = Color(1.0, 0.2, 0.2)
 	mat.emission_energy_multiplier = 2.0
 	bullet.material_override = mat
 	
@@ -308,9 +360,18 @@ func _create_projectile() -> Node3D:
 	return bullet
 
 func _pick_new_patrol_target() -> void:
-	var angle = randf() * TAU
-	var radius = randf_range(30.0, 60.0)
-	_patrol_target = _spawn_position + Vector3(cos(angle) * radius, 0, sin(angle) * radius)
+	# Patrol a ~100m bubble around the spawn (80-120m for slight variation).
+	# The leash on `LEASH_DISTANCE` in `_update_state` keeps the enemy
+	# inside this territory — it breaks off chase and returns here the
+	# moment the player strays beyond the leash.
+	_patrol_target = _compute_patrol_target(80.0, 120.0)
+
+
+## Redirect away from station — switch to patrol.
+func break_off_from_station() -> void:
+	state = State.PATROL
+	_state_timer = 0.0
+	_pick_new_patrol_target()
 
 func _spawn_death_effect() -> void:
 	# Large explosion for gunship
@@ -318,8 +379,9 @@ func _spawn_death_effect() -> void:
 	explosion.light_color = Color(1.0, 0.6, 0.2)
 	explosion.light_energy = 8.0
 	explosion.omni_range = 15.0
-	explosion.global_position = global_position
+	# Add to scene FIRST, then set global_position
 	get_tree().current_scene.add_child(explosion)
+	explosion.global_position = global_position
 	
 	var tween = create_tween()
 	tween.tween_property(explosion, "light_energy", 0.0, 0.5)

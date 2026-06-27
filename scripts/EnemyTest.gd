@@ -41,8 +41,11 @@ func _ready() -> void:
 func _on_enemy_spawned(enemy: Node3D) -> void:
 	print("Enemy spawned: ", enemy.name, " at ", enemy.global_position)
 
-func _on_enemy_destroyed(enemy: Node3D, position: Vector3, gems: int) -> void:
-	print("Enemy destroyed: ", enemy.name, " at ", position, " - Gems: ", gems)
+func _on_enemy_destroyed(enemy: Node3D, position: Vector3, gem_table: Dictionary) -> void:
+	var total: int = 0
+	for type in gem_table:
+		total += int(gem_table[type])
+	print("Enemy destroyed: ", enemy.name, " at ", position, " - Gems: ", total, " (", gem_table, ")")
 
 func _process(_delta: float) -> void:
 	# Debug info

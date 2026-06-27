@@ -5,10 +5,13 @@ class_name SpawnPointGenerator
 ## Creates visual markers at each spawn location.
 
 @export var world_seed: int = 42
-@export var min_distance: float = 600.0
-@export var max_distance: float = 2000.0
-@export var points_per_ring: int = 8
-@export var ring_count: int = 5
+## Spawn points are generated in an outer ring around the station so
+## the player has space to explore outward and meet enemies at range,
+## not have them crash into the station.
+@export var min_distance: float = 500.0
+@export var max_distance: float = 1500.0
+@export var points_per_ring: int = 10
+@export var ring_count: int = 6
 @export var show_markers: bool = true
 
 var spawn_points: Array[Vector3] = []
@@ -18,6 +21,13 @@ var _markers: Array[Node3D] = []
 func _ready() -> void:
 	add_to_group("spawn_generators")
 	generate_spawn_points()
+
+func _exit_tree() -> void:
+	# Clean up markers when node is freed
+	for marker in _markers:
+		if is_instance_valid(marker):
+			marker.queue_free()
+	_markers.clear()
 
 func generate_spawn_points() -> void:
 	_rng.seed = world_seed
@@ -34,15 +44,15 @@ func generate_spawn_points() -> void:
 	# Generate spawn points in rings around the station
 	for ring in range(ring_count):
 		var ring_distance = lerp(min_distance, max_distance, float(ring) / float(ring_count - 1))
-		var num_points = points_per_ring + ring * 2  # More points in outer rings
+		var num_points = points_per_ring + ring * 3  # More points in outer rings
 		
 		for i in range(num_points):
-			var angle = (float(i) / float(num_points)) * TAU + _rng.randf_range(-0.2, 0.2)
-			var distance = ring_distance + _rng.randf_range(-30.0, 30.0)
+			var angle = (float(i) / float(num_points)) * TAU + _rng.randf_range(-0.3, 0.3)
+			var distance = ring_distance + _rng.randf_range(-50.0, 50.0)
 			
 			var pos = Vector3(
 				cos(angle) * distance,
-				0.0,
+				1.5,  # Match player height
 				sin(angle) * distance
 			)
 			
@@ -50,12 +60,12 @@ func generate_spawn_points() -> void:
 			
 			if show_markers:
 				_create_marker(pos, ring)
-	
+		
 	print("SpawnPointGenerator: Generated ", spawn_points.size(), " spawn points")
 
 func _create_marker(pos: Vector3, ring: int) -> void:
 	var marker = MeshInstance3D.new()
-	
+
 	# Create a torus marker
 	var torus = TorusMesh.new()
 	torus.inner_radius = 2.0
@@ -63,11 +73,11 @@ func _create_marker(pos: Vector3, ring: int) -> void:
 	torus.rings = 16
 	torus.ring_segments = 8
 	marker.mesh = torus
-	
+
 	# Color based on ring (difficulty)
 	var mat = StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	
+
 	match ring:
 		0:  # Outer belt - blue
 			mat.albedo_color = Color(0.3, 0.5, 1.0, 0.4)
@@ -81,29 +91,29 @@ func _create_marker(pos: Vector3, ring: int) -> void:
 		_:  # Deep fringe - red
 			mat.albedo_color = Color(1.0, 0.3, 0.2, 0.4)
 			mat.emission = Color(1.0, 0.3, 0.2, 1.0)
-	
+
 	mat.emission_energy_multiplier = 0.5
 	marker.material_override = mat
 	marker.position = pos
 	marker.position.y = 0.5  # Slightly above ground plane
-	
+
 	add_child(marker)
 	_markers.append(marker)
-	
+
 	# Add a center indicator
 	var center = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.5
 	sphere.height = 1.0
 	center.mesh = sphere
-	
+
 	var center_mat = StandardMaterial3D.new()
 	center_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	center_mat.albedo_color = mat.albedo_color
 	center_mat.emission = mat.emission
 	center_mat.emission_energy_multiplier = 1.0
 	center.material_override = center_mat
-	
+
 	center.position = pos
 	center.position.y = 0.5
 	add_child(center)
@@ -122,13 +132,13 @@ func get_random_spawn_point() -> Vector3:
 func get_nearest_spawn_point(pos: Vector3) -> Vector3:
 	var nearest = Vector3.ZERO
 	var nearest_dist = INF
-	
+
 	for point in spawn_points:
 		var dist = pos.distance_to(point)
 		if dist < nearest_dist:
 			nearest_dist = dist
 			nearest = point
-	
+
 	return nearest
 
 func get_spawn_points_in_range(min_dist: float, max_dist: float) -> Array[Vector3]:

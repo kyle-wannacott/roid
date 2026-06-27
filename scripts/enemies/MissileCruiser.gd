@@ -4,9 +4,9 @@ class_name MissileCruiser
 ## Medium-range ship that fires homing missiles and maintains distance.
 
 @export_group("Cruiser Behavior")
-@export var patrol_speed: float = 50.0
-@export var cruise_speed: float = 80.0
-@export var retreat_speed: float = 120.0
+@export var patrol_speed: float = 20.0  # Slow patrol
+@export var cruise_speed: float = 35.0  # Moderate approach
+@export var retreat_speed: float = 45.0  # Can escape but player can catch
 @export var optimal_distance: float = 200.0
 @export var missile_damage: float = 15.0
 @export var missile_speed: float = 120.0
@@ -14,6 +14,11 @@ class_name MissileCruiser
 @export var missile_lifetime: float = 5.0
 @export var missiles_per_volley: int = 2
 @export var volley_cooldown: float = 3.0
+
+## Patrol radius (and leash): the enemy guards a 100m bubble around its
+## spawn. If the player strays beyond `leash_distance` from `_spawn_position`
+## the enemy breaks off chase and returns to its spawn to resume patrolling.
+const LEASH_DISTANCE: float = 110.0
 
 ## Movement states
 enum State {
@@ -25,7 +30,6 @@ enum State {
 
 var state: State = State.PATROL
 var _patrol_target: Vector3 = Vector3.ZERO
-var _spawn_position: Vector3 = Vector3.ZERO
 var _state_timer: float = 0.0
 var _missiles_fired: int = 0
 
@@ -43,19 +47,21 @@ func _ready() -> void:
 	# Cruiser stats
 	max_health = 60.0
 	move_speed = patrol_speed
-	reward_gems = 10
+	reward_gem_table = {"blue": 2, "yellow": 1}
 	fire_rate = 0.5
-	detection_range = 250.0
-	attack_range = 200.0
+	detection_range = LEASH_DISTANCE  # See the player at the leash boundary
+	attack_range = 70.0
 	
 	super._ready()
 	
 	# Collect missile pods
 	_missile_pods = [_missile_pod_left, _missile_pod_right]
-	
+
 	_upgrade_visuals()
-	_spawn_position = global_position
-	_pick_new_patrol_target()
+	# NOTE: `_spawn_position` is set by the EnemyManager AFTER positioning
+	# the enemy, via `set_spawn_position()`. It cannot be captured here in
+	# `_ready()` because `global_position` is still the manager's position
+	# (origin) at this point — the manager hasn't set the real position yet.
 
 
 func _upgrade_visuals() -> void:
@@ -177,37 +183,59 @@ func _update_enemy(delta: float) -> void:
 	
 	# Try to fire missiles
 	_try_fire_missiles()
+	
+	# Maintain correct height (same as player ship)
+	global_position.y = 1.5
 
 func _update_state() -> void:
 	if not is_alive:
 		return
-	
+
 	var dist_to_player = get_distance_to_player()
-	
+	# Leash check: how far is the player from our spawn point? If the
+	# player strays beyond LEASH_DISTANCE the enemy gives up entirely
+	# and returns to patrol, no matter what state it was in.
+	var dist_player_to_spawn: float = _distance_player_to_spawn()
+	var out_of_leash: bool = dist_player_to_spawn > LEASH_DISTANCE
+
 	match state:
 		State.PATROL:
-			if dist_to_player <= detection_range:
+			# Only engage if the player is both visible AND inside our
+			# patrol bubble. Otherwise stay on patrol.
+			if dist_to_player <= detection_range and not out_of_leash:
 				state = State.APPROACH
 				_state_timer = 0.0
-		
+
 		State.APPROACH:
-			if dist_to_player <= optimal_distance:
+			if out_of_leash:
+				state = State.PATROL
+				_state_timer = 0.0
+				_pick_new_patrol_target()
+			elif dist_to_player <= optimal_distance:
 				state = State.MAINTAIN_DISTANCE
 				_state_timer = 0.0
 			elif dist_to_player > detection_range * 1.5:
 				state = State.PATROL
 				_state_timer = 0.0
-		
+
 		State.MAINTAIN_DISTANCE:
-			if dist_to_player < optimal_distance * 0.6:
+			if out_of_leash:
+				state = State.PATROL
+				_state_timer = 0.0
+				_pick_new_patrol_target()
+			elif dist_to_player < optimal_distance * 0.6:
 				state = State.RETREAT
 				_state_timer = 0.0
 			elif dist_to_player > optimal_distance * 1.5:
 				state = State.APPROACH
 				_state_timer = 0.0
-		
+
 		State.RETREAT:
-			if dist_to_player >= optimal_distance:
+			if out_of_leash:
+				state = State.PATROL
+				_state_timer = 0.0
+				_pick_new_patrol_target()
+			elif dist_to_player >= optimal_distance:
 				state = State.MAINTAIN_DISTANCE
 				_state_timer = 0.0
 			elif _state_timer > 3.0:
@@ -225,6 +253,17 @@ func _update_approach(delta: float) -> void:
 	if target == null or not is_instance_valid(target):
 		return
 	
+	# Only break off if WE have entered the station zone — not just
+	# because the player happens to be near the station. The player
+	# should be able to engage enemies even while flying near the hub.
+	# EnemyManager._check_enemies_near_station handles the case where
+	# we follow the player all the way in.
+	if is_near_station():
+		state = State.PATROL
+		_state_timer = 0.0
+		_pick_new_patrol_target()
+		return
+	
 	face_target(delta)
 	move_to_position(target.global_position, cruise_speed, delta)
 
@@ -234,8 +273,24 @@ func _update_maintain_distance(delta: float) -> void:
 	
 	face_target(delta)
 	
-	# Circle while maintaining distance
-	orbit_around(target.global_position, optimal_distance, 0.3, delta)
+	# Maintain distance - strafe sideways, don't orbit
+	var to_player = (target.global_position - global_position)
+	to_player.y = 0.0
+	var dist = to_player.length()
+	
+	# Move to maintain optimal distance
+	if dist > optimal_distance * 1.1:
+		move_to_position(target.global_position, cruise_speed * 0.5, delta)
+	elif dist < optimal_distance * 0.9:
+		move_from_position(target.global_position, cruise_speed * 0.5, delta)
+	else:
+		# Strafe perpendicular to player
+		var perpendicular = Vector3(-to_player.z, 0, to_player.x).normalized()
+		velocity = perpendicular * cruise_speed * 0.3
+		move_and_slide()
+	
+	# Maintain correct height
+	global_position.y = 1.5
 
 func _update_retreat(delta: float) -> void:
 	if target == null or not is_instance_valid(target):
@@ -310,7 +365,7 @@ func _fire_homing_missile() -> void:
 	var part_mesh := SphereMesh.new()
 	part_mesh.radius = 0.04
 	part_mesh.height = 0.08
-	trail.draw_pass_1 = part_mesh
+	trail.mesh = part_mesh
 	
 	trail.direction = Vector3(0, 0, 1) # shoot straight back
 	trail.spread = 10.0
@@ -345,8 +400,6 @@ func _fire_homing_missile() -> void:
 		var pod = _missile_pods[_missiles_fired % _missile_pods.size()]
 		pod_pos = pod.global_position
 	
-	missile.global_position = pod_pos
-	
 	# Initial direction toward target
 	var direction = (target.global_position - pod_pos).normalized()
 	missile.velocity = direction * missile_speed
@@ -356,12 +409,24 @@ func _fire_homing_missile() -> void:
 	missile.lifetime = missile_lifetime
 	missile.speed = missile_speed
 	
+	# Add to scene FIRST, then set global_position
 	get_tree().current_scene.add_child(missile)
+	missile.global_position = pod_pos
 
 func _pick_new_patrol_target() -> void:
-	var angle = randf() * TAU
-	var radius = randf_range(40.0, 80.0)
-	_patrol_target = _spawn_position + Vector3(cos(angle) * radius, 0, sin(angle) * radius)
+	# Patrol a ~100m bubble around the spawn (80-120m for slight variation).
+	# The leash on `LEASH_DISTANCE` in `_update_state` keeps the enemy
+	# inside this territory — it breaks off chase and returns here the
+	# moment the player strays beyond the leash.
+	_patrol_target = _compute_patrol_target(80.0, 120.0)
+
+
+## Redirect away from station — switch to patrol.
+func break_off_from_station() -> void:
+	state = State.PATROL
+	_state_timer = 0.0
+	_pick_new_patrol_target()
+
 
 func _spawn_death_effect() -> void:
 	# Medium explosion
@@ -369,8 +434,9 @@ func _spawn_death_effect() -> void:
 	explosion.light_color = Color(1.0, 0.4, 0.1)
 	explosion.light_energy = 6.0
 	explosion.omni_range = 12.0
-	explosion.global_position = global_position
+	# Add to scene FIRST, then set global_position
 	get_tree().current_scene.add_child(explosion)
+	explosion.global_position = global_position
 	
 	var tween = create_tween()
 	tween.tween_property(explosion, "light_energy", 0.0, 0.4)

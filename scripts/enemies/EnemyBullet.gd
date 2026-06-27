@@ -3,7 +3,7 @@ class_name EnemyBullet
 
 ## Simple enemy projectile that moves in a straight line.
 
-@export var speed: float = 300.0
+@export var speed: float = 100.0  # Slower so player can dodge
 @export var damage: float = 10.0
 @export var lifetime: float = 3.0
 
@@ -12,6 +12,12 @@ var velocity: Vector3 = Vector3.ZERO
 func _ready() -> void:
 	add_to_group("enemy_projectiles")
 	_ensure_collision()
+
+func _exit_tree() -> void:
+	# Ensure collision area is freed
+	for child in get_children():
+		if child is Area3D:
+			child.queue_free()
 
 func _ensure_collision() -> void:
 	# Check if we already have collision
