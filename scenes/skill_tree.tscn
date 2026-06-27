@@ -2,6 +2,31 @@
 
 [ext_resource type="Script" uid="uid://bskilltreegd01" path="res://scripts/skill_tree.gd" id="1"]
 [ext_resource type="FontFile" path="res://assets/fonts/IBMPlexMono-SemiBold.ttf" id="2"]
+[ext_resource type="Shader" path="res://shaders/skill_tree_bg.gdshader" id="3_bg_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("3_bg_shader")
+shader_parameter/colorA = Vector3(0.15, 0.0, 0.08)
+shader_parameter/colorB = Vector3(0.5, 0.15, 0.25)
+shader_parameter/colorC = Vector3(0.8, 0.1, 0.3)
+shader_parameter/discomode = false
+shader_parameter/speed = 0.6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gem_bar"]
+bg_color = Color(0.04, 0.04, 0.06, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.36, 0.28, 0.7)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_panel"]
 bg_color = Color(0, 0, 0, 0.96)
@@ -38,7 +63,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.05, 0.05, 0.1, 0.95)
+material = SubResource("ShaderMaterial_bg")
 
 [node name="Header" type="HBoxContainer" parent="." unique_id=1000003]
 layout_mode = 1
@@ -56,6 +81,13 @@ size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("2")
 theme_override_font_sizes/font_size = 20
 text = "SKILL TREE EDITOR"
+
+[node name="DeployBtn" type="Button" parent="Header" unique_id=1000030]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1.0, 0.5, 1)
+tooltip_text = "Launch from station"
+text = "★ DEPLOY ★"
 
 [node name="ZoomOutBtn" type="Button" parent="Header" unique_id=1000005]
 unique_name_in_owner = true
@@ -78,10 +110,7 @@ layout_mode = 2
 tooltip_text = "Reset Zoom"
 text = "⟳"
 
-[node name="SkillPointsLabel" type="Label" parent="Header" unique_id=1000020]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Gems: 0"
+
 
 [node name="ZoomLevelLabel" type="Label" parent="Header" unique_id=1000008]
 unique_name_in_owner = true
@@ -89,6 +118,29 @@ custom_minimum_size = Vector2(56, 0)
 layout_mode = 2
 horizontal_alignment = 1
 text = "100%"
+
+[node name="GemBar" type="PanelContainer" parent="." unique_id=1000031]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -415.0
+offset_top = 44.0
+offset_right = 407.0
+offset_bottom = 76.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gem_bar")
+
+[node name="GemBarInner" type="HBoxContainer" parent="GemBar" unique_id=1000032]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 18
+alignment = 1
+theme_override_constants/separation = 18
 
 [node name="TreeViewport" type="Control" parent="." unique_id=1000009]
 unique_name_in_owner = true
@@ -99,7 +151,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 0.0
-offset_top = 50.0
+offset_top = 80.0
 offset_right = 0.0
 offset_bottom = 0.0
 grow_horizontal = 2
@@ -169,11 +221,12 @@ layout_mode = 2
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 13
 
-[node name="InfoCost" type="Label" parent="InfoPanel/VBoxContainer"]
+[node name="InfoCost" type="RichTextLabel" parent="InfoPanel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-autowrap_mode = 3
-theme_override_font_sizes/font_size = 13
+bbcode_enabled = true
+fit_content = true
+theme_override_font_sizes/normal_font_size = 13
 
 [node name="UnlockButton" type="Button" parent="InfoPanel/VBoxContainer"]
 unique_name_in_owner = true
@@ -181,6 +234,7 @@ layout_mode = 2
 disabled = true
 text = "Unlock"
 
+[connection signal="pressed" from="Header/DeployBtn" to="." method="_on_deploy_btn_pressed"]
 [connection signal="pressed" from="Header/ZoomOutBtn" to="." method="_on_zoom_out_btn_pressed"]
 [connection signal="pressed" from="Header/ZoomInBtn" to="." method="_on_zoom_in_btn_pressed"]
 [connection signal="pressed" from="Header/ZoomResetBtn" to="." method="_on_zoom_reset_btn_pressed"]

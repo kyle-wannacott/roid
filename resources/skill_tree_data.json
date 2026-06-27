@@ -16,12 +16,36 @@
 	},
 	{
 		"cost": 2.0,
+		"desc": "Install a rotating tactical radar on your ship. Shows nearby enemies on the HUD.",
+		"direction": "up",
+		"effects": {
+			"unlock_radar": true
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 3.0
+		},
+		"icon": "Map_Markers_Scanner_Sweep_Radar_Detection.png",
+		"id": "tactical_radar",
+		"name": "Tactical Radar",
+		"parent": "root",
+		"parent_skill_id": "",
+		"unlock_color": "#44ff88",
+		"x": 500.0,
+		"y": 80.0
+	},
+	{
+		"cost": 2.0,
 		"desc": "Increase maximum fuel storage by 5.",
 		"direction": "left",
 		"effects": {
 			"fuel_max_bonus": 25.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_capacity",
 		"name": "Fuel Capacity",
@@ -39,6 +63,10 @@
 			"fuel_max_bonus": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_capacity_2",
 		"name": "Fuel Capacity II",
@@ -56,6 +84,10 @@
 			"fuel_max_bonus": 25.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"green": 1.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_capacity_3",
 		"name": "Fuel Capacity III",
@@ -73,6 +105,9 @@
 			"fuel_efficiency_pct": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_efficiency",
 		"name": "Fuel Efficiency",
@@ -90,6 +125,9 @@
 			"fuel_efficiency_pct": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_efficiency_2",
 		"name": "Fuel Efficiency II",
@@ -107,6 +145,9 @@
 			"solar_regen": 2.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"yellow": 2.0
+		},
 		"icon": "Weather_Sun_Holy_Light_Rays_Summer_Season.png",
 		"id": "solar_panels",
 		"name": "Solar Panels",
@@ -122,8 +163,8 @@
 		"pin_width": 3.0,
 		"pins_per_side": 4.0,
 		"unlock_color": "#44aaff",
-		"x": -27.0,
-		"y": -24.0
+		"x": -70.0,
+		"y": 25.0
 	},
 	{
 		"cost": 3.0,
@@ -131,14 +172,18 @@
 		"direction": "down",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "Weather_Sun_Holy_Light_Rays_Summer_Season.png",
 		"id": "solar_while_moving",
 		"name": "Solar While Moving",
 		"parent": "solar_panels",
 		"parent_skill_id": "",
 		"unlock_color": "#44aaff",
-		"x": -140.0,
-		"y": -81.0
+		"x": -183.0,
+		"y": -32.0
 	},
 	{
 		"cost": 2.0,
@@ -149,6 +194,9 @@
 			"yaw_bonus_pct": 15.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "ion_thrusters",
 		"name": "Ion Thrusters",
@@ -167,6 +215,10 @@
 			"yaw_bonus_pct": 15.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "ion_thrusters_2",
 		"name": "Ion Thrusters II",
@@ -185,6 +237,10 @@
 			"afterburner_speed_pct": 15.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "afterburner",
 		"name": "Afterburner",
@@ -202,6 +258,9 @@
 			"afterburner_speed_pct": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "afterburner_speed",
 		"name": "Afterburner Overdrive",
@@ -219,6 +278,9 @@
 			"afterburner_efficiency_pct": 25.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "afterburner_efficiency",
 		"name": "Afterburner Efficiency",
@@ -236,6 +298,9 @@
 			"reverse_thrust_bonus_pct": 30.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
 		"icon": "Weather_Wildfire_Flame_Element_Hot_Burn.png",
 		"id": "reverse_thrusters",
 		"name": "Reverse Thrusters",
@@ -247,10 +312,68 @@
 	},
 	{
 		"cost": 2.0,
+		"desc": "Master aerial maneuvers — barrel roll completes 40%% faster.",
+		"direction": "down",
+		"effects": {
+			"barrel_roll_speed_pct": 40.0
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 1.0
+		},
+		"icon": "Arrows_Media_Controls_Fast_Forward.png",
+		"id": "stunt_pilot",
+		"name": "Stunt Pilot",
+		"parent": "ion_thrusters",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#66ddff",
+		"x": 1233.0,
+		"y": 140.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Barrel roll slows game time to 30%% speed, making projectiles and enemies appear to crawl.",
+		"direction": "down",
+		"effects": {
+			"bullet_time_scale": 0.3
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"yellow": 2.0
+		},
+		"icon": "Arrows_Double_Vertical_Up_Down.png",
+		"id": "bullet_time",
+		"name": "Bullet Time",
+		"parent": "stunt_pilot",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#4488ff",
+		"x": 1386.0,
+		"y": 64.0
+	},
+	{
+		"cost": 2.0,
 		"desc": "Increases ship max health by 25.",
 		"direction": "down",
 		"effects": {
 			"max_health_bonus": 25.0
+		},
+		"gem_cost": {
+			"green": 2.0
 		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "armor_plating",
@@ -275,6 +398,9 @@
 		"effects": {
 			"max_health_bonus": 25.0
 		},
+		"gem_cost": {
+			"green": 3.0
+		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "armor_plating_2",
 		"name": "Armor Plating II",
@@ -291,14 +417,44 @@
 		"effects": {
 			"max_health_bonus": 50.0
 		},
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "armor_plating_3",
 		"name": "Armor Plating III",
 		"parent": "armor_plating_2",
 		"parent_skill_id": "",
 		"unlock_color": "#66cc66",
-		"x": 689.0,
-		"y": 730.0
+		"x": 736.0,
+		"y": 745.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Add a wall of spikes to the front of the ship. Rams enemies on contact, dealing damage equal to 20% of ship speed.",
+		"direction": "down",
+		"effects": {
+			"spike_ram_damage_pct": 0.2
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
+		"icon": "RPG_Minesweeper_Bomb_Naval_Underwater.png",
+		"id": "spike_ram",
+		"name": "Spike Ram",
+		"parent": "armor_plating_3",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#dd6644",
+		"x": 767.0,
+		"y": 900.0
 	},
 	{
 		"cost": 3.0,
@@ -309,14 +465,18 @@
 			"nanobot_interval": 5.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "RPG_Creature_Archetypes_Robot_Mechanical.png",
 		"id": "nanorobots",
 		"name": "Nanorobots",
 		"parent": "armor_plating_2",
 		"parent_skill_id": "",
 		"unlock_color": "#44ff88",
-		"x": 802.0,
-		"y": 656.0
+		"x": 850.0,
+		"y": 624.0
 	},
 	{
 		"cost": 4.0,
@@ -326,14 +486,18 @@
 			"gem_heal_amount": 2.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"green": 1.0
+		},
 		"icon": "RPG_Creature_Archetypes_Robot_Mechanical.png",
 		"id": "nanobot_gem_heal",
 		"name": "Gem Nanobots",
 		"parent": "nanorobots",
 		"parent_skill_id": "",
 		"unlock_color": "#44ff88",
-		"x": 816.0,
-		"y": 798.0
+		"x": 945.0,
+		"y": 835.0
 	},
 	{
 		"cost": 4.0,
@@ -343,14 +507,17 @@
 			"shield_cooldown": 15.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "shield_unlock",
 		"name": "Energy Shield",
 		"parent": "armor_plating_3",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 524.0,
-		"y": 744.0
+		"x": 571.0,
+		"y": 759.0
 	},
 	{
 		"cost": 3.0,
@@ -358,6 +525,9 @@
 		"direction": "left",
 		"effects": {
 			"shield_cooldown": -3.0
+		},
+		"gem_cost": {
+			"blue": 2.0
 		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "shield_recharge",
@@ -365,8 +535,8 @@
 		"parent": "shield_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 394.0,
-		"y": 824.0
+		"x": 441.0,
+		"y": 839.0
 	},
 	{
 		"cost": 4.0,
@@ -375,79 +545,59 @@
 		"effects": {
 			"shield_cooldown": -3.0
 		},
+		"gem_cost": {
+			"blue": 2.0,
+			"yellow": 1.0
+		},
 		"icon": "RPG_Item_Stat_Shield_Defense_Armor.png",
 		"id": "shield_recharge_2",
 		"name": "Shield Recharge II",
 		"parent": "shield_recharge",
 		"parent_skill_id": "",
 		"unlock_color": "#4444ff",
-		"x": 403.0,
-		"y": 945.0
+		"x": 397.0,
+		"y": 975.0
 	},
 	{
-		"cost": 2.0,
-		"desc": "Reduce fuel cost of mining laser by 2.",
-		"direction": "left-down",
+		"cost": 3.0,
+		"desc": "+{gem_drop_chance_bonus}% increased chance for asteroids to drop gems.",
+		"direction": "left",
 		"effects": {
-			"mining_fuel_reduction": 2.0
+			"gem_drop_chance_bonus": 0.15
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Gem_Jewelcrafting_Diamond_Points_Currency.png",
-		"id": "mining_efficiency",
-		"name": "Mining Efficiency",
-		"parent": "root",
-		"parent_skill_id": "",
-		"unlock_color": "#ffdd44",
-		"x": 515.0,
-		"y": 320.0
-	},
-	{
-		"cost": 3.0,
-		"desc": "Reduce fuel cost of mining laser by 2.",
-		"direction": "left",
-		"effects": {
-			"mining_fuel_reduction": 2.0
-		},
-		"icon": "RPG_Combat_Types_Sword_Arrow_Staff_Melee_Ranged_Magic.png",
-		"id": "mining_efficiency_2",
-		"name": "Mining Efficiency II",
-		"parent": "mining_efficiency",
-		"parent_skill_id": "",
-		"unlock_color": "#ffdd44",
-		"x": 373.0,
-		"y": 298.0
-	},
-	{
-		"cost": 3.0,
-		"desc": "Asteroids yield 1 extra gem when destroyed.",
-		"direction": "left",
-		"effects": {
-			"bonus_gems_per_asteroid": 1.0
-		},
-		"icon": "RPG_Combat_Types_Sword_Arrow_Staff_Melee_Ranged_Magic.png",
 		"id": "mining_yield",
-		"name": "Gem Yield",
-		"parent": "mining_efficiency_2",
+		"name": "Gem Chance",
+		"parent": "laser_range_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd44",
-		"x": 251.0,
-		"y": 315.0
+		"x": 1331.0,
+		"y": 466.0
 	},
 	{
 		"cost": 4.0,
-		"desc": "Asteroids yield 2 extra gems when destroyed.",
+		"desc": "+{gem_drop_chance_bonus}% increased chance for asteroids to drop gems.",
 		"direction": "left",
 		"effects": {
-			"bonus_gems_per_asteroid": 2.0
+			"gem_drop_chance_bonus": 0.25
 		},
-		"icon": "RPG_Combat_Types_Sword_Arrow_Staff_Melee_Ranged_Magic.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"yellow": 1.0
+		},
+		"icon": "RPG_Gem_Jewelcrafting_Diamond_Points_Currency.png",
 		"id": "mining_yield_2",
-		"name": "Gem Yield II",
+		"name": "Gem Chance II",
 		"parent": "mining_yield",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd44",
-		"x": 77.0,
-		"y": 294.0
+		"x": 1451.0,
+		"y": 393.0
 	},
 	{
 		"cost": 2.0,
@@ -457,6 +607,9 @@
 			"laser_range_bonus": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
 		"icon": "Software_Power_Electricity_Battery_Thunder_Lightning_Bolt_Zap.png",
 		"id": "laser_range",
 		"name": "Extended Laser",
@@ -467,6 +620,60 @@
 		"y": 305.0
 	},
 	{
+		"cost": 2.0,
+		"desc": "Reduce mining laser fuel cost by 1.",
+		"direction": "down",
+		"effects": {
+			"mining_fuel_reduction": 1.0
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
+		"icon": "Travel_Gas_Station_Refuel.png",
+		"id": "laser_fuel_efficiency",
+		"name": "Laser Fuel Efficiency",
+		"parent": "laser_range",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#44cc88",
+		"x": 1084.0,
+		"y": 468.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Reduce mining laser fuel cost by 2.",
+		"direction": "down",
+		"effects": {
+			"mining_fuel_reduction": 2.0
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
+		"icon": "Travel_Gas_Station_Refuel.png",
+		"id": "laser_fuel_efficiency_2",
+		"name": "Laser Fuel Efficiency II",
+		"parent": "laser_fuel_efficiency",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#44cc88",
+		"x": 1217.0,
+		"y": 703.0
+	},
+	{
 		"cost": 3.0,
 		"desc": "Increase mining laser range by 10 units.",
 		"direction": "right",
@@ -474,6 +681,10 @@
 			"laser_range_bonus": 10.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "Software_Power_Electricity_Battery_Thunder_Lightning_Bolt_Zap.png",
 		"id": "laser_range_2",
 		"name": "Extended Laser II",
@@ -491,6 +702,9 @@
 			"harpoon_range_bonus": 50.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
 		"icon": "RPG_Skill_Harpoon_Shot_Hooking_Pulling_Arrow.png",
 		"id": "harpoon_extended",
 		"name": "Extended Harpoon",
@@ -508,14 +722,17 @@
 			"harpoon_reel_bonus": 5.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
 		"icon": "RPG_Skill_Harpoon_Shot_Hooking_Pulling_Arrow.png",
 		"id": "harpoon_speed",
 		"name": "Harpoon Speed",
 		"parent": "harpoon_extended",
 		"parent_skill_id": "",
 		"unlock_color": "#88aaff",
-		"x": 948.0,
-		"y": 596.0
+		"x": 1001.0,
+		"y": 569.0
 	},
 	{
 		"cost": 3.0,
@@ -525,151 +742,219 @@
 			"harpoon_reel_bonus": 5.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Skill_Harpoon_Shot_Hooking_Pulling_Arrow.png",
 		"id": "harpoon_speed_2",
 		"name": "Harpoon Speed II",
 		"parent": "harpoon_speed",
 		"parent_skill_id": "",
 		"unlock_color": "#88aaff",
-		"x": 1031.0,
-		"y": 741.0
+		"x": 1149.0,
+		"y": 809.0
 	},
 	{
 		"cost": 3.0,
-		"desc": "Unlock a forward-firing turret (enemies required).",
+		"desc": "Unlock a forward-firing double barrel turret.",
 		"direction": "left-down",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "Warfare_Medieval_Siege_Engine_Ballista_Turret.png",
 		"id": "turret_unlock",
 		"name": "Gatling Turret",
 		"parent": "root",
 		"parent_skill_id": "",
 		"unlock_color": "#ff4422",
-		"x": 285.0,
-		"y": 512.0
+		"x": 333.0,
+		"y": 472.0
 	},
 	{
 		"cost": 2.0,
 		"desc": "Increase turret fire rate.",
 		"direction": "left",
 		"effects": {},
+		"gem_cost": {
+			"blue": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "RPG_Item_Weapon_Bow_Drawn_Ranged_Shooting.png",
 		"id": "turret_rapid_fire",
 		"name": "Rapid Fire",
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff6633",
-		"x": -174.0,
-		"y": 606.0
+		"x": 122.0,
+		"y": 596.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Further reduce heat build‑up and increase cool‑down rate.",
 		"direction": "right",
 		"effects": {},
-		"icon": "RPG_Item_Weapon_Bow_Drawn_Ranged_Shooting.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"yellow": 2.0
+		},
+		"icon": "Weather_Water_Droplet_Liquid_Rain_Element_Small.png",
 		"id": "turret_rapid_fire_2",
 		"name": "Improved Cooling",
 		"parent": "turret_rapid_fire",
 		"parent_skill_id": "",
-		"unlock_color": "#ff6633",
-		"x": -69.0,
-		"y": 724.0
+		"unlock_color": "#4046bf",
+		"x": 227.0,
+		"y": 714.0
 	},
 	{
 		"cost": 4.0,
 		"desc": "Maximum cool‑down rate — the turret can fire for longer before overheating.",
 		"direction": "right",
 		"effects": {},
-		"icon": "RPG_Item_Weapon_Bow_Drawn_Ranged_Shooting.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"yellow": 1.0
+		},
+		"icon": "Weather_Water_Droplet_Liquid_Rain_Element_Small.png",
 		"id": "turret_rapid_fire_3",
 		"name": "Overclocked",
 		"parent": "turret_rapid_fire_2",
 		"parent_skill_id": "",
-		"unlock_color": "#ff6633",
-		"x": 61.0,
-		"y": 724.0
+		"unlock_color": "#335aff",
+		"x": 232.0,
+		"y": 835.0
 	},
 	{
 		"cost": 2.0,
 		"desc": "Faster turret projectiles travel further.",
 		"direction": "left-up",
-		"effects": {},
+		"effects": {
+			"turret_projectile_speed_bonus": 50.0
+		},
 		"exclusive_children": false,
-		"icon": "Travel_Car_Driving_Speedometer_Graph.png",
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 1.0
+		},
+		"icon": "Warfare_Ammo_Revolver_Six_Shooter_Bullets_Barrel.png",
 		"id": "turret_projectile_speed",
 		"name": "High-Velocity Rounds",
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff8855",
-		"x": 150.0,
-		"y": 442.0
+		"x": 198.0,
+		"y": 402.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Turret rounds pierce through one enemy per level.",
 		"direction": "left",
-		"effects": {},
+		"effects": {
+			"pierce_count": 1.0
+		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "RPG_Spell_Skill_Magic_Arcane_Missiles_Multishot.png",
 		"id": "turret_projectile_pierce",
 		"name": "Armor-Piercing Rounds",
 		"parent": "turret_projectile_speed",
 		"parent_skill_id": "",
 		"unlock_color": "#ffaa44",
-		"x": -128.0,
-		"y": 294.0
+		"x": -80.0,
+		"y": 254.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Turret rounds have a chance to ricochet to a new target.",
 		"direction": "left-up",
-		"effects": {},
+		"effects": {
+			"ricochet_chance": 0.3
+		},
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Item_Weapon_Arrow_Ranged_Pierce_Damage.png",
 		"id": "ricochet_rounds",
 		"name": "Ricochet Rounds",
 		"parent": "turret_projectile_speed",
 		"parent_skill_id": "",
 		"unlock_color": "#ffaa44",
-		"x": -89.0,
-		"y": 487.0
+		"x": 199.0,
+		"y": 280.0
 	},
 	{
 		"cost": 2.0,
-		"desc": "+10% chance per level for turret shots to deal critical damage.",
+		"desc": "+{crit_chance}% chance for turret shots to deal critical damage.",
 		"direction": "down",
-		"effects": {},
+		"effects": {
+			"crit_chance": 0.1
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
 		"icon": "RPG_Stat_Luck_Four_Leaf_Clover.png",
 		"id": "critical_chance",
 		"name": "Critical Strike",
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
-		"pin_length": 6.0,
-		"pin_sides": [
-			"left",
-			"right"
-		],
-		"pin_width": 2.0,
-		"pins_per_side": 4.0,
 		"unlock_color": "#ffdd00",
-		"x": 453.0,
-		"y": 517.0
+		"x": 334.0,
+		"y": 391.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Critical hits deal +25% more damage per level.",
 		"direction": "down",
-		"effects": {},
+		"effects": {
+			"crit_damage_mult": 0.25
+		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Stat_Luck_Four_Leaf_Clover.png",
 		"id": "critical_multiplier",
 		"name": "Critical Power",
 		"parent": "turret_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ffdd00",
-		"x": 296.0,
-		"y": 632.0
+		"x": 344.0,
+		"y": 592.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Turret bullets are 50% larger, dealing more impact damage.",
+		"direction": "down",
+		"effects": {
+			"bullet_scale": 1.5
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
+		"icon": "RPG_Item_Bomb_Grenade_Explosive.png",
+		"id": "turret_big_bullets",
+		"name": "Heavy Rounds",
+		"parent": "turret_unlock",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#ff8844",
+		"x": -74.0,
+		"y": 494.0
 	},
 	{
 		"cost": 3.0,
@@ -677,43 +962,61 @@
 		"direction": "left",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "RPG_Skill_Multishot_Arrows_Ranged_Attack.png",
 		"id": "multi_shot",
 		"name": "Multi-Shot",
 		"parent": "turret_rapid_fire",
 		"parent_skill_id": "",
 		"unlock_color": "#ff9966",
-		"x": -304.0,
-		"y": 636.0
+		"x": -151.0,
+		"y": 657.0
 	},
 	{
 		"cost": 4.0,
 		"desc": "Turret rounds have a 20% chance per level to chain to nearby enemies.",
 		"direction": "left",
-		"effects": {},
+		"effects": {
+			"chain_chance": 0.2,
+			"chain_count": 2.0
+		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 2.0
+		},
 		"icon": "RPG_Spell_Skill_Magic_Chain_Lightning_Link.png",
 		"id": "chain_lightning",
 		"name": "Chain Lightning",
 		"parent": "turret_projectile_pierce",
 		"parent_skill_id": "",
 		"unlock_color": "#44ddff",
-		"x": -258.0,
-		"y": 274.0
+		"x": -210.0,
+		"y": 234.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "25% chance per level to slow enemies hit by turret rounds.",
 		"direction": "left-down",
-		"effects": {},
+		"effects": {
+			"slow_chance": 0.25,
+			"slow_duration": 2.0,
+			"slow_factor": 0.5
+		},
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "Weather_Snowflake_Freeze_Cold_Snowstorm_Frozen_Frost_Element_Winter_Season.png",
 		"id": "frost_shot",
 		"name": "Frost Shot",
 		"parent": "turret_projectile_pierce",
 		"parent_skill_id": "",
 		"unlock_color": "#88ddff",
-		"x": -258.0,
-		"y": 374.0
+		"x": -210.0,
+		"y": 334.0
 	},
 	{
 		"cost": 4.0,
@@ -721,14 +1024,17 @@
 		"direction": "right-down",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 2.0
+		},
 		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
 		"id": "missile_unlock",
 		"name": "Missile System",
 		"parent": "turret_rapid_fire",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -334.0,
-		"y": 768.0
+		"x": -38.0,
+		"y": 758.0
 	},
 	{
 		"cost": 3.0,
@@ -736,100 +1042,89 @@
 		"direction": "right",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
 		"icon": "Weather_Heat_Hot_Desert_Baking.png",
 		"id": "missile_heat_seeking",
 		"name": "Heat Seeking",
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -237.0,
-		"y": 898.0
+		"x": 111.0,
+		"y": 941.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Increase missile splash damage radius.",
 		"direction": "right-up",
 		"effects": {},
+		"gem_cost": {
+			"purple": 1.0,
+			"red": 1.0
+		},
 		"icon": "RPG_Spell_Skill_Magic_Explosive_Explosion.png",
 		"id": "missile_splash_area",
 		"name": "Explosive Payload",
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -484.0,
-		"y": 900.0
+		"x": -188.0,
+		"y": 890.0
 	},
 	{
 		"cost": 2.0,
 		"desc": "Carry +2 missiles per wing pod (4 total).",
 		"direction": "down",
 		"effects": {},
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 2.0
+		},
 		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
 		"id": "missile_capacity",
 		"name": "Extended Magazine",
 		"parent": "missile_unlock",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -334.0,
-		"y": 898.0
+		"x": -38.0,
+		"y": 888.0
 	},
 	{
 		"cost": 3.0,
 		"desc": "Carry +4 missiles per wing pod (8 total).",
 		"direction": "down",
 		"effects": {},
+		"gem_cost": {
+			"purple": 1.0,
+			"red": 1.0
+		},
 		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
 		"id": "missile_capacity_2",
 		"name": "Ammo Belt",
 		"parent": "missile_capacity",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -334.0,
-		"y": 1028.0
+		"x": -38.0,
+		"y": 1018.0
 	},
 	{
 		"cost": 4.0,
 		"desc": "Carry +6 missiles per wing pod (12 total).",
 		"direction": "down",
 		"effects": {},
+		"gem_cost": {
+			"red": 2.0
+		},
 		"icon": "Warfare_Ammo_Rocket_Missile_RPG.png",
 		"id": "missile_capacity_3",
 		"name": "Ordnance Expansion",
 		"parent": "missile_capacity_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff3344",
-		"x": -334.0,
-		"y": 1158.0
-	},
-	{
-		"cost": 2.0,
-		"desc": "Mining laser becomes wider, hitting a larger area.",
-		"direction": "right-up",
-		"effects": {},
-		"exclusive_children": false,
-		"icon": "Cosmetics_Mascara.png",
-		"id": "laser_width",
-		"name": "Wide Beam",
-		"parent": "laser_range",
-		"parent_skill_id": "",
-		"unlock_color": "#ff9966",
-		"x": 1013.0,
-		"y": 457.0
-	},
-	{
-		"cost": 3.0,
-		"desc": "Mining laser becomes even wider.",
-		"direction": "right-up",
-		"effects": {},
-		"exclusive_children": false,
-		"icon": "Cosmetics_Mascara.png",
-		"id": "laser_width_2",
-		"name": "Wide Beam II",
-		"parent": "laser_width",
-		"parent_skill_id": "",
-		"unlock_color": "#ffaa66",
-		"x": 1094.0,
-		"y": 617.0
+		"x": -38.0,
+		"y": 1148.0
 	},
 	{
 		"cost": 3.0,
@@ -837,14 +1132,17 @@
 		"direction": "right",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
 		"icon": "RPG_Spell_Skill_Magic_Chain_Lightning_Link.png",
 		"id": "laser_chain",
 		"name": "Chain Mining",
 		"parent": "laser_range_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ffaa00",
-		"x": 1303.0,
-		"y": 303.0
+		"x": 1321.0,
+		"y": 262.0
 	},
 	{
 		"cost": 4.0,
@@ -852,14 +1150,43 @@
 		"direction": "right",
 		"effects": {},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"yellow": 1.0
+		},
 		"icon": "RPG_Spell_Skill_Magic_Chain_Lightning_Link.png",
 		"id": "laser_chain_2",
 		"name": "Chain Mining II",
 		"parent": "laser_chain",
 		"parent_skill_id": "",
 		"unlock_color": "#ffcc00",
-		"x": 1463.0,
-		"y": 288.0
+		"x": 1481.0,
+		"y": 247.0
+	},
+	{
+		"cost": 4.0,
+		"desc": "Mining laser also damages enemy ships. Laser width scales with Laser Power levels.",
+		"direction": "right",
+		"effects": {},
+		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 2.0
+		},
+		"icon": "RPG_Crossed_Swords_Duel_PvP_Combat_Battle_War.png",
+		"id": "mining_laser_combat",
+		"name": "Mining Laser Combat",
+		"parent": "laser_chain_2",
+		"parent_skill_id": "laser_power_2",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#ff3366",
+		"x": 1618.0,
+		"y": 329.0
 	},
 	{
 		"cost": 2.0,
@@ -869,6 +1196,9 @@
 			"gem_capacity_bonus": 25.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
 		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity",
 		"name": "Cargo Hold",
@@ -886,6 +1216,10 @@
 			"gem_capacity_bonus": 50.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity_2",
 		"name": "Cargo Hold II",
@@ -903,6 +1237,10 @@
 			"gem_capacity_bonus": 100.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"green": 1.0
+		},
 		"icon": "Travel_Mining_Minecart_Full_Gold_Ore_Gemstones.png",
 		"id": "gem_capacity_3",
 		"name": "Cargo Hold III",
@@ -919,14 +1257,18 @@
 		"effects": {
 			"gem_pickup_bonus": 5.0
 		},
-		"icon": "Alchemy_Creation.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"green": 2.0
+		},
+		"icon": "RPG_Stat_Magnetism.png",
 		"id": "gem_magnet",
 		"name": "Tractor Magnet",
 		"parent": "root",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 644.0,
-		"y": 86.0
+		"x": 646.0,
+		"y": 110.0
 	},
 	{
 		"cost": 3.0,
@@ -935,14 +1277,19 @@
 		"effects": {
 			"gem_pickup_bonus": 10.0
 		},
-		"icon": "Alchemy_Creation.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
+		"icon": "RPG_Stat_Magnetism.png",
 		"id": "gem_magnet_2",
 		"name": "Wide Tractor",
 		"parent": "gem_magnet",
 		"parent_skill_id": "",
 		"unlock_color": "#ff66aa",
-		"x": 498.0,
-		"y": -52.0
+		"x": 500.0,
+		"y": -28.0
 	},
 	{
 		"cost": 4.0,
@@ -951,14 +1298,18 @@
 		"effects": {
 			"gem_pickup_bonus": 15.0
 		},
-		"icon": "Alchemy_Creation.png",
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
+		"icon": "RPG_Stat_Magnetism.png",
 		"id": "gem_magnet_3",
 		"name": "Mega Tractor",
 		"parent": "gem_magnet_2",
 		"parent_skill_id": "",
-		"unlock_color": "#ff66aa",
-		"x": 506.0,
-		"y": -179.0
+		"unlock_color": "#5f66aa",
+		"x": 508.0,
+		"y": -155.0
 	},
 	{
 		"cost": 2.0,
@@ -968,14 +1319,18 @@
 			"laser_damage_mult": 0.5
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 1.0
+		},
 		"icon": "Weather_Atomic_Energy_Nuclear_Power_Plant.png",
 		"id": "laser_power",
 		"name": "Laser Power",
 		"parent": "laser_range_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff5500",
-		"x": 1228.0,
-		"y": 452.0
+		"x": 1264.0,
+		"y": 586.0
 	},
 	{
 		"cost": 3.0,
@@ -985,14 +1340,17 @@
 			"laser_damage_mult": 1.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"yellow": 2.0
+		},
 		"icon": "Weather_Atomic_Energy_Nuclear_Power_Plant.png",
 		"id": "laser_power_2",
 		"name": "Laser Power II",
 		"parent": "laser_power",
 		"parent_skill_id": "",
 		"unlock_color": "#ff5500",
-		"x": 1388.0,
-		"y": 452.0
+		"x": 1424.0,
+		"y": 586.0
 	},
 	{
 		"cost": 4.0,
@@ -1002,6 +1360,10 @@
 			"fuel_max_bonus": 50.0
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"green": 1.0
+		},
 		"icon": "Travel_Gas_Station_Refuel.png",
 		"id": "fuel_capacity_4",
 		"name": "Fuel Capacity IV",
@@ -1013,53 +1375,168 @@
 	},
 	{
 		"cost": 2.0,
-		"desc": "Gems travel 50% faster to the ship.",
+		"desc": "Gems travel {magnet_speed_mult}% faster to the ship.",
 		"direction": "right",
 		"effects": {
-			"magnet_speed_mult": 0.5
+			"magnet_speed_mult": 0.2
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
 		"icon": "RPG_Stat_Magnetism.png",
 		"id": "magnet_speed_1",
 		"name": "Magnet Speed I",
 		"parent": "gem_magnet",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 652.0,
-		"y": -41.0
+		"x": 654.0,
+		"y": -17.0
 	},
 	{
 		"cost": 3.0,
-		"desc": "Gems travel 100% faster to the ship.",
+		"desc": "Gems travel {magnet_speed_mult}% faster to the ship.",
 		"direction": "right",
 		"effects": {
-			"magnet_speed_mult": 1.0
+			"magnet_speed_mult": 0.4
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
 		"icon": "RPG_Stat_Magnetism.png",
 		"id": "magnet_speed_2",
 		"name": "Magnet Speed II",
 		"parent": "magnet_speed_1",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 657.0,
-		"y": -164.0
+		"x": 659.0,
+		"y": -140.0
 	},
 	{
 		"cost": 4.0,
-		"desc": "Gems travel 150% faster to the ship.",
+		"desc": "Gems travel {magnet_speed_mult}% faster to the ship.",
 		"direction": "right",
 		"effects": {
-			"magnet_speed_mult": 1.5
+			"magnet_speed_mult": 0.8
 		},
 		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0,
+			"green": 1.0
+		},
 		"icon": "RPG_Stat_Magnetism.png",
 		"id": "magnet_speed_3",
 		"name": "Magnet Speed III",
 		"parent": "magnet_speed_2",
 		"parent_skill_id": "",
 		"unlock_color": "#ff88cc",
-		"x": 653.0,
-		"y": -319.0
+		"x": 655.0,
+		"y": -295.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Fire flares that break enemy missile lock-on. While active, homing missiles cannot track your ship.",
+		"direction": "left",
+		"effects": {},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0,
+			"green": 2.0
+		},
+		"icon": "RPG_Item_Weapon_Torch_Light_Flame_Fire.png",
+		"id": "flare_system",
+		"name": "Flare Countermeasures",
+		"parent": "armor_plating_2",
+		"parent_skill_id": "",
+		"unlock_color": "#ff8844",
+		"x": 490.0,
+		"y": 590.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Turret bullets are 50% larger, dealing more impact damage.",
+		"direction": "down",
+		"effects": {},
+		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
+		"icon": "RPG_Item_Bomb_Grenade_Explosive.png",
+		"id": "turret_big_bullets_2",
+		"name": "Heavy Rounds II",
+		"parent": "turret_big_bullets",
+		"parent_skill_id": "",
+		"pin_length": 8.0,
+		"pin_sides": [
+			"left",
+			"right"
+		],
+		"pin_width": 3.0,
+		"pins_per_side": 4.0,
+		"unlock_color": "#ff8844",
+		"x": -210.0,
+		"y": 528.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Turret rounds pierce through one enemy per level.",
+		"direction": "left",
+		"effects": {},
+		"exclusive_children": false,
+		"gem_cost": {
+			"purple": 1.0,
+			"yellow": 1.0
+		},
+		"icon": "RPG_Spell_Skill_Magic_Arcane_Missiles_Multishot.png",
+		"id": "turret_projectile_pierce_2",
+		"name": "Armor-Piercing Rounds II",
+		"parent": "turret_projectile_pierce",
+		"parent_skill_id": "",
+		"unlock_color": "#ffaa44",
+		"x": -92.0,
+		"y": 147.0
+	},
+	{
+		"cost": 2.0,
+		"desc": "+{crit_chance}% chance per level for turret shots to deal critical damage.",
+		"direction": "down",
+		"effects": {
+			"crit_chance": 0.15
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 1.0
+		},
+		"icon": "RPG_Stat_Luck_Four_Leaf_Clover.png",
+		"id": "critical_chance_2",
+		"name": "Critical Strike II",
+		"parent": "critical_chance",
+		"parent_skill_id": "",
+		"unlock_color": "#ffdd00",
+		"x": 330.0,
+		"y": 269.0
+	},
+	{
+		"cost": 3.0,
+		"desc": "Critical hits deal +25% more damage per level.",
+		"direction": "down",
+		"effects": {
+			"crit_damage_mult": 0.25
+		},
+		"exclusive_children": false,
+		"gem_cost": {
+			"blue": 2.0
+		},
+		"icon": "RPG_Stat_Luck_Four_Leaf_Clover.png",
+		"id": "critical_multiplier_2",
+		"name": "Critical Power II",
+		"parent": "critical_multiplier",
+		"parent_skill_id": "",
+		"unlock_color": "#ffdd00",
+		"x": 344.0,
+		"y": 712.0
 	}
 ]

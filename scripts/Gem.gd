@@ -13,6 +13,10 @@ extends RigidBody3D
 @export var home_speed: float = 14.0
 @export var attraction_radius: float = 8.0
 
+## Which gem type this pickup represents.
+## Must be one of GemTypeData.TYPES (green, blue, yellow, purple, red).
+@export var gem_type: String = "green"
+
 var gem_slot: int = -1       # index in GemManager's arrays
 var gem_manager: Node = null
 var age: float = 0.0
@@ -39,8 +43,8 @@ func _ready() -> void:
 	if mi != null:
 		mi.hide()
 
-	# Spawn a new gem in the manager and remember the slot.
-	gem_slot = gem_manager.spawn_gem(global_position)
+	# Spawn a new gem in the manager with this gem's type and remember the slot.
+	gem_slot = gem_manager.spawn_gem(global_position, gem_type)
 	if gem_slot >= 0:
 		gem_manager.rb_refs[gem_slot] = self
 

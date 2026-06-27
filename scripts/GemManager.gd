@@ -25,6 +25,7 @@ var _gem_material: ShaderMaterial
 # Parallel arrays.
 var positions: PackedVector3Array
 var colors: PackedColorArray
+var gem_types: Array[String]  # gem type name per instance
 var alive: PackedByteArray
 var rb_refs: Array  # RigidBody3D refs, nullable
 var _count: int = 0
@@ -35,33 +36,15 @@ var _pool: Array[int] = []
 @onready var rng := RandomNumberGenerator.new()
 
 
-# Gem palette – weighted by rarity.  White is the jackpot.
-const PALETTE := [
-	[ Color(0.3, 0.85, 1.0), 4.0 ],   # cyan      – common
-	[ Color(0.5, 1.0,  0.4), 3.0 ],   # green     – common
-	[ Color(0.95, 0.3, 1.0), 2.0 ],   # magenta   – uncommon
-	[ Color(1.0,  0.8,  0.3), 1.5 ],   # gold      – uncommon
-	[ Color(0.4,  0.7, 1.0), 1.0 ],   # sapphire  – rare
-	[ Color(1.0,  1.0,  1.0), 0.3 ],   # white     – very rare
-]
-var _palette_weights: PackedFloat32Array
-
-
 func _ready() -> void:
 	add_to_group("gem_manager")
 	rng.randomize()
 	positions.resize(max_gems)
 	colors.resize(max_gems)
+	gem_types.resize(max_gems)
 	alive.resize(max_gems)
 	rb_refs.resize(max_gems)
 	_setup_multimesh()
-	_setup_palette_weights()
-
-
-func _setup_palette_weights() -> void:
-	_palette_weights = PackedFloat32Array()
-	for entry in PALETTE:
-		_palette_weights.append((entry as Array)[1] as float)
 
 
 func _setup_multimesh() -> void:
@@ -97,11 +80,12 @@ func _alloc() -> int:
 	var idx: int = _count; _count += 1; return idx
 
 
-func spawn_gem(at: Vector3) -> int:
+func spawn_gem(at: Vector3, gem_type: String = "green") -> int:
 	var idx: int = _alloc()
-	var color: Color = _pick_palette_color()
+	var color: Color = GemTypeData.get_color(gem_type)
 	positions[idx] = at
 	colors[idx] = color
+	gem_types[idx] = gem_type
 	alive[idx] = 1
 	# Write the per‑instance colour so the shader reads it from COLOR.
 	mmi.multimesh.set_instance_color(idx, color)
@@ -120,15 +104,11 @@ func collect_gem(idx: int) -> void:
 	# Note: the RigidBody3D is freed by the Gem script itself.
 
 
-func _pick_palette_color() -> Color:
-	var total: float = 0.0
-	for w in _palette_weights: total += w
-	var pick: float = rng.randf_range(0.0, total)
-	var acc: float = 0.0
-	for i in _palette_weights.size():
-		acc += _palette_weights[i]
-		if pick <= acc: return (PALETTE[i] as Array)[0]
-	return (PALETTE[0] as Array)[0]
+## Return the gem type string for a given slot index.
+func get_gem_type(idx: int) -> String:
+	if idx < 0 or idx >= _count or not alive[idx]:
+		return "green"
+	return gem_types[idx]
 
 
 # ── Per‑frame: update transforms from physics bodies ───────────

@@ -15,9 +15,10 @@ signal data_changed
 @onready var info_current_value: Label = %InfoCurrentValue
 @onready var info_desc: Label = %InfoDesc
 @onready var info_req: Label = %InfoReq
-@onready var info_cost: Label = %InfoCost
+@onready var info_cost: RichTextLabel = %InfoCost
 @onready var unlock_button: Button = %UnlockButton
-@onready var skill_points_label: Label = %SkillPointsLabel
+@onready var gem_bar: PanelContainer = %GemBar
+@onready var gem_bar_inner: HBoxContainer = %GemBarInner
 @onready var tree_viewport: Control = %TreeViewport
 @onready var tree_canvas: Control = %TreeCanvas
 @onready var zoom_in_btn: Button = %ZoomInBtn
@@ -339,18 +340,20 @@ func build_tree() -> void:
 	var positions: Dictionary = {}
 	_layout_node("root", Vector2(500, 100), "", positions)
 	_last_positions = positions.duplicate()
+	# ── PCB-style trace connections ────────────────────────────────────
 	for skill in SKILL_TREE:
 		var skill_id: String = str(skill.get("id", ""))
 		var parent_id := _get_primary_parent_id(skill)
 		for required_parent_id in _get_required_skill_ids(skill):
 			if required_parent_id.is_empty() or not positions.has(skill_id) or not positions.has(required_parent_id):
 				continue
-			var line := Line2D.new()
-			line.add_point(positions[required_parent_id] + Vector2(NODE_SIZE * 0.5, NODE_SIZE * 0.5))
-			line.add_point(positions[skill_id] + Vector2(NODE_SIZE * 0.5, NODE_SIZE * 0.5))
-			line.width = 2.5
-			line.default_color = Color(0.9, 0.9, 0.9, 0.7)
-			lines_layer.add_child(line)
+			var start_pos = positions[required_parent_id] + Vector2(NODE_SIZE * 0.5, NODE_SIZE * 0.5)
+			var end_pos = positions[skill_id] + Vector2(NODE_SIZE * 0.5, NODE_SIZE * 0.5)
+			# Check if both skills are unlocked to determine line color
+			var parent_unlocked := PlayerSkills and PlayerSkills.is_unlocked(required_parent_id)
+			var child_unlocked := PlayerSkills and PlayerSkills.is_unlocked(skill_id)
+			var both_unlocked := parent_unlocked and child_unlocked
+			_draw_pcb_trace(lines_layer, start_pos, end_pos, both_unlocked)
 	for skill in SKILL_TREE:
 		var skill_id: String = str(skill.get("id", ""))
 		if not positions.has(skill_id):
@@ -522,7 +525,7 @@ func _show_warning(title: String, message: String) -> void:
 	win.title = title
 	win.size = Vector2i(420, 140)
 	win.wrap_controls = true
-	win.exclusive = true
+	win.exclusive = false
 	if PlayerSkills:
 		PlayerSkills.editor_modal_open = true
 	add_child(win)
@@ -587,7 +590,7 @@ func _on_skill_button_hover(skill_id: String) -> void:
 	info_name.text = str(skill.get("name", skill_id))
 	info_desc.text = _format_skill_description(skill)
 	info_req.text = _build_skill_requirement_text(skill)
-	info_cost.text = "Cost: %d SP" % int(skill.get("cost", 1))
+	info_cost.text = _build_gem_cost_text(skill)
 	info_current_value.text = ""
 	info_panel.move_to_front()
 	# Update unlock button state
@@ -598,12 +601,13 @@ func _on_skill_button_hover(skill_id: String) -> void:
 		unlock_button.text = "Unlocked"
 		unlock_button.disabled = true
 	elif can_ui_unlock:
-		info_cost.text = "Cost: %d gems" % int(skill.get("cost", 1))
-		unlock_button.text = "Unlock (%d gems)" % int(skill.get("cost", 1))
+		var cost_text: String = _build_gem_cost_text(skill)
+		info_cost.text = cost_text
+		unlock_button.text = "Unlock (" + _build_gem_cost_short_text(skill) + ")"
 		unlock_button.disabled = false
 	else:
 		var reason: String = _build_unlock_status_text(skill)
-		info_cost.text = reason if reason != "" else "Cost: %d gems" % int(skill.get("cost", 1))
+		info_cost.text = reason if reason != "" else _build_gem_cost_text(skill)
 		unlock_button.text = "Locked"
 		unlock_button.disabled = true
 	
@@ -671,12 +675,64 @@ func _build_skill_requirement_text(skill: Dictionary) -> String:
 
 # ── Skill unlock (game mode) ────────────────────────────────────────────────────
 
+## Build a human-readable gem cost string with colored BBCode for the info panel.
+## Example: "Cost: 2 💚 Green + 1 💙 Blue"
+func _build_gem_cost_text(skill: Dictionary) -> String:
+	if PlayerSkills == null:
+		return ""
+	var cost: Dictionary = PlayerSkills.get_skill_gem_cost(skill)
+	if cost.is_empty():
+		return "Cost: Free"
+	var parts: Array[String] = []
+	for type in GemTypeData.TYPES:
+		var amount: int = cost.get(type, 0)
+		if amount <= 0:
+			continue
+		var hex: String = GemTypeData.get_hex(type)
+		var name: String = GemTypeData.get_display_name(type)
+		# Show in green if we have enough, red if not
+		var have: int = PlayerSkills.get_gem_count(type)
+		var color: String = hex if have >= amount else "FF4444"
+		parts.append("[color=#%s]%d %s[/color]" % [color, amount, name])
+	if parts.is_empty():
+		return "Cost: Free"
+	return "Cost: " + " + ".join(parts)
+
+
+## Build a short plain-text cost summary for the unlock button.
+## Example: "2 Green + 1 Blue"
+func _build_gem_cost_short_text(skill: Dictionary) -> String:
+	if PlayerSkills == null:
+		return ""
+	var cost: Dictionary = PlayerSkills.get_skill_gem_cost(skill)
+	if cost.is_empty():
+		return "Free"
+	var parts: Array[String] = []
+	for type in GemTypeData.TYPES:
+		var amount: int = cost.get(type, 0)
+		if amount <= 0:
+			continue
+		parts.append("%d %s" % [amount, GemTypeData.get_display_name(type)])
+	if parts.is_empty():
+		return "Free"
+	return " + ".join(parts)
+
+
 func _build_unlock_status_text(skill: Dictionary) -> String:
 	if PlayerSkills == null:
 		return ""
-	var cost := int(skill.get("cost", 1))
-	if PlayerSkills.gems < cost:
-		return "Need %d gems (have %d)" % [cost, PlayerSkills.gems]
+	var cost: Dictionary = PlayerSkills.get_skill_gem_cost(skill)
+	if not cost.is_empty():
+		var missing_lines: Array[String] = []
+		for type in GemTypeData.TYPES:
+			var needed: int = cost.get(type, 0)
+			if needed <= 0:
+				continue
+			var have: int = PlayerSkills.get_gem_count(type)
+			if have < needed:
+				missing_lines.append("Need %d more %s (have %d)" % [needed - have, GemTypeData.get_display_name(type), have])
+		if not missing_lines.is_empty():
+			return "\n".join(missing_lines)
 	var required_ids := _get_required_skill_ids(skill)
 	for required_id in required_ids:
 		if not PlayerSkills.is_unlocked(required_id):
@@ -707,10 +763,105 @@ func _on_zoom_reset_btn_pressed() -> void:
 	_center_view()
 
 func _update_gems_label() -> void:
-	if skill_points_label and PlayerSkills:
-		skill_points_label.text = "Gems: %d" % PlayerSkills.gems
+	if not gem_bar_inner or not PlayerSkills:
+		return
+	# Clear existing gem labels
+	for child in gem_bar_inner.get_children():
+		child.queue_free()
+	
+	var counts: Dictionary = PlayerSkills.get_all_gem_counts()
+	# Build a colored label for each gem type
+	for type in GemTypeData.TYPES:
+		var c: int = counts.get(type, 0)
+		var hex: String = GemTypeData.get_hex(type)
+		var name: String = GemTypeData.get_display_name(type)
+		var color: Color = GemTypeData.get_color(type)
+		
+		var lbl := Label.new()
+		lbl.text = "♦ %d  %s" % [c, name]
+		lbl.add_theme_color_override("font_color", color)
+		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.custom_minimum_size = Vector2(120, 0)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		gem_bar_inner.add_child(lbl)
 
-func _on_gems_changed(_amount: int) -> void:
+
+## Called when the DEPLOY button is pressed in the skill tree header.
+## Tells the station to launch the ship out the hangar door.
+func _on_deploy_btn_pressed() -> void:
+	var ship := get_tree().get_first_node_in_group("ship")
+	if ship == null or not ship.has_method("get_state"):
+		return
+	# Only deploy when docked
+	if ship.get_state() != 4:  # 4 = DOCKED
+		return
+	# Ask the station to deploy the ship
+	for s in get_tree().get_nodes_in_group("station"):
+		if not is_instance_valid(s):
+			continue
+		if s.has_method("is_ship_docked") and s.is_ship_docked(ship):
+			s.deploy_ship()
+			# Close the skill tree after deploying
+			visible = false
+			break
+
+func _draw_pcb_trace(layer: Control, from: Vector2, to: Vector2, unlocked: bool = false) -> void:
+	"""Draw a PCB-style trace between two points.
+	White when locked, green when both skills are unlocked."""
+	# Compute a right-angle route: horizontal leg, then vertical leg (classic PCB auto-router style)
+	var dx := to.x - from.x
+	var dy := to.y - from.y
+	var mid_x := from.x + dx * 0.5
+	var route: Array = [from, Vector2(mid_x, from.y), Vector2(mid_x, to.y), to]
+	# For very short connections, or when nodes are aligned, simplify to a straight line
+	if abs(dx) < 8.0 or abs(dy) < 8.0 or dx == 0.0 or dy == 0.0:
+		route = [from, to]
+	
+	# Colors based on unlock state
+	var glow_color: Color
+	var trace_color: Color
+	var highlight_color: Color
+	if unlocked:
+		# Green when unlocked
+		glow_color = Color(0.12, 0.38, 0.15, 0.18)
+		trace_color = Color(0.15, 0.52, 0.18, 0.85)
+		highlight_color = Color(0.6, 0.9, 0.4, 0.35)
+	else:
+		# White/grey when locked
+		glow_color = Color(0.3, 0.3, 0.35, 0.15)
+		trace_color = Color(0.45, 0.45, 0.5, 0.6)
+		highlight_color = Color(0.7, 0.7, 0.75, 0.25)
+	
+	# ── Trace glow (wide, faint) ───────────────────────────────────
+	var glow := Line2D.new()
+	glow.width = 7.0
+	glow.default_color = glow_color
+	glow.antialiased = true
+	for pt in route:
+		glow.add_point(pt)
+	layer.add_child(glow)
+	
+	# ── Main trace ─────────────────────────────────────────────────
+	var trace := Line2D.new()
+	trace.width = 3.0
+	trace.default_color = trace_color
+	trace.antialiased = true
+	for pt in route:
+		trace.add_point(pt)
+	layer.add_child(trace)
+	
+	# ── Highlight strip down the center ────────────────────────────
+	var highlight := Line2D.new()
+	highlight.width = 1.2
+	highlight.default_color = highlight_color
+	highlight.antialiased = true
+	for pt in route:
+		highlight.add_point(pt)
+	layer.add_child(highlight)
+
+
+func _on_gems_changed(_inventory: Dictionary) -> void:
 	_update_gems_label()
 	build_tree()
 
@@ -737,7 +888,10 @@ func _relock_all_skills() -> void:
 	for sid in to_refund:
 		var skill_data := _find_skill(sid)
 		if not skill_data.is_empty():
-			PlayerSkills.gems += int(skill_data.get("cost", 1))
+			# Refund using the gem_cost dict
+			var cost_dict: Dictionary = PlayerSkills.get_skill_gem_cost(skill_data)
+			for type in cost_dict:
+				PlayerSkills.gem_inventory[type] = PlayerSkills.gem_inventory.get(type, 0) + cost_dict[type]
 		PlayerSkills.unlocked_skills.erase(sid)
 	PlayerSkills.save_data()
 	if PlayerSkills.has_signal("skills_reset"):
@@ -747,7 +901,11 @@ func _relock_all_skills() -> void:
 
 func _add_debug_gems() -> void:
 	if PlayerSkills:
-		PlayerSkills.add_gems(10)
+		# Add a mix of gem types for testing
+		PlayerSkills.add_gems("green", 10)
+		PlayerSkills.add_gems("blue", 5)
+		PlayerSkills.add_gems("yellow", 3)
+		PlayerSkills.add_gems("purple", 1)
 		_update_gems_label()
 
 # ── Pan / Zoom ─────────────────────────────────────────────────────────────────
@@ -1027,7 +1185,8 @@ func _relock_skill(skill_id: String) -> void:
 		return
 	if not PlayerSkills.is_unlocked(skill_id):
 		return
-	# Recursively relock this skill and any skills that depend on it.
+	# Recursively find ALL descendants (children, grandchildren, etc.) that
+	# depend on this skill or any of its unlocked children.
 	var to_relock: Array[String] = [skill_id]
 	var visited: Dictionary = {skill_id: true}
 	var changed := true
@@ -1037,22 +1196,27 @@ func _relock_skill(skill_id: String) -> void:
 			var sid: String = str(s.get("id", ""))
 			if visited.has(sid):
 				continue
-			if PlayerSkills.is_unlocked(sid) and _depends_on_skill(s, skill_id):
-				visited[sid] = true
-				to_relock.append(sid)
-				changed = true
-	# Refund each relocked skill's cost
-	var total_refund := 0
+			if not PlayerSkills.is_unlocked(sid):
+				continue
+			# Check if this skill depends on ANY skill already in to_relock
+			for locked_id in to_relock:
+				if _depends_on_skill(s, locked_id):
+					visited[sid] = true
+					to_relock.append(sid)
+					changed = true
+					break
+	# Refund each relocked skill's cost (using gem_cost dict)
 	for sid in to_relock:
 		var data := _find_skill(sid)
 		if not data.is_empty():
-			total_refund += int(data.get("cost", 1))
+			var cost_dict: Dictionary = PlayerSkills.get_skill_gem_cost(data)
+			for type in cost_dict:
+				PlayerSkills.gem_inventory[type] = PlayerSkills.gem_inventory.get(type, 0) + cost_dict[type]
 		PlayerSkills.unlocked_skills.erase(sid)
-	PlayerSkills.gems += total_refund
 	PlayerSkills.save_data()
 	if PlayerSkills.has_signal("skills_reset"):
 		PlayerSkills.skills_reset.emit()
-	PlayerSkills.gems_changed.emit(PlayerSkills.gems)
+	PlayerSkills.gems_changed.emit(PlayerSkills.gem_inventory)
 	_update_gems_label()
 	build_tree()
 
