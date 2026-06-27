@@ -1,26 +1,37 @@
 [gd_scene format=3 uid="uid://b4shipspc01"]
 
 [ext_resource type="Script" uid="uid://cv6ybb06qrdn" path="res://scripts/Ship.gd" id="1_ship"]
+[ext_resource type="Shader" uid="uid://cw0klq4p4kr7v" path="res://shaders/ship_shield.gdshader" id="2_gjfe0"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ship"]
 radius = 0.7
 height = 2.4
 
-[sub_resource type="StandardMaterial3D" id="Material_hull_main"]
-albedo_color = Color(0.78, 0.8, 0.85, 1)
-metallic = 0.6
-roughness = 0.4
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gjfe0"]
+albedo_color = Color(0.79607844, 0.72156864, 0.8, 1)
+metallic = 0.9
+roughness = 0.18
+normal_scale = 12.55
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qq457"]
+render_priority = 0
+shader = ExtResource("2_gjfe0")
+shader_parameter/shield_color = Color(0.13250384, 1.410231e-05, 0.5457154, 1)
+shader_parameter/crack_color = Color(0.20764601, 0.8363775, 0.9999996, 1)
+shader_parameter/shield_strength = 0.270000012825
+shader_parameter/fresnel_power = 2.0
+shader_parameter/hex_scale = 6.0
+shader_parameter/pulse_speed = 2.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_hull"]
 size = Vector3(1.2, 0.45, 2.2)
 
-[sub_resource type="StandardMaterial3D" id="Material_hull_accent"]
-albedo_color = Color(0.2, 0.4, 0.7, 1)
-metallic = 0.4
-roughness = 0.5
-emission_enabled = true
-emission = Color(0.15, 0.3, 0.6, 1)
-emission_energy_multiplier = 0.4
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ky8oh"]
+albedo_color = Color(0.1, 0.3, 0.5, 1)
+metallic = 0.6
+roughness = 0.3
+emission = Color(0, 0.8, 1, 1)
+emission_energy_multiplier = 1.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_fin"]
 size = Vector3(0.12, 0.5, 1.2)
@@ -34,13 +45,13 @@ bottom_radius = 0.35
 height = 0.7
 radial_segments = 16
 
-[sub_resource type="StandardMaterial3D" id="Material_cockpit"]
-albedo_color = Color(0.1, 0.15, 0.25, 1)
-metallic = 0.8
-roughness = 0.1
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_maf36"]
+albedo_color = Color(0.1, 0.12, 0.18, 1)
+metallic = 0.95
+roughness = 0.05
 emission_enabled = true
-emission = Color(0.2, 0.5, 0.9, 1)
-emission_energy_multiplier = 0.6
+emission = Color(0.05, 0.3, 0.6, 1)
+emission_energy_multiplier = 0.5
 
 [sub_resource type="SphereMesh" id="SphereMesh_cockpit"]
 radius = 0.32
@@ -147,8 +158,10 @@ radial_segments = 8
 size = Vector3(1.5, 0.8, 2.5)
 
 [node name="Ship" type="CharacterBody3D" unique_id=1956836986 groups=["player_ship"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 collision_mask = 2
 script = ExtResource("1_ship")
+preview_fully_upgraded = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=599583966]
 shape = SubResource("CapsuleShape3D_ship")
@@ -156,32 +169,33 @@ shape = SubResource("CapsuleShape3D_ship")
 [node name="Body" type="Node3D" parent="." unique_id=748695950]
 
 [node name="Hull" type="MeshInstance3D" parent="Body" unique_id=1845457545]
-material_override = SubResource("Material_hull_main")
+material_override = SubResource("StandardMaterial3D_gjfe0")
+material_overlay = SubResource("ShaderMaterial_qq457")
 mesh = SubResource("BoxMesh_hull")
 
 [node name="HullAccent" type="MeshInstance3D" parent="Body" unique_id=1783558701]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0.3)
-material_override = SubResource("Material_hull_accent")
+material_override = SubResource("StandardMaterial3D_ky8oh")
 mesh = SubResource("BoxMesh_fin")
 
 [node name="Nose" type="MeshInstance3D" parent="Body" unique_id=949598023]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.4)
-material_override = SubResource("Material_hull_main")
+material_override = SubResource("StandardMaterial3D_gjfe0")
 mesh = SubResource("BoxMesh_nose")
 
 [node name="NoseCone" type="MeshInstance3D" parent="Body" unique_id=321395854]
 transform = Transform3D(1, 0, 0, 0, 0.06395359, 0.6440532, 0, -0.97463846, 0.04226133, 0, -0.036953628, -2)
-material_override = SubResource("Material_hull_accent")
+material_override = SubResource("StandardMaterial3D_ky8oh")
 mesh = SubResource("CylinderMesh_nosecone")
 
 [node name="TopFin" type="MeshInstance3D" parent="Body" unique_id=1038656405]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33925647, 0.1)
-material_override = SubResource("Material_hull_accent")
+material_override = SubResource("StandardMaterial3D_ky8oh")
 mesh = SubResource("BoxMesh_fin")
 
 [node name="Cockpit" type="MeshInstance3D" parent="Body" unique_id=1299556388]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, -0.5)
-material_override = SubResource("Material_cockpit")
+material_override = SubResource("StandardMaterial3D_maf36")
 mesh = SubResource("SphereMesh_cockpit")
 
 [node name="WingLeft" type="Node3D" parent="Body" unique_id=927774375]
@@ -189,16 +203,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0, 0.1)
 
 [node name="WingMesh" type="MeshInstance3D" parent="Body/WingLeft" unique_id=543210133]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, 0)
-material_override = SubResource("Material_hull_main")
+material_override = SubResource("StandardMaterial3D_gjfe0")
 mesh = SubResource("BoxMesh_wing")
 
 [node name="WingTipLight" type="MeshInstance3D" parent="Body/WingLeft" unique_id=1748521799]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.55, 0, 0)
-material_override = SubResource("Material_hull_accent")
+material_override = SubResource("StandardMaterial3D_ky8oh")
 mesh = SubResource("BoxMesh_wingtip")
 
 [node name="WingBar" type="MeshInstance3D" parent="Body/WingLeft" unique_id=1537926870]
-transform = Transform3D(0.007853741, 0, -0.9999692, 0, 1, 0, 0.9999692, 0, 0.007853741, -0.8088309, 0.07, 0.32788432)
+transform = Transform3D(0.007853741, 0, -0.0009999692, 0, 1, 0, 0.9999692, 0, 7.853741e-06, -0.8088309, 0.07, 0.32788432)
 material_override = SubResource("Material_wing_bar")
 mesh = SubResource("BoxMesh_wingbar")
 
@@ -206,17 +220,17 @@ mesh = SubResource("BoxMesh_wingbar")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0, 0.1)
 
 [node name="WingMesh" type="MeshInstance3D" parent="Body/WingRight" unique_id=192314781]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
-material_override = SubResource("Material_hull_main")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7944786, 0.004366994, -0.012488544)
+material_override = SubResource("StandardMaterial3D_gjfe0")
 mesh = SubResource("BoxMesh_wing")
 
 [node name="WingTipLight" type="MeshInstance3D" parent="Body/WingRight" unique_id=1421468143]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.55, 0, 0)
-material_override = SubResource("Material_hull_accent")
+material_override = SubResource("StandardMaterial3D_ky8oh")
 mesh = SubResource("BoxMesh_wingtip")
 
 [node name="WingBar" type="MeshInstance3D" parent="Body/WingRight" unique_id=518089997]
-transform = Transform3D(-0.01364968, 0, -0.99990684, 0, 1, 0, 0.99990684, 0, -0.01364968, 0.7, 0.07, 0.30529153)
+transform = Transform3D(-0.01364968, 0, -0.0009999069, 0, 1, 0, 0.99990684, 0, -1.364968e-05, 0.7, 0.07, 0.30529153)
 material_override = SubResource("Material_wing_bar")
 mesh = SubResource("BoxMesh_wingbar")
 
@@ -241,6 +255,7 @@ material_override = SubResource("Material_laser")
 mesh = SubResource("BoxMesh_laser")
 
 [node name="HitLight" type="OmniLight3D" parent="Laser" unique_id=557808500]
+visible = false
 light_color = Color(1, 0.2, 0.2, 1)
 light_energy = 4.0
 omni_range = 6.0
@@ -254,14 +269,16 @@ collision_layer = 0
 collision_mask = 4
 
 [node name="CollectionShape" type="CollisionShape3D" parent="CollectionArea" unique_id=1505177703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.013279e-05, 0.0012226105, -7.31349e-05)
 shape = SubResource("SphereShape3D_collect")
 
 [node name="Beacon" type="Node3D" parent="." unique_id=1120796082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.2)
 
 [node name="BeaconMesh" type="MeshInstance3D" parent="Beacon" unique_id=165800925]
-mesh = SubResource("SphereMesh_engine_main")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3039375, 0.55607224)
 material_override = SubResource("Material_beacon")
+mesh = SubResource("SphereMesh_engine_main")
 
 [node name="Light" type="OmniLight3D" parent="Beacon" unique_id=1459616646]
 light_color = Color(0.2, 1, 0.3, 1)
@@ -302,9 +319,9 @@ visible = false
 material_override = SubResource("Material_cable")
 mesh = SubResource("CylinderMesh_cable")
 
-[node name="HurtboxArea" type="Area3D" parent="." groups=["player_hurtbox"]]
+[node name="HurtboxArea" type="Area3D" parent="." unique_id=1679882324 groups=["player_hurtbox"]]
 collision_layer = 0
 collision_mask = 4
 
-[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea"]
+[node name="HurtboxShape" type="CollisionShape3D" parent="HurtboxArea" unique_id=330174523]
 shape = SubResource("BoxShape3D_hurtbox")
