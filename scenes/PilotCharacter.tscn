@@ -1,0 +1,264 @@
+[gd_scene format=3 uid="uid://b6f6wb1ntty2t"]
+
+[ext_resource type="Script" uid="uid://cipd27pwd2gj0" path="res://scripts/PilotCharacter.gd" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="MatChair"]
+albedo_color = Color(0.25, 0.25, 0.28, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="MeshChair"]
+size = Vector3(0.5, 0.15, 0.4)
+
+[sub_resource type="BoxMesh" id="MeshChairBack"]
+size = Vector3(0.5, 0.4, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="MatColumn"]
+albedo_color = Color(0.15, 0.15, 0.18, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="MeshColumn"]
+top_radius = 0.03
+bottom_radius = 0.04
+height = 0.35
+
+[sub_resource type="StandardMaterial3D" id="MatWheel"]
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="TorusMesh" id="MeshWheelRing"]
+inner_radius = 0.12
+outer_radius = 0.17
+rings = 12
+
+[sub_resource type="StandardMaterial3D" id="MatGrip"]
+albedo_color = Color(0.2, 0.2, 0.25, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="MeshGrip"]
+top_radius = 0.025
+bottom_radius = 0.03
+height = 0.06
+
+[sub_resource type="StandardMaterial3D" id="MatBody"]
+albedo_color = Color(0.55, 0.4, 0.25, 1)
+metallic = 0.2
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="MeshBody"]
+size = Vector3(0.3, 0.35, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="MatHead"]
+albedo_color = Color(0.9, 0.75, 0.6, 1)
+roughness = 0.6
+
+[sub_resource type="SphereMesh" id="MeshHead"]
+radius = 0.1
+height = 0.2
+radial_segments = 5
+rings = 7
+
+[sub_resource type="StandardMaterial3D" id="MatEye"]
+albedo_color = Color(0.1, 0.1, 0.15, 1)
+
+[sub_resource type="SphereMesh" id="MeshEye"]
+radius = 0.02
+height = 0.04
+
+[sub_resource type="StandardMaterial3D" id="MatMouth"]
+albedo_color = Color(0.2, 0.1, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="MeshMouth"]
+size = Vector3(0.04, 0.01, 0.02)
+
+[sub_resource type="StandardMaterial3D" id="MatHat"]
+albedo_color = Color(0.35, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="MeshBrim"]
+top_radius = 0.18
+bottom_radius = 0.2
+height = 0.015
+
+[sub_resource type="CylinderMesh" id="MeshCrown"]
+top_radius = 0.08
+bottom_radius = 0.12
+height = 0.1
+
+[sub_resource type="StandardMaterial3D" id="MatArm"]
+albedo_color = Color(0.5, 0.38, 0.22, 1)
+metallic = 0.1
+roughness = 0.8
+
+[sub_resource type="CylinderMesh" id="MeshUpperArm"]
+top_radius = 0.035
+bottom_radius = 0.04
+height = 0.35
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="MeshForearm"]
+top_radius = 0.03
+bottom_radius = 0.035
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="MatHand"]
+albedo_color = Color(0.9, 0.75, 0.6, 1)
+roughness = 0.6
+
+[sub_resource type="SphereMesh" id="MeshHand"]
+radius = 0.025
+height = 0.05
+
+[node name="PilotCharacter" type="Node3D" unique_id=2147434734]
+script = ExtResource("1")
+
+[node name="KeyLight" type="OmniLight3D" parent="." unique_id=1042288931]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 2, -1.5)
+light_color = Color(0.9, 0.92, 1, 1)
+light_energy = 2.0
+omni_range = 3.0
+
+[node name="FillLight" type="OmniLight3D" parent="." unique_id=2097280136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -1)
+light_color = Color(0.8, 0.7, 0.6, 1)
+omni_range = 2.5
+
+[node name="RimLight" type="OmniLight3D" parent="." unique_id=758569489]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 1.5)
+light_color = Color(0.3, 0.5, 0.8, 1)
+light_energy = 1.5
+omni_range = 3.0
+
+[node name="Chair" type="MeshInstance3D" parent="." unique_id=290304329]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, -0.15)
+material_override = SubResource("MatChair")
+mesh = SubResource("MeshChair")
+
+[node name="ChairBack" type="MeshInstance3D" parent="." unique_id=300898783]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.35)
+material_override = SubResource("MatChair")
+mesh = SubResource("MeshChairBack")
+
+[node name="Column" type="MeshInstance3D" parent="." unique_id=562866000]
+transform = Transform3D(1, 0, 0, 0, 0.955336, -0.29552, 0, 0.29552, 0.955336, 0, -0.05, -0.55)
+material_override = SubResource("MatColumn")
+mesh = SubResource("MeshColumn")
+
+[node name="SteeringWheel" type="Node3D" parent="." unique_id=6076065]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -0.7)
+
+[node name="WheelRing" type="MeshInstance3D" parent="SteeringWheel" unique_id=1946426704]
+transform = Transform3D(1, 0, 0, 0, -0.416147, -0.909297, 0, 0.909297, -0.416147, 0, 0, 0)
+material_override = SubResource("MatWheel")
+mesh = SubResource("MeshWheelRing")
+
+[node name="GripL" type="MeshInstance3D" parent="SteeringWheel" unique_id=662448902]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 0, 0)
+material_override = SubResource("MatGrip")
+mesh = SubResource("MeshGrip")
+
+[node name="GripR" type="MeshInstance3D" parent="SteeringWheel" unique_id=1847060303]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.13, 0, 0)
+material_override = SubResource("MatGrip")
+mesh = SubResource("MeshGrip")
+
+[node name="Skeleton" type="Skeleton3D" parent="." unique_id=690631479]
+
+[node name="LeftArmIK" type="CCDIK3D" parent="Skeleton" unique_id=975490301]
+
+[node name="RightArmIK" type="CCDIK3D" parent="Skeleton" unique_id=540660623]
+
+[node name="Torso" type="Node3D" parent="." unique_id=1994419502]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+
+[node name="BodyMesh" type="MeshInstance3D" parent="Torso" unique_id=1599852375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("MatBody")
+mesh = SubResource("MeshBody")
+
+[node name="Head" type="Node3D" parent="Torso" unique_id=1824508764]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, -0.02)
+
+[node name="HeadMesh" type="MeshInstance3D" parent="Torso/Head" unique_id=264553487]
+material_override = SubResource("MatHead")
+mesh = SubResource("MeshHead")
+
+[node name="EyeL" type="MeshInstance3D" parent="Torso/Head" unique_id=153119944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.029999971, -0.0816555)
+material_override = SubResource("MatEye")
+mesh = SubResource("MeshEye")
+
+[node name="EyeR" type="MeshInstance3D" parent="Torso/Head" unique_id=2081801405]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.029999971, -0.07515097)
+material_override = SubResource("MatEye")
+mesh = SubResource("MeshEye")
+
+[node name="Mouth" type="MeshInstance3D" parent="Torso/Head" unique_id=360763049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04000002, -0.08184856)
+material_override = SubResource("MatMouth")
+mesh = SubResource("MeshMouth")
+
+[node name="Hat" type="Node3D" parent="Torso/Head" unique_id=2143903207]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.064248085, 0.01)
+
+[node name="Brim" type="MeshInstance3D" parent="Torso/Head/Hat" unique_id=639848898]
+material_override = SubResource("MatHat")
+mesh = SubResource("MeshBrim")
+
+[node name="Crown" type="MeshInstance3D" parent="Torso/Head/Hat" unique_id=1594498200]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, 0)
+material_override = SubResource("MatHat")
+mesh = SubResource("MeshCrown")
+
+[node name="ShoulderL" type="Node3D" parent="Torso" unique_id=1262661597]
+transform = Transform3D(1, 0, 0, 0, -0.3123974, 0.9499515, 0, -0.9499515, -0.3123974, -0.18, 0.24999999, 0)
+
+[node name="UpperArmL" type="Node3D" parent="Torso/ShoulderL" unique_id=2066403820]
+
+[node name="UpperArmLMesh" type="MeshInstance3D" parent="Torso/ShoulderL/UpperArmL" unique_id=1754126654]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, 0)
+material_override = SubResource("MatArm")
+mesh = SubResource("MeshUpperArm")
+
+[node name="ForearmL" type="Node3D" parent="Torso/ShoulderL/UpperArmL" unique_id=1299487400]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+
+[node name="ForearmLMesh" type="MeshInstance3D" parent="Torso/ShoulderL/UpperArmL/ForearmL" unique_id=1609571938]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+material_override = SubResource("MatArm")
+mesh = SubResource("MeshForearm")
+
+[node name="HandL" type="Node3D" parent="Torso/ShoulderL/UpperArmL/ForearmL" unique_id=429633658]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+
+[node name="HandLMesh" type="MeshInstance3D" parent="Torso/ShoulderL/UpperArmL/ForearmL/HandL" unique_id=1081529817]
+material_override = SubResource("MatHand")
+mesh = SubResource("MeshHand")
+
+[node name="ShoulderR" type="Node3D" parent="Torso" unique_id=1664062150]
+transform = Transform3D(1, 0, 0, 0, -0.37235624, 0.92808986, 0, -0.92808986, -0.37235624, 0.18, 0.24999999, 0)
+
+[node name="UpperArmR" type="Node3D" parent="Torso/ShoulderR" unique_id=1392378236]
+
+[node name="UpperArmRMesh" type="MeshInstance3D" parent="Torso/ShoulderR/UpperArmR" unique_id=1878892467]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, 0)
+material_override = SubResource("MatArm")
+mesh = SubResource("MeshUpperArm")
+
+[node name="ForearmR" type="Node3D" parent="Torso/ShoulderR/UpperArmR" unique_id=1878030483]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+
+[node name="ForearmRMesh" type="MeshInstance3D" parent="Torso/ShoulderR/UpperArmR/ForearmR" unique_id=237012141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+material_override = SubResource("MatArm")
+mesh = SubResource("MeshForearm")
+
+[node name="HandR" type="Node3D" parent="Torso/ShoulderR/UpperArmR/ForearmR" unique_id=500196266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+
+[node name="HandRMesh" type="MeshInstance3D" parent="Torso/ShoulderR/UpperArmR/ForearmR/HandR" unique_id=2073652859]
+material_override = SubResource("MatHand")
+mesh = SubResource("MeshHand")

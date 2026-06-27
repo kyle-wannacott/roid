@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "gdscript-godot": {
+      "name": "GDScript (Godot LSP)",
+      "extensions": [".gd"],
+      "command": "/home/lee/Documents/roid/.pi-lens/gd-lsp-wrapper.sh",
+      "args": [],
+      "rootMarkers": ["project.godot"],
+      "env": {
+        "GODOT_LSP_PORT": "6005"
+      }
+    }
+  }
+}

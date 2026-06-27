@@ -1,0 +1,6 @@
+{
+  "signature": "GEM_TYPE_SYSTEM_PLAN.md::ℹ️ Advisory — no action required this turn:\nCode-quality warnings introduced/touched this turn: 50 across 1 file(s).\nTop rules: MD013×28, MD029×14, MD060×6\nDetails written to .pi-lens/cache/code-quality-warnings.json\nNo action required unless you are already refactoring these areas.",
+  "sessionId": "019f046b-70fa-7d0d-a180-b83066ac9854",
+  "projectSeqStart": 19,
+  "projectSeqEnd": 20
+}

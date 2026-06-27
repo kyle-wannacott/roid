@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Planet.gd" id="1"]
+
+[node name="Planet" type="Node3D"]
+script = ExtResource("1")
+planet_radius = 100.0
+rim_color = Color(0.7, 0.5, 0.3, 1.0)
+animation_speed = 0.25
+distortion_strength = 0.3
+rim_brightness = 1.0
+gravity_radius = 400.0
+gravity_strength = 500.0
+player_gravity_factor = 0.7
+asteroid_count = 30
+orbit_radius_min_factor = 1.5
+orbit_radius_max_factor = 3.5
+asteroid_scale_min = 1.5
+asteroid_scale_max = 4.0
+asteroid_health = 30.0
+asteroid_gem_count = 2

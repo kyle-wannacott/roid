@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "cwd": "/home/lee/Documents/roid",
+  "tier": "cheap",
+  "scannedAt": "2026-06-26T15:35:55.776Z",
+  "diagnostics": [],
+  "filesScanned": 0,
+  "runners": [
+    "tree-sitter",
+    "fact-rules",
+    "ast-grep-napi"
+  ]
+}

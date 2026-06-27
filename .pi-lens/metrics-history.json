@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "files": {
+    ".pi-lens/gdscript-lsp.mjs": {
+      "latest": {
+        "commit": "841a941",
+        "timestamp": "2026-06-26T14:31:22.721Z",
+        "mi": 31.6,
+        "cognitive": 106,
+        "nesting": 4,
+        "lines": 205,
+        "maxCyclomatic": 24,
+        "entropy": 6.43
+      },
+      "history": [
+        {
+          "commit": "841a941",
+          "timestamp": "2026-06-26T14:31:22.721Z",
+          "mi": 31.6,
+          "cognitive": 106,
+          "nesting": 4,
+          "lines": 205,
+          "maxCyclomatic": 24,
+          "entropy": 6.43
+        }
+      ],
+      "trend": "stable"
+    }
+  },
+  "capturedAt": "2026-06-26T14:31:27.721Z"
+}
